@@ -16,6 +16,5 @@ configViewEngine(app);
 initWebRoutes(app);
 
 app.listen(PORT, () => {
-  // Sửa lại thành 'PORT'
   console.log(`Example app listening on port ${PORT}`);
 });

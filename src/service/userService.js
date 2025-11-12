@@ -14,8 +14,14 @@ const hashUserPassWord = (userPassWord) => {
   //let check = bcrypt.compareSync(password, hashpassword);
 };
 
-const CreateNewUser = (email, password, username) => {
+const CreateNewUser = async (email, password, username) => {
   let hashPassWord = hashUserPassWord(password);
+  const connection = await mysql.createConnection({
+    host: "localhost",
+    user: "root",
+    database: "jwt",
+    Promise: bluebird,
+  });
   // A simple SELECT query
   connection.query(
     "insert into users (email,password,username) values (?,?,?)",

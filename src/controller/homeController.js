@@ -19,7 +19,7 @@ const handleCreateUser = (req, res) => {
 
   //userService.getUserList();
   userService.CreateNewUser(email, password, username);
-  return res.send("handleCreateUser");
+  return res.redirect("/user");
 };
 
 module.exports = {
