@@ -1,14 +1,11 @@
 import bcrypt, { hash } from "bcryptjs";
-import mysql from "mysql2";
+import mysql from "mysql2/promise";
+import bluebird from "bluebird";
+
+// create the connection, specify bluebird as Promise
+
 //salt
 const salt = bcrypt.genSaltSync(10);
-
-// Create the connection to database
-const connection = mysql.createConnection({
-  host: "localhost",
-  user: "root",
-  database: "jwt",
-});
 
 const hashUserPassWord = (userPassWord) => {
   const hashPassWord = bcrypt.hashSync(userPassWord, salt);
@@ -31,16 +28,33 @@ const CreateNewUser = (email, password, username) => {
   );
 };
 
-const getUserList = () => {
-  const users = [];
-  connection.query("select * from users", function (err, results, fields) {
-    if (err) {
-      console.log(err);
-    }
-    console.log("Check results :  ", results);
+const getUserList = async () => {
+  const connection = await mysql.createConnection({
+    host: "localhost",
+    user: "root",
+    database: "jwt",
+    Promise: bluebird,
   });
+  let users = [];
+  // return connection.query(
+  //   "select * from users",
+  //   function (err, results, fields) {
+  //     if (err) {
+  //       console.log(err);
+  //       return users;
+  //     }
+  //     users = results;
+  //     console.log("run get user list", users);
+  //     return users;
+  //   }
+  // );
+  try {
+    const [rows, fields] = await connection.execute("select * from users");
+    return rows;
+  } catch (error) {
+    console.log("check erro :", error);
+  }
 };
-
 module.exports = {
   CreateNewUser,
   getUserList,
