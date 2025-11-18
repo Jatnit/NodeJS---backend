@@ -4,7 +4,7 @@ import adminService from "../service/adminService";
 
 const isAuthenticated = (req) => req.session && req.session.user;
 const isAdminSession = (req) =>
-  isAuthenticated(req) && String(req.session.user.role) === "1";
+  isAuthenticated(req) && String(req.session.user.role_id) === "1";
 
 // Get the client
 
@@ -133,13 +133,15 @@ const handleSignIn = async (req, res) => {
     }
 
     const normalizedRole =
-      user.role === null || user.role === undefined ? "2" : String(user.role);
+      user.role_id === null || user.role_id === undefined
+        ? "2"
+        : String(user.role_id);
 
     req.session.user = {
       id: user.id,
       email: user.email,
       username: user.username,
-      role: normalizedRole,
+      role_id: normalizedRole,
     };
 
     if (!req.session.theme) {

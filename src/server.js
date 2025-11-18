@@ -3,6 +3,8 @@ import configViewEngine from "./configs/viewEngine";
 import initWebRoutes from "./routes/web";
 import bodyParser from "body-parser";
 import session from "express-session";
+import sequelize from "./configs/database";
+import "./models/User";
 require("dotenv").config();
 
 const app = express();
@@ -36,6 +38,18 @@ configViewEngine(app);
 //init web routes
 initWebRoutes(app);
 
-app.listen(PORT, () => {
-  console.log(`Example app listening on port ${PORT}`);
-});
+const startServer = async () => {
+  try {
+    await sequelize.authenticate();
+    await sequelize.sync();
+    console.log("Database connection established.");
+    app.listen(PORT, () => {
+      console.log(`Example app listening on port ${PORT}`);
+    });
+  } catch (error) {
+    console.log("Unable to connect to the database:", error);
+    process.exit(1);
+  }
+};
+
+startServer();

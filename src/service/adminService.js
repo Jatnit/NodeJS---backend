@@ -1,6 +1,5 @@
 import bcrypt from "bcryptjs";
-import mysql from "mysql2/promise";
-import bluebird from "bluebird";
+import User from "../models/User";
 
 const salt = bcrypt.genSaltSync(10);
 
@@ -10,19 +9,16 @@ const hashUserPassWord = (userPassWord) => {
 };
 
 const adminCreateUser = async (email, password, username, role = 2) => {
-  const hashPassWord = hashUserPassWord(password);
-  const connection = await mysql.createConnection({
-    host: "localhost",
-    user: "root",
-    database: "jwt",
-    Promise: bluebird,
-  });
   try {
-    const [rows, fields] = await connection.execute(
-      "INSERT INTO users (email,password,username,role) VALUES (?,?,?,?)",
-      [email, hashPassWord, username, role]
-    );
-    return rows;
+    const hashPassWord = hashUserPassWord(password);
+    const normalizedRole = Number(role) || 2;
+    const user = await User.create({
+      email,
+      password: hashPassWord,
+      username,
+      role_id: normalizedRole,
+    });
+    return user.get({ plain: true });
   } catch (error) {
     console.log("adminCreateUser error:", error);
     throw error;
@@ -30,15 +26,11 @@ const adminCreateUser = async (email, password, username, role = 2) => {
 };
 
 const getUserList = async () => {
-  const connection = await mysql.createConnection({
-    host: "localhost",
-    user: "root",
-    database: "jwt",
-    Promise: bluebird,
-  });
   try {
-    const [rows, fields] = await connection.execute("select * from users");
-    return rows;
+    return await User.findAll({
+      order: [["id", "ASC"]],
+      raw: true,
+    });
   } catch (error) {
     console.log("getUserList error :", error);
     throw error;
@@ -46,18 +38,10 @@ const getUserList = async () => {
 };
 
 const deleteUserById = async (id) => {
-  const connection = await mysql.createConnection({
-    host: "localhost",
-    user: "root",
-    database: "jwt",
-    Promise: bluebird,
-  });
   try {
-    const [rows, fields] = await connection.execute(
-      "DELETE FROM users WHERE id = ?",
-      [id]
-    );
-    return rows;
+    return await User.destroy({
+      where: { id },
+    });
   } catch (error) {
     console.log("deleteUserById error :", error);
     throw error;
@@ -65,18 +49,13 @@ const deleteUserById = async (id) => {
 };
 
 const updateUserById = async (id, email, username, role = 2) => {
-  const connection = await mysql.createConnection({
-    host: "localhost",
-    user: "root",
-    database: "jwt",
-    Promise: bluebird,
-  });
   try {
-    const [rows, fields] = await connection.execute(
-      "UPDATE users SET email = ?, username = ?, role = ? WHERE id = ?",
-      [email, username, role, id]
+    const normalizedRole = Number(role) || 2;
+    const [updatedRows] = await User.update(
+      { email, username, role_id: normalizedRole },
+      { where: { id } }
     );
-    return rows;
+    return updatedRows;
   } catch (error) {
     console.log("updateUserById error :", error);
     throw error;

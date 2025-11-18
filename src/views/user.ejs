@@ -87,7 +87,7 @@
                                                         <%= user.username %>
                                                     </td>
                                                     <td>
-                                                        <% if (String(user.role)==="1" ) { %>
+                                                        <% if (String(user.role_id)==="1" ) { %>
                                                             Admin
                                                             <% } else { %>
                                                                 Member
@@ -97,7 +97,7 @@
                                                         <button type="button" class="btn btn-warning btn-edit"
                                                             data-id="<%= user.id %>" data-email="<%= user.email %>"
                                                             data-username="<%= user.username %>"
-                                                            data-role="<%= user.role %>">Edit</button>
+                                                            data-role="<%= user.role_id %>">Edit</button>
                                                         <form action="/admin/delete-user/<%= user.id %>" method="POST">
                                                             <button type="submit" class="btn btn-danger">Delete</button>
                                                         </form>

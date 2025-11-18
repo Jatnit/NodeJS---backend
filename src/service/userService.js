@@ -1,6 +1,5 @@
 import bcrypt from "bcryptjs";
-import mysql from "mysql2/promise";
-import bluebird from "bluebird";
+import User from "../models/User";
 
 const salt = bcrypt.genSaltSync(10);
 
@@ -10,19 +9,16 @@ const hashUserPassWord = (userPassWord) => {
 };
 
 const registerUser = async (email, password, username, role = 2) => {
-  const hashPassWord = hashUserPassWord(password);
-  const connection = await mysql.createConnection({
-    host: "localhost",
-    user: "root",
-    database: "jwt",
-    Promise: bluebird,
-  });
   try {
-    const [rows, fields] = await connection.execute(
-      "INSERT INTO users (email,password,username,role) VALUES (?,?,?,?)",
-      [email, hashPassWord, username, role]
-    );
-    return rows;
+    const hashPassWord = hashUserPassWord(password);
+    const normalizedRole = Number(role) || 2;
+    const user = await User.create({
+      email,
+      password: hashPassWord,
+      username,
+      role_id: normalizedRole,
+    });
+    return user.get({ plain: true });
   } catch (error) {
     console.log("registerUser error:", error);
     throw error;
@@ -30,21 +26,9 @@ const registerUser = async (email, password, username, role = 2) => {
 };
 
 const getUserById = async (id) => {
-  const connection = await mysql.createConnection({
-    host: "localhost",
-    user: "root",
-    database: "jwt",
-    Promise: bluebird,
-  });
   try {
-    const [rows, fields] = await connection.execute(
-      "SELECT * FROM users WHERE id = ? LIMIT 1",
-      [id]
-    );
-    if (rows && rows.length > 0) {
-      return rows[0];
-    }
-    return null;
+    const user = await User.findByPk(id, { raw: true });
+    return user;
   } catch (error) {
     console.log("getUserById error:", error);
     throw error;
@@ -52,21 +36,12 @@ const getUserById = async (id) => {
 };
 
 const getUserByEmail = async (email) => {
-  const connection = await mysql.createConnection({
-    host: "localhost",
-    user: "root",
-    database: "jwt",
-    Promise: bluebird,
-  });
   try {
-    const [rows, fields] = await connection.execute(
-      "SELECT * FROM users WHERE email = ? LIMIT 1",
-      [email]
-    );
-    if (rows && rows.length > 0) {
-      return rows[0];
-    }
-    return null;
+    const user = await User.findOne({
+      where: { email },
+      raw: true,
+    });
+    return user;
   } catch (error) {
     console.log("getUserByEmail error:", error);
     throw error;
