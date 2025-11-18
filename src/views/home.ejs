@@ -3,11 +3,201 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Moda Studio | Fashion Forward</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: "Helvetica Neue", Arial, sans-serif;
+            background-color: #f8f8f8;
+            color: #1f1f1f;
+        }
+
+        .hero {
+            background: linear-gradient(135deg, rgba(17, 17, 17, 0.85), rgba(0, 0, 0, 0.4)),
+                url("https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=1600&q=80") center / cover;
+            color: #fff;
+            min-height: 70vh;
+            display: flex;
+            align-items: center;
+            text-align: left;
+            padding: 80px 0;
+        }
+
+        .hero h1 {
+            font-size: 3.5rem;
+            letter-spacing: 2px;
+        }
+
+        .section-title {
+            letter-spacing: 0.2em;
+            font-weight: 600;
+            color: #b48b57;
+        }
+
+        .collection-card {
+            border: none;
+            border-radius: 0;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+        }
+
+        .collection-card img {
+            height: 280px;
+            object-fit: cover;
+        }
+
+        .pill {
+            text-transform: uppercase;
+            letter-spacing: 0.4em;
+            font-size: 0.75rem;
+            color: #6c757d;
+        }
+
+        .cta-banner {
+            background: #000;
+            color: #fff;
+            padding: 70px 40px;
+        }
+
+        footer {
+            padding: 50px 0;
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+    </style>
 </head>
 
 <body>
-    <h1>Hello World</h1>
+    <nav class="navbar navbar-expand-lg bg-white shadow-sm py-3">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="/">MODA STUDIO</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto gap-3">
+                    <li class="nav-item"><a class="nav-link" href="#collections">Collections</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#stories">Stories</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#shop">Shop</a></li>
+                </ul>
+                <div class="d-flex align-items-center gap-2 ms-lg-4">
+                    <a class="btn btn-outline-dark" href="/signup">Create Account</a>
+                    <a class="btn btn-dark" href="/signin">Sign In</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <header class="hero">
+        <div class="container">
+            <p class="pill">/ SPRING 2025</p>
+            <h1>Elevated essentials for a bold new season.</h1>
+            <p class="lead mt-3 col-lg-6">Discover limited-run capsules inspired by Parisian street style and Japanese
+                minimalism. Tailored silhouettes, sustainable fabrics, unmistakable presence.</p>
+            <div class="mt-4">
+                <a href="#collections" class="btn btn-light btn-lg px-5 me-3">Explore Lookbook</a>
+                <a href="#shop" class="btn btn-outline-light btn-lg px-5">Shop Now</a>
+            </div>
+        </div>
+    </header>
+
+    <section id="collections" class="py-5">
+        <div class="container">
+            <div class="text-center mb-5">
+                <p class="section-title">COLLECTIONS</p>
+                <h2 class="fw-bold">Curated drops every month</h2>
+                <p class="text-muted">Hand-picked silhouettes for work, weekend, and every memorable moment.</p>
+            </div>
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="card collection-card">
+                        <img src="https://images.unsplash.com/photo-1504593811423-6dd665756598?auto=format&fit=crop&w=900&q=80"
+                            class="card-img-top" alt="Modern Tailoring">
+                        <div class="card-body">
+                            <h5 class="card-title">Modern Tailoring</h5>
+                            <p class="card-text text-muted">Architectural lines softened with silk-wool blends. From
+                                boardroom to rooftop.</p>
+                            <a href="#shop" class="btn btn-outline-dark">Shop Capsule</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card collection-card">
+                        <img src="https://images.unsplash.com/photo-1509631179647-0177331693ae?auto=format&fit=crop&w=900&q=80"
+                            class="card-img-top" alt="Street Luxe">
+                        <div class="card-body">
+                            <h5 class="card-title">Street Luxe</h5>
+                            <p class="card-text text-muted">Metallic finishes, oversized fits, effortless swagger.
+                                Limited to 300 pieces.</p>
+                            <a href="#shop" class="btn btn-outline-dark">Discover Drop</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card collection-card">
+                        <img src="https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=900&q=80"
+                            class="card-img-top" alt="Resort Escape">
+                        <div class="card-body">
+                            <h5 class="card-title">Resort Escape</h5>
+                            <p class="card-text text-muted">Light linens, coastal palettes, ultra-relaxed layers for
+                                faraway afternoons.</p>
+                            <a href="#shop" class="btn btn-outline-dark">Preview Styles</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="stories" class="py-5 bg-white">
+        <div class="container">
+            <div class="row align-items-center g-4">
+                <div class="col-lg-6">
+                    <img class="img-fluid rounded shadow"
+                        src="https://images.unsplash.com/photo-1514996937319-344454492b37?auto=format&fit=crop&w=1200&q=80"
+                        alt="Designer at work">
+                </div>
+                <div class="col-lg-6">
+                    <p class="section-title">STUDIO STORIES</p>
+                    <h3 class="fw-bold">Craftsmanship that respects the planet.</h3>
+                    <p class="text-muted">Every garment is cut-to-order in our Saigon atelier using recycled dyes and
+                        certified organic fibers. We partner with independent artisans to ensure each piece is sewn with
+                        care and fair-wage practices.</p>
+                    <ul class="list-unstyled text-muted">
+                        <li>• 92% of the line uses certified sustainable materials</li>
+                        <li>• Carbon-neutral shipping across Vietnam & Southeast Asia</li>
+                        <li>• Complimentary tailoring for Members+</li>
+                    </ul>
+                    <a href="#shop" class="btn btn-dark mt-2">Meet the Makers</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="shop" class="cta-banner text-center text-lg-start">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-lg-8">
+                    <p class="section-title text-white mb-2">EXCLUSIVE ACCESS</p>
+                    <h2 class="fw-bold">Join the Moda Circle for early drops & private fittings.</h2>
+                    <p class="text-white-50">Members-only experiences, priority invites to runway previews, and curated
+                        styling sessions in Ho Chi Minh City.</p>
+                </div>
+                <div class="col-lg-4 text-lg-end">
+                    <a href="/user" class="btn btn-light btn-lg px-5">Become a Member</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="bg-white">
+        <div class="container text-center">
+            <p class="mb-1">Moda Studio © <%= new Date().getFullYear() %>. Crafted in Vietnam.</p>
+            <p>Follow us @modastudio.vn · hello@modastudio.vn</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 
 </html>

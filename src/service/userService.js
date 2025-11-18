@@ -15,23 +15,23 @@ const hashUserPassWord = (userPassWord) => {
 };
 
 const CreateNewUser = async (email, password, username) => {
-  let hashPassWord = hashUserPassWord(password);
+  const hashPassWord = hashUserPassWord(password);
   const connection = await mysql.createConnection({
     host: "localhost",
     user: "root",
     database: "jwt",
     Promise: bluebird,
   });
-  // A simple SELECT query
-  connection.query(
-    "insert into users (email,password,username) values (?,?,?)",
-    [email, hashPassWord, username],
-    function (err, results, fields) {
-      if (err) {
-        console.log(err);
-      }
-    }
-  );
+  try {
+    const [rows, fields] = await connection.execute(
+      "INSERT INTO users (email,password,username) VALUES (?,?,?)",
+      [email, hashPassWord, username]
+    );
+    return rows;
+  } catch (error) {
+    console.log("CreateNewUser error:", error);
+    throw error;
+  }
 };
 
 const getUserList = async () => {
@@ -41,19 +41,6 @@ const getUserList = async () => {
     database: "jwt",
     Promise: bluebird,
   });
-  let users = [];
-  // return connection.query(
-  //   "select * from users",
-  //   function (err, results, fields) {
-  //     if (err) {
-  //       console.log(err);
-  //       return users;
-  //     }
-  //     users = results;
-  //     console.log("run get user list", users);
-  //     return users;
-  //   }
-  // );
   try {
     const [rows, fields] = await connection.execute("select * from users");
     return rows;
@@ -61,7 +48,70 @@ const getUserList = async () => {
     console.log("check erro :", error);
   }
 };
+
+const deleteUserById = async (id) => {
+  // DELETE FROM `users` WHERE `users`.`id` = [id]
+  const connection = await mysql.createConnection({
+    host: "localhost",
+    user: "root",
+    database: "jwt",
+    Promise: bluebird,
+  });
+  try {
+    const [rows, fields] = await connection.execute(
+      "DELETE FROM users WHERE id = ?",
+      [id]
+    );
+    return rows;
+  } catch (error) {
+    console.log("check erro :", error);
+  }
+};
+
+const updateUserById = async (id, email, username) => {
+  const connection = await mysql.createConnection({
+    host: "localhost",
+    user: "root",
+    database: "jwt",
+    Promise: bluebird,
+  });
+  try {
+    const [rows, fields] = await connection.execute(
+      "UPDATE users SET email = ?, username = ? WHERE id = ?",
+      [email, username, id]
+    );
+    return rows;
+  } catch (error) {
+    console.log("check erro :", error);
+  }
+};
+
+const getUserByEmail = async (email) => {
+  const connection = await mysql.createConnection({
+    host: "localhost",
+    user: "root",
+    database: "jwt",
+    Promise: bluebird,
+  });
+  try {
+    const [rows, fields] = await connection.execute(
+      "SELECT * FROM users WHERE email = ? LIMIT 1",
+      [email]
+    );
+    if (rows && rows.length > 0) {
+      return rows[0];
+    }
+    return null;
+  } catch (error) {
+    console.log("getUserByEmail error:", error);
+    throw error;
+  }
+};
+
 module.exports = {
   CreateNewUser,
   getUserList,
+  deleteUserById,
+  updateUserById,
+  getUserByEmail,
 };

@@ -15,7 +15,8 @@
     <div class="user-infor-container">
         <div class="container">
             <div class="row">
-                <form action="/user/create-user" method="POST">
+                <form id="userForm" action="/user/create-user" method="POST">
+                    <input type="hidden" id="userId" name="id">
                     <div class="mt-3">
                         <H3>
                             CREATE NEW USER
@@ -41,7 +42,8 @@
                             <input class="form-check-input" type="checkbox" name="remember"> Remember me
                         </label>
                     </div>
-                    <button type="submit" class="btn btn-primary">Submit</button>
+                    <button type="submit" class="btn btn-primary" id="submitBtn">Submit</button>
+                    <button type="button" class="btn btn-secondary d-none" id="cancelEdit">Cancel</button>
                 </form>
             </div>
         </div>
@@ -57,7 +59,7 @@
                         <table class="table table-hover table-bordered">
                             <thead>
                                 <tr>
-                                    <th scope="col">#</th>
+                                    <th scope="col">ID</th>
                                     <th scope="col">Email</th>
                                     <th scope="col">Name</th>
                                     <th>Actions</th>
@@ -69,7 +71,7 @@
                                     <% userlist.forEach(function (user, index) { %>
                                         <tr>
                                             <th scope="row">
-                                                <%= index + 1 %>
+                                                <%= user.id %>
                                             </th>
                                             <td>
                                                 <%= user.email %>
@@ -78,8 +80,12 @@
                                                 <%= user.username %>
                                             </td>
                                             <td>
-                                                <button type="button" class="btn btn-warning">Edit</button>
-                                                <button type="button" class="btn btn-danger">Delete</button>
+                                                <button type="button" class="btn btn-warning btn-edit"
+                                                    data-id="<%= user.id %>" data-email="<%= user.email %>"
+                                                    data-username="<%= user.username %>">Edit</button>
+                                                <form action="/user/delete-user/<%= user.id %>" method="POST">
+                                                    <button type="submit" class="btn btn-danger">Delete</button>
+                                                </form>
                                             </td>
                                         </tr>
                                         <% }) %>
@@ -95,6 +101,52 @@
             </div>
         </div>
 
+
+        <script>
+            document.addEventListener("DOMContentLoaded", () => {
+                const form = document.getElementById("userForm");
+                const idInput = document.getElementById("userId");
+                const emailInput = document.getElementById("email");
+                const usernameInput = document.getElementById("username");
+                const passwordInput = document.getElementById("password");
+                const submitBtn = document.getElementById("submitBtn");
+                const cancelBtn = document.getElementById("cancelEdit");
+
+                const resetForm = () => {
+                    form.reset();
+                    idInput.value = "";
+                    form.action = "/user/create-user";
+                    submitBtn.textContent = "Submit";
+                    cancelBtn.classList.add("d-none");
+                    passwordInput.disabled = false;
+                    passwordInput.required = true;
+                };
+
+                const enterEditMode = ({ id, email, username }) => {
+                    idInput.value = id;
+                    emailInput.value = email;
+                    usernameInput.value = username;
+                    form.action = "/user/edit-user";
+                    submitBtn.textContent = "Update";
+                    cancelBtn.classList.remove("d-none");
+                    passwordInput.value = "";
+                    passwordInput.disabled = true;
+                    passwordInput.required = false;
+                };
+
+                document.querySelectorAll(".btn-edit").forEach((btn) => {
+                    btn.addEventListener("click", () => {
+                        enterEditMode({
+                            id: btn.dataset.id,
+                            email: btn.dataset.email,
+                            username: btn.dataset.username,
+                        });
+                    });
+                });
+
+                cancelBtn.addEventListener("click", resetForm);
+            });
+        </script>
 
 </body>
 
