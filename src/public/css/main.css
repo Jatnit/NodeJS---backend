@@ -1,0 +1,154 @@
+:root {
+  --app-font: "Helvetica Neue", Arial, sans-serif;
+  --color-brand: #b48b57;
+  --transition-base: 0.3s ease;
+}
+
+body {
+  font-family: var(--app-font);
+  background-color: var(--app-bg, #f8f8f8);
+  color: var(--app-text, #1f1f1f);
+  transition: background-color var(--transition-base),
+    color var(--transition-base);
+}
+
+body.theme-light {
+  --app-bg: #f8f8f8;
+  --app-text: #1f1f1f;
+  --card-bg: #ffffff;
+  --muted-text: #6c757d;
+  --border-color: rgba(0, 0, 0, 0.08);
+  --nav-bg: rgba(255, 255, 255, 0.95);
+}
+
+body.theme-dark {
+  --app-bg: #050505;
+  --app-text: #f4f4f4;
+  --card-bg: #121212;
+  --muted-text: #aaaaaa;
+  --border-color: rgba(255, 255, 255, 0.12);
+  --nav-bg: rgba(12, 12, 12, 0.9);
+}
+
+.navbar-global {
+  background-color: var(--nav-bg);
+  backdrop-filter: blur(18px);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.navbar-global .nav-link,
+.navbar-global .navbar-brand {
+  color: var(--app-text);
+}
+
+.navbar-global .nav-link:hover,
+.navbar-global .nav-link:focus {
+  color: var(--color-brand);
+}
+
+.site-main {
+  padding-top: 96px;
+}
+
+.footer-global {
+  background-color: var(--card-bg);
+  border-top: 1px solid var(--border-color);
+  color: var(--muted-text);
+}
+
+.card,
+.auth-card,
+.profile-card,
+.table {
+  background-color: var(--card-bg);
+  color: var(--app-text);
+  border-color: var(--border-color);
+}
+
+.table thead {
+  background-color: rgba(180, 139, 87, 0.08);
+}
+
+body.theme-dark .table thead {
+  background-color: rgba(180, 139, 87, 0.15);
+}
+
+.table tbody tr {
+  border-color: var(--border-color);
+}
+
+.auth-wrapper,
+.profile-wrapper {
+  min-height: calc(100vh - 180px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 15px;
+}
+
+.dropdown-menu {
+  background-color: var(--card-bg);
+  color: var(--app-text);
+  border-color: var(--border-color);
+}
+
+.dropdown-menu .dropdown-item {
+  color: var(--app-text);
+}
+
+.dropdown-menu .dropdown-item:hover {
+  background-color: rgba(180, 139, 87, 0.15);
+}
+
+input.form-control,
+select.form-select,
+textarea.form-control {
+  background-color: var(--card-bg);
+  color: var(--app-text);
+  border-color: var(--border-color);
+}
+
+input.form-control:focus,
+select.form-select:focus,
+textarea.form-control:focus {
+  border-color: var(--color-brand);
+  box-shadow: none;
+}
+
+.btn-outline-theme {
+  border-color: var(--app-text);
+  color: var(--app-text);
+}
+
+.btn-outline-theme:hover {
+  background-color: var(--app-text);
+  color: var(--app-bg);
+}
+
+.hero {
+  border-radius: 24px;
+  overflow: hidden;
+}
+
+.cta-banner,
+.hero,
+.profile-card,
+.auth-card {
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.22);
+}
+
+body.theme-dark .cta-banner,
+body.theme-dark .hero,
+body.theme-dark .profile-card,
+body.theme-dark .auth-card {
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.7);
+}
+
+body.theme-dark .bg-white {
+  background-color: #101010 !important;
+}
+
+body.theme-dark .text-muted {
+  color: var(--muted-text) !important;
+}
+

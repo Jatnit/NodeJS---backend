@@ -8,13 +8,19 @@ const router = express.Router();
 
 const initWebRoutes = (app) => {
   router.get("/", homeController.handleHelloWorld);
-  router.get("/user", homeController.handleUserPage);
   router.get("/signin", homeController.renderSignIn);
   router.post("/signin", homeController.handleSignIn);
   router.get("/signup", homeController.renderSignUp);
   router.post("/user/create-user", homeController.handleCreateUser);
-  router.post("/user/delete-user/:id", homeController.handleDeleteUser);
-  router.post("/user/edit-user", homeController.handleEditUser);
+  router.post("/logout", homeController.handleLogout);
+  router.post("/user/theme", homeController.handleThemeChange);
+
+  router.get("/admin/users", homeController.handleUserPage);
+  router.post("/admin/create-user", homeController.handleCreateUser);
+  router.post("/admin/delete-user/:id", homeController.handleDeleteUser);
+  router.post("/admin/edit-user", homeController.handleEditUser);
+
+  router.get("/user/profile/:id", homeController.handleUserProfile);
 
   return app.use("/", router);
 };

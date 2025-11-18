@@ -9,7 +9,7 @@ const hashUserPassWord = (userPassWord) => {
   return hashPassWord;
 };
 
-const registerUser = async (email, password, username, role = 2) => {
+const adminCreateUser = async (email, password, username, role = 2) => {
   const hashPassWord = hashUserPassWord(password);
   const connection = await mysql.createConnection({
     host: "localhost",
@@ -24,12 +24,28 @@ const registerUser = async (email, password, username, role = 2) => {
     );
     return rows;
   } catch (error) {
-    console.log("registerUser error:", error);
+    console.log("adminCreateUser error:", error);
     throw error;
   }
 };
 
-const getUserById = async (id) => {
+const getUserList = async () => {
+  const connection = await mysql.createConnection({
+    host: "localhost",
+    user: "root",
+    database: "jwt",
+    Promise: bluebird,
+  });
+  try {
+    const [rows, fields] = await connection.execute("select * from users");
+    return rows;
+  } catch (error) {
+    console.log("getUserList error :", error);
+    throw error;
+  }
+};
+
+const deleteUserById = async (id) => {
   const connection = await mysql.createConnection({
     host: "localhost",
     user: "root",
@@ -38,20 +54,17 @@ const getUserById = async (id) => {
   });
   try {
     const [rows, fields] = await connection.execute(
-      "SELECT * FROM users WHERE id = ? LIMIT 1",
+      "DELETE FROM users WHERE id = ?",
       [id]
     );
-    if (rows && rows.length > 0) {
-      return rows[0];
-    }
-    return null;
+    return rows;
   } catch (error) {
-    console.log("getUserById error:", error);
+    console.log("deleteUserById error :", error);
     throw error;
   }
 };
 
-const getUserByEmail = async (email) => {
+const updateUserById = async (id, email, username, role = 2) => {
   const connection = await mysql.createConnection({
     host: "localhost",
     user: "root",
@@ -60,21 +73,19 @@ const getUserByEmail = async (email) => {
   });
   try {
     const [rows, fields] = await connection.execute(
-      "SELECT * FROM users WHERE email = ? LIMIT 1",
-      [email]
+      "UPDATE users SET email = ?, username = ?, role = ? WHERE id = ?",
+      [email, username, role, id]
     );
-    if (rows && rows.length > 0) {
-      return rows[0];
-    }
-    return null;
+    return rows;
   } catch (error) {
-    console.log("getUserByEmail error:", error);
+    console.log("updateUserById error :", error);
     throw error;
   }
 };
 
 module.exports = {
-  registerUser,
-  getUserByEmail,
-  getUserById,
+  adminCreateUser,
+  getUserList,
+  deleteUserById,
+  updateUserById,
 };
