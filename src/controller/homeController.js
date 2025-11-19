@@ -1,10 +1,18 @@
+import Product from "../models/Product";
+import ProductSKU from "../models/ProductSKU";
+import Attribute from "../models/Attribute";
+import AttributeValue from "../models/AttributeValue";
+import Order from "../models/Order";
+import OrderDetail from "../models/OrderDetail";
+import UserAddress from "../models/UserAddress";
+
 import bcrypt from "bcryptjs";
 import userService from "../service/userService";
 import adminService from "../service/adminService";
 
 const isAuthenticated = (req) => req.session && req.session.user;
 const isAdminSession = (req) =>
-  isAuthenticated(req) && String(req.session.user.role_id) === "1";
+  isAuthenticated(req) && String(req.session.user.roleId) === "1";
 
 // Get the client
 
@@ -133,15 +141,15 @@ const handleSignIn = async (req, res) => {
     }
 
     const normalizedRole =
-      user.role_id === null || user.role_id === undefined
+      user.roleId === null || user.roleId === undefined
         ? "2"
-        : String(user.role_id);
+        : String(user.roleId);
 
     req.session.user = {
       id: user.id,
       email: user.email,
       username: user.username,
-      role_id: normalizedRole,
+      roleId: normalizedRole,
     };
 
     if (!req.session.theme) {
@@ -149,11 +157,11 @@ const handleSignIn = async (req, res) => {
     }
 
     if (normalizedRole === "1") {
-      console.log("[SIGNIN] Admin login success:", email);
+      console.log("[SIGNIN] Admin login success:", email, "(role: Admin)");
       return res.redirect("/admin/users");
     }
     if (normalizedRole === "2") {
-      console.log("[SIGNIN] User login success:", email);
+      console.log("[SIGNIN] User login success:", email, "(role: Customer)");
       return res.redirect(`/user/profile/${user.id}`);
     }
     console.warn(
@@ -226,6 +234,278 @@ const handleThemeChange = (req, res) => {
   return res.redirect(redirectTo);
 };
 
+const handleProductListing = async (req, res) => {
+  try {
+    const products = await Product.findAll({
+      where: { isActive: true },
+      order: [["createdAt", "DESC"]],
+      raw: true,
+    });
+
+    return res.render("products.ejs", {
+      products,
+      errorMessage: null,
+    });
+  } catch (error) {
+    console.log("handleProductListing error:", error);
+    return res.render("products.ejs", {
+      products: [],
+      errorMessage: "Không thể tải danh sách sản phẩm.",
+    });
+  }
+};
+
+const handleProductDetail = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const product = await Product.findOne({
+      where: { id, isActive: true },
+      raw: true,
+    });
+
+    if (!product) {
+      return res.status(404).render("product-detail.ejs", {
+        product: null,
+        attributeGroups: [],
+        skus: [],
+        errorMessage: "Không tìm thấy sản phẩm.",
+      });
+    }
+
+    const skuRecords = await ProductSKU.findAll({
+      where: { productId: id },
+      include: [
+        {
+          model: AttributeValue,
+          attributes: ["id", "value", "attributeId"],
+          include: [{ model: Attribute, attributes: ["id", "name"] }],
+          through: { attributes: [] },
+        },
+      ],
+      order: [["id", "ASC"]],
+    });
+
+    const plainSkus = skuRecords.map((sku) => sku.get({ plain: true }));
+
+    const attributeGroupsMap = {};
+    plainSkus.forEach((sku) => {
+      (sku.AttributeValues || []).forEach((attrValue) => {
+        const attr = attrValue.Attribute;
+        if (!attr) return;
+        if (!attributeGroupsMap[attr.id]) {
+          attributeGroupsMap[attr.id] = {
+            attributeId: attr.id,
+            attributeName: attr.name,
+            values: {},
+          };
+        }
+        attributeGroupsMap[attr.id].values[attrValue.id] = attrValue.value;
+      });
+    });
+
+    const attributeGroups = Object.values(attributeGroupsMap)
+      .map((group) => ({
+        attributeId: group.attributeId,
+        attributeName: group.attributeName,
+        values: Object.entries(group.values).map(([valueId, value]) => ({
+          id: Number(valueId),
+          value,
+        })),
+      }))
+      .sort((a, b) => a.attributeName.localeCompare(b.attributeName));
+
+    const skuOptions = plainSkus.map((sku) => ({
+      id: sku.id,
+      price: Number(sku.price),
+      stockQuantity: sku.stockQuantity,
+      imageUrl: sku.imageUrl || product.thumbnailUrl,
+      attributeValueIds: (sku.AttributeValues || []).map(
+        (attrValue) => attrValue.id
+      ),
+    }));
+
+    return res.render("product-detail.ejs", {
+      product,
+      attributeGroups,
+      skuOptions,
+      errorMessage: null,
+    });
+  } catch (error) {
+    console.log("handleProductDetail error:", error);
+    return res.status(500).render("product-detail.ejs", {
+      product: null,
+      attributeGroups: [],
+      skuOptions: [],
+      errorMessage: "Có lỗi xảy ra khi tải sản phẩm.",
+    });
+  }
+};
+
+const handleAddToCart = async (req, res) => {
+  const { skuId, quantity } = req.body;
+
+  if (!skuId) {
+    return res
+      .status(400)
+      .json({ success: false, message: "Please select options" });
+  }
+
+  try {
+    const sku = await ProductSKU.findOne({
+      where: { id: skuId },
+      include: [
+        {
+          model: Product,
+          attributes: ["id", "name", "thumbnailUrl"],
+        },
+        {
+          model: AttributeValue,
+          attributes: ["id", "value"],
+          include: [{ model: Attribute, attributes: ["id", "name"] }],
+          through: { attributes: [] },
+        },
+      ],
+    });
+
+    if (!sku) {
+      return res
+        .status(404)
+        .json({ success: false, message: "SKU not found." });
+    }
+
+    const selectedQuantity = Number(quantity) > 0 ? Number(quantity) : 1;
+    const variantLabel = (sku.AttributeValues || [])
+      .map((av) => {
+        const attrName = av.Attribute ? av.Attribute.name : "";
+        return attrName ? `${attrName}: ${av.value}` : av.value;
+      })
+      .join(" / ");
+
+    const cartItem = {
+      skuId: sku.id,
+      productId: sku.Product.id,
+      name: sku.Product.name,
+      thumbnailUrl: sku.imageUrl || sku.Product.thumbnailUrl,
+      price: Number(sku.price),
+      quantity: selectedQuantity,
+      variantLabel,
+      stockQuantity: sku.stockQuantity,
+    };
+
+    if (!req.session.cart) {
+      req.session.cart = { items: [], subtotal: 0 };
+    }
+
+    const existing = req.session.cart.items.find(
+      (item) => item.skuId === cartItem.skuId
+    );
+    if (existing) {
+      existing.quantity += selectedQuantity;
+    } else {
+      req.session.cart.items.push(cartItem);
+    }
+
+    req.session.cart.subtotal = req.session.cart.items.reduce(
+      (sum, item) => sum + item.price * item.quantity,
+      0
+    );
+
+    return res.json({
+      success: true,
+      cart: req.session.cart,
+    });
+  } catch (error) {
+    console.log("handleAddToCart error:", error);
+    return res
+      .status(500)
+      .json({ success: false, message: "Unable to add to cart." });
+  }
+};
+
+const renderCheckoutPage = async (req, res) => {
+  const cart = req.session.cart || { items: [], subtotal: 0 };
+  if (!cart.items.length) {
+    return res.redirect("/products");
+  }
+
+  let addresses = [];
+  if (isAuthenticated(req)) {
+    addresses = await UserAddress.findAll({
+      where: { userId: req.session.user.id },
+      raw: true,
+      order: [["isDefault", "DESC"]],
+    });
+  }
+
+  return res.render("checkout.ejs", {
+    cart,
+    addresses,
+    errorMessage: null,
+  });
+};
+
+const handleCheckout = async (req, res) => {
+  const cart = req.session.cart;
+  if (!cart || !cart.items.length) {
+    return res.status(400).render("checkout.ejs", {
+      cart: { items: [], subtotal: 0 },
+      addresses: [],
+      errorMessage: "Giỏ hàng đang trống.",
+    });
+  }
+
+  const {
+    shippingName,
+    shippingPhone,
+    shippingAddress,
+    paymentMethod = "COD",
+  } = req.body;
+
+  if (!shippingName || !shippingPhone || !shippingAddress) {
+    return res.status(400).render("checkout.ejs", {
+      cart,
+      addresses: [],
+      errorMessage: "Vui lòng nhập đầy đủ thông tin giao hàng.",
+    });
+  }
+
+  try {
+    const order = await Order.create({
+      userId: isAuthenticated(req) ? req.session.user.id : null,
+      totalAmount: cart.subtotal,
+      status: "Chờ xác nhận",
+      paymentMethod,
+      isPaid: paymentMethod !== "COD",
+      shippingName,
+      shippingPhone,
+      shippingAddress,
+      note: req.body.note || null,
+    });
+
+    const detailPayload = cart.items.map((item) => ({
+      orderId: order.id,
+      productSkuId: item.skuId,
+      productName: item.name,
+      quantity: item.quantity,
+      unitPrice: item.price,
+    }));
+
+    await OrderDetail.bulkCreate(detailPayload);
+
+    req.session.cart = { items: [], subtotal: 0 };
+
+    return res.render("checkout-success.ejs", { order });
+  } catch (error) {
+    console.log("handleCheckout error:", error);
+    return res.status(500).render("checkout.ejs", {
+      cart,
+      addresses: [],
+      errorMessage: "Đặt hàng thất bại. Vui lòng thử lại.",
+    });
+  }
+};
+
 module.exports = {
   handleHelloWorld,
   handleUserPage,
@@ -238,4 +518,9 @@ module.exports = {
   handleUserProfile,
   handleLogout,
   handleThemeChange,
+  handleProductListing,
+  handleProductDetail,
+  handleAddToCart,
+  renderCheckoutPage,
+  handleCheckout,
 };

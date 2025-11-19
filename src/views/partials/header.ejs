@@ -43,12 +43,128 @@
                     </ul>
                 </div>
             <% } else { %>
-                <div class="d-flex align-items-center gap-2 ms-lg-4 mt-3 mt-lg-0">
-                    <a class="btn btn-outline-theme" href="/signup">Tạo tài khoản</a>
-                    <a class="btn btn-dark" href="/signin">Đăng nhập</a>
-                </div>
+        <div class="d-flex align-items-center gap-2 ms-lg-4 mt-3 mt-lg-0">
+            <a class="btn btn-outline-theme" href="/signup">Tạo tài khoản</a>
+            <a class="btn btn-dark" href="/signin">Đăng nhập</a>
+        </div>
             <% } %>
+            <button class="btn btn-outline-theme ms-lg-3 mt-3 mt-lg-0" id="openCartDrawer">
+                Cart (<%= (cartItems && cartItems.length) || 0 %>)
+            </button>
+<a class="btn btn-dark ms-2 mt-3 mt-lg-0" href="/checkout" <%= cartItems && cartItems.length ? "" : "aria-disabled='true' tabindex='-1' class='btn btn-dark disabled'" %>>
+    Checkout
+</a>
         </div>
     </div>
 </nav>
+
+<div class="cart-overlay" id="cartOverlay"></div>
+<aside class="cart-drawer" id="cartDrawer">
+    <div class="cart-drawer-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0 text-uppercase" style="letter-spacing: 0.3em;">Your Cart</h5>
+        <button type="button" class="btn-close" id="closeCartDrawer"></button>
+    </div>
+    <div class="cart-drawer-body" id="cartDrawerItems">
+        <% if (cartItems && cartItems.length > 0) { %>
+            <% cartItems.forEach(function(item){ %>
+                <div class="cart-line d-flex justify-content-between align-items-start">
+                    <div>
+                        <p class="mb-1 fw-bold"><%= item.name %></p>
+                        <% if (item.variantLabel) { %>
+                            <small class="text-muted"><%= item.variantLabel %></small>
+                        <% } %>
+                        <p class="mb-0"><%= item.quantity %> x <%= item.price.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' }) %></p>
+                    </div>
+                    <div class="text-end fw-semibold">
+                        <%= (item.price * item.quantity).toLocaleString('vi-VN', { style: 'currency', currency: 'VND' }) %>
+                    </div>
+                </div>
+            <% }) %>
+        <% } else { %>
+            <p class="text-muted">Giỏ hàng trống.</p>
+        <% } %>
+    </div>
+    <div class="cart-drawer-footer">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <span class="text-muted text-uppercase" style="letter-spacing: 0.2em;">Subtotal</span>
+            <strong id="cartSubtotalAmount"><%= (cartSubtotal || 0).toLocaleString('vi-VN', { style: 'currency', currency: 'VND' }) %></strong>
+        </div>
+        <button class="btn btn-dark w-100 py-3" id="checkoutBtn" <%= cartItems && cartItems.length ? "" : "disabled" %>>
+            Checkout
+        </button>
+    </div>
+</aside>
+
+<style>
+    .cart-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.35);
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.3s ease;
+        z-index: 1030;
+    }
+
+    .cart-overlay.active {
+        opacity: 1;
+        visibility: visible;
+    }
+
+    .cart-drawer {
+        position: fixed;
+        top: 0;
+        right: -420px;
+        width: 420px;
+        height: 100vh;
+        background: var(--card-bg, #fff);
+        box-shadow: -25px 0 60px rgba(0, 0, 0, 0.15);
+        padding: 2rem;
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+        transition: right 0.3s ease;
+        z-index: 1031;
+    }
+
+    .cart-drawer.active {
+        right: 0;
+    }
+
+    .cart-drawer-body {
+        flex: 1;
+        overflow-y: auto;
+    }
+
+    .cart-line {
+        border-bottom: 1px solid var(--border-color, #eee);
+        padding-bottom: 1rem;
+        margin-bottom: 1rem;
+    }
+</style>
+
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        const drawer = document.getElementById("cartDrawer");
+        const overlay = document.getElementById("cartOverlay");
+        const openBtn = document.getElementById("openCartDrawer");
+        const closeBtn = document.getElementById("closeCartDrawer");
+
+        if (!drawer || !overlay || !openBtn || !closeBtn) return;
+
+        const openDrawer = () => {
+            drawer.classList.add("active");
+            overlay.classList.add("active");
+        };
+
+        const closeDrawer = () => {
+            drawer.classList.remove("active");
+            overlay.classList.remove("active");
+        };
+
+        openBtn.addEventListener("click", openDrawer);
+        closeBtn.addEventListener("click", closeDrawer);
+        overlay.addEventListener("click", closeDrawer);
+    });
+</script>
 

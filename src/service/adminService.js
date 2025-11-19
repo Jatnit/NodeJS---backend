@@ -16,7 +16,7 @@ const adminCreateUser = async (email, password, username, role = 2) => {
       email,
       password: hashPassWord,
       username,
-      role_id: normalizedRole,
+      roleId: normalizedRole,
     });
     return user.get({ plain: true });
   } catch (error) {
@@ -52,7 +52,7 @@ const updateUserById = async (id, email, username, role = 2) => {
   try {
     const normalizedRole = Number(role) || 2;
     const [updatedRows] = await User.update(
-      { email, username, role_id: normalizedRole },
+      { email, username, roleId: normalizedRole },
       { where: { id } }
     );
     return updatedRows;

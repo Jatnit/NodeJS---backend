@@ -16,7 +16,7 @@ const registerUser = async (email, password, username, role = 2) => {
       email,
       password: hashPassWord,
       username,
-      role_id: normalizedRole,
+      roleId: normalizedRole,
     });
     return user.get({ plain: true });
   } catch (error) {

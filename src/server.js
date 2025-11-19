@@ -4,7 +4,7 @@ import initWebRoutes from "./routes/web";
 import bodyParser from "body-parser";
 import session from "express-session";
 import sequelize from "./configs/database";
-import "./models/User";
+import { Role } from "./models";
 require("dotenv").config();
 
 const app = express();
@@ -30,6 +30,9 @@ app.use(
 app.use((req, res, next) => {
   res.locals.currentUser = req.session.user || null;
   res.locals.theme = req.session.theme || "light";
+  const cart = req.session.cart || { items: [], subtotal: 0 };
+  res.locals.cartItems = cart.items;
+  res.locals.cartSubtotal = cart.subtotal;
   next();
 });
 
@@ -38,10 +41,26 @@ configViewEngine(app);
 //init web routes
 initWebRoutes(app);
 
+const ensureDefaultRoles = async () => {
+  const defaultRoles = [
+    { roleName: "Admin", description: "System administrator" },
+    { roleName: "Customer", description: "Default customer account" },
+    { roleName: "Staff", description: "Store staff account" },
+  ];
+
+  for (const role of defaultRoles) {
+    await Role.findOrCreate({
+      where: { roleName: role.roleName },
+      defaults: role,
+    });
+  }
+};
+
 const startServer = async () => {
   try {
     await sequelize.authenticate();
     await sequelize.sync();
+    await ensureDefaultRoles();
     console.log("Database connection established.");
     app.listen(PORT, () => {
       console.log(`Example app listening on port ${PORT}`);

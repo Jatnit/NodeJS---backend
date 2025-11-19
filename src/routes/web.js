@@ -14,6 +14,11 @@ const initWebRoutes = (app) => {
   router.post("/user/create-user", homeController.handleCreateUser);
   router.post("/logout", homeController.handleLogout);
   router.post("/user/theme", homeController.handleThemeChange);
+  router.get("/products", homeController.handleProductListing);
+  router.get("/products/:id", homeController.handleProductDetail);
+  router.post("/cart/add", homeController.handleAddToCart);
+  router.get("/checkout", homeController.renderCheckoutPage);
+  router.post("/checkout", homeController.handleCheckout);
 
   router.get("/admin/users", homeController.handleUserPage);
   router.post("/admin/create-user", homeController.handleCreateUser);
