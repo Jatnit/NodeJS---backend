@@ -10,6 +10,7 @@ import SKUAttributeValue from "./SKUAttributeValue";
 import Order from "./Order";
 import OrderDetail from "./OrderDetail";
 import Review from "./Review";
+import ProductCategory from "./ProductCategory";
 
 Role.hasMany(User, { foreignKey: "roleId" });
 User.belongsTo(Role, { foreignKey: "roleId" });
@@ -26,8 +27,16 @@ Category.belongsTo(Category, {
   foreignKey: "parentId",
 });
 
-Category.hasMany(Product, { foreignKey: "categoryId" });
-Product.belongsTo(Category, { foreignKey: "categoryId" });
+Product.belongsToMany(Category, {
+  through: ProductCategory,
+  foreignKey: "productId",
+  otherKey: "categoryId",
+});
+Category.belongsToMany(Product, {
+  through: ProductCategory,
+  foreignKey: "categoryId",
+  otherKey: "productId",
+});
 
 Product.hasMany(ProductSKU, { foreignKey: "productId" });
 ProductSKU.belongsTo(Product, { foreignKey: "productId" });
@@ -71,6 +80,7 @@ export {
   AttributeValue,
   ProductSKU,
   SKUAttributeValue,
+  ProductCategory,
   Order,
   OrderDetail,
   Review,

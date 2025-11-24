@@ -5,6 +5,7 @@ import AttributeValue from "../models/AttributeValue";
 import Order from "../models/Order";
 import OrderDetail from "../models/OrderDetail";
 import UserAddress from "../models/UserAddress";
+import Category from "../models/Category";
 
 import bcrypt from "bcryptjs";
 import userService from "../service/userService";
@@ -236,21 +237,24 @@ const handleThemeChange = (req, res) => {
 
 const handleProductListing = async (req, res) => {
   try {
-    const products = await Product.findAll({
-      where: { isActive: true },
-      order: [["createdAt", "DESC"]],
+    const categories = await Category.findAll({
+      attributes: ["id", "name", "slug"],
+      order: [
+        ["parentId", "ASC"],
+        ["name", "ASC"],
+      ],
       raw: true,
     });
 
     return res.render("products.ejs", {
-      products,
+      categories,
       errorMessage: null,
     });
   } catch (error) {
     console.log("handleProductListing error:", error);
     return res.render("products.ejs", {
-      products: [],
-      errorMessage: "Không thể tải danh sách sản phẩm.",
+      categories: [],
+      errorMessage: "Không thể tải danh sách danh mục.",
     });
   }
 };

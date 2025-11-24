@@ -7,72 +7,10 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="/css/main.css">
     <style>
-        .product-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-            gap: 1.5rem;
-        }
-
-        @media (min-width: 768px) {
-            .product-grid {
-                grid-template-columns: repeat(4, minmax(0, 1fr));
-            }
-        }
-
-        .product-card {
-            position: relative;
-            background: transparent;
-            border: none;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
-
-        .product-media {
-            position: relative;
-            overflow: hidden;
-            border-radius: 18px;
-        }
-
-        .product-media img {
-            width: 100%;
-            aspect-ratio: 3/4;
-            object-fit: cover;
-            transition: transform 0.4s ease;
-        }
-
-        .product-card:hover .product-media img {
-            transform: scale(1.05);
-        }
-
-        .quick-view {
-            position: absolute;
-            inset: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: rgba(0, 0, 0, 0.55);
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-
-        .product-card:hover .quick-view {
-            opacity: 1;
-        }
-
-        .product-info {
-            margin-top: 1rem;
-        }
-
-        .product-name {
-            font-family: "Playfair Display", "Times New Roman", serif;
-            font-size: 1.1rem;
-            letter-spacing: 0.05em;
-            color: var(--app-text);
-        }
-
-        .product-price {
-            font-family: "Helvetica Neue", Arial, sans-serif;
+        .product-heading {
+            letter-spacing: 0.2em;
+            font-weight: 600;
             color: #b48b57;
-            font-size: 1rem;
         }
     </style>
 </head>
@@ -92,43 +30,38 @@
                         <div class="alert alert-danger text-center">
                             <%= errorMessage %>
                         </div>
-                    <% } %>
+                        <% } %>
 
-                    <% if (products && products.length > 0) { %>
-                        <div class="product-grid">
-                            <% products.forEach(function(product){ %>
-                                <a href="/products/<%= product.id %>" class="text-decoration-none text-reset">
-                                    <article class="product-card">
-                                        <div class="product-media">
-                                            <img src="<%= product.thumbnailUrl || 'https://images.unsplash.com/photo-1506630448358-8f41a03fc8ef?auto=format&fit=crop&w=900&q=80' %>"
-                                                alt="<%= product.name %>">
-                                            <div class="quick-view d-none d-md-flex">
-                                                <button class="btn btn-light px-4">Quick View</button>
-                                            </div>
-                                        </div>
-                                        <div class="product-info">
-                                            <p class="product-name mb-1 text-uppercase">
-                                                <%= product.name %>
-                                            </p>
-                                            <p class="product-price mb-0">
-                                                <%= new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(product.basePrice || 0) %>
-                                            </p>
-                                        </div>
-                                    </article>
-                                </a>
-                            <% }) %>
-                        </div>
-                    <% } else { %>
-                        <p class="text-center text-muted">Chưa có sản phẩm nào.</p>
-                    <% } %>
+                            <div id="product-root"></div>
+                            <script type="application/json" id="product-categories-data">
+                        <%- JSON.stringify(categories || []) %>
+                    </script>
                 </div>
             </section>
         </main>
 
         <%- include('partials/footer') %>
 
+            <script>
+                (function () {
+                    const node = document.getElementById("product-categories-data");
+                    let parsed = [];
+                    if (node && node.textContent) {
+                        try {
+                            parsed = JSON.parse(node.textContent);
+                        } catch (error) {
+                            parsed = [];
+                        }
+                    }
+                    window.__PRODUCT_LISTING__ = { categories: parsed };
+                })();
+            </script>
             <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+            <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+            <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+            <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+            <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+            <script type="text/babel" data-presets="env,react" src="/js/ProductListing.jsx"></script>
 </body>
 
 </html>
-

@@ -26,11 +26,6 @@ const Product = sequelize.define(
       allowNull: true,
       field: "Description",
     },
-    categoryId: {
-      type: DataTypes.INTEGER,
-      allowNull: true,
-      field: "CategoryId",
-    },
     basePrice: {
       type: DataTypes.DECIMAL(18, 2),
       allowNull: false,

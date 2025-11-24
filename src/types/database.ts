@@ -42,7 +42,6 @@ export interface Product {
   name: string;
   slug?: string | null;
   description?: string | null;
-  categoryId?: number | null;
   basePrice: number;
   thumbnailUrl?: string | null;
   isActive: boolean;
@@ -72,6 +71,11 @@ export interface ProductSKU {
 export interface SKUAttributeValue {
   productSkuId: number;
   attributeValueId: number;
+}
+
+export interface ProductCategory {
+  productId: number;
+  categoryId: number;
 }
 
 export interface Order {

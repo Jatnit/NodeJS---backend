@@ -1,6 +1,7 @@
 import express from "express";
 import configViewEngine from "./configs/viewEngine";
 import initWebRoutes from "./routes/web";
+import initApiRoutes from "./routes/api";
 import bodyParser from "body-parser";
 import session from "express-session";
 import sequelize from "./configs/database";
@@ -38,6 +39,8 @@ app.use((req, res, next) => {
 
 //config view engine
 configViewEngine(app);
+//init api routes
+initApiRoutes(app);
 //init web routes
 initWebRoutes(app);
 
