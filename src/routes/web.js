@@ -1,5 +1,8 @@
 import express from "express";
 import homeController from "../controller/homeController";
+import adminCategoryController from "../controller/adminCategoryController";
+import adminProductController from "../controller/adminProductController";
+import upload from "../middleware/upload";
 const router = express.Router();
 
 /**
@@ -24,6 +27,49 @@ const initWebRoutes = (app) => {
   router.post("/admin/create-user", homeController.handleCreateUser);
   router.post("/admin/delete-user/:id", homeController.handleDeleteUser);
   router.post("/admin/edit-user", homeController.handleEditUser);
+  router.get("/admin/dashboard", homeController.renderAdminDashboard);
+
+  // admin categories
+  router.get("/admin/categories", adminCategoryController.listCategories);
+  router.get(
+    "/admin/categories/:id/edit",
+    adminCategoryController.renderEditCategory
+  );
+  router.post(
+    "/admin/categories",
+    upload.single("image"),
+    adminCategoryController.createCategory
+  );
+  router.post(
+    "/admin/categories/:id",
+    upload.single("image"),
+    adminCategoryController.updateCategory
+  );
+  router.post(
+    "/admin/categories/:id/delete",
+    adminCategoryController.deleteCategory
+  );
+
+  // admin products
+  router.get("/admin/products", adminProductController.listProducts);
+  router.get(
+    "/admin/products/:id/edit",
+    adminProductController.renderEditProduct
+  );
+  router.post(
+    "/admin/products",
+    upload.single("thumbnail"),
+    adminProductController.createProduct
+  );
+  router.post(
+    "/admin/products/:id",
+    upload.single("thumbnail"),
+    adminProductController.updateProduct
+  );
+  router.post(
+    "/admin/products/:id/delete",
+    adminProductController.deleteProduct
+  );
 
   router.get("/user/profile/:id", homeController.handleUserProfile);
 

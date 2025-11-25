@@ -6,6 +6,8 @@ import Order from "../models/Order";
 import OrderDetail from "../models/OrderDetail";
 import UserAddress from "../models/UserAddress";
 import Category from "../models/Category";
+import User from "../models/User";
+import { Op, fn, col, literal } from "sequelize";
 
 import bcrypt from "bcryptjs";
 import userService from "../service/userService";
@@ -14,6 +16,138 @@ import adminService from "../service/adminService";
 const isAuthenticated = (req) => req.session && req.session.user;
 const isAdminSession = (req) =>
   isAuthenticated(req) && String(req.session.user.roleId) === "1";
+
+const getRevenueSeries = async () => {
+  const start = new Date();
+  start.setHours(0, 0, 0, 0);
+  start.setMonth(start.getMonth() - 11, 1);
+
+  const rows = await Order.findAll({
+    attributes: [
+      [fn("DATE_FORMAT", col("OrderDate"), "%Y-%m"), "ym"],
+      [fn("SUM", col("TotalAmount")), "total"],
+    ],
+    where: {
+      orderDate: {
+        [Op.gte]: start,
+      },
+    },
+    group: ["ym"],
+    order: [[literal("ym"), "ASC"]],
+    raw: true,
+  });
+
+  const monthMap = new Map(rows.map((row) => [row.ym, Number(row.total) || 0]));
+
+  const series = [];
+  for (let i = 0; i < 12; i += 1) {
+    const date = new Date(start.getFullYear(), start.getMonth() + i, 1);
+    const ymKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(
+      2,
+      "0"
+    )}`;
+    series.push({
+      label: `T${date.getMonth() + 1}`,
+      value: monthMap.get(ymKey) || 0,
+    });
+  }
+
+  const revenueMax = Math.max(...series.map((item) => item.value), 1);
+  return { series, revenueMax };
+};
+
+const getDashboardStats = async () => {
+  const [totalRevenue, totalOrders, totalProducts, totalUsers] =
+    await Promise.all([
+      Order.sum("totalAmount"),
+      Order.count(),
+      Product.count({ where: { isActive: true } }),
+      User.count(),
+    ]);
+
+  return [
+    {
+      id: "revenue",
+      label: "Tổng doanh thu",
+      value: Number(totalRevenue) || 0,
+      growth: "Dữ liệu thực",
+    },
+    {
+      id: "orders",
+      label: "Tổng đơn hàng",
+      value: totalOrders || 0,
+      growth: "Dữ liệu thực",
+    },
+    {
+      id: "products",
+      label: "Tổng sản phẩm",
+      value: totalProducts || 0,
+      growth: "Active",
+    },
+    {
+      id: "users",
+      label: "Tổng người dùng",
+      value: totalUsers || 0,
+      growth: "Dữ liệu thực",
+    },
+  ];
+};
+
+const getRecentOrders = async () => {
+  const orders = await Order.findAll({
+    attributes: ["id", "shippingName", "orderDate", "totalAmount", "status"],
+    order: [["orderDate", "DESC"]],
+    limit: 5,
+    raw: true,
+  });
+
+  return orders.map((order) => ({
+    id: `#${order.id}`,
+    customer: order.shippingName || "Khách lẻ",
+    date: order.orderDate || new Date(),
+    total: Number(order.totalAmount) || 0,
+    status: order.status || "Chờ xác nhận",
+  }));
+};
+
+const getOrderStatusBreakdown = async () => {
+  const rows = await Order.findAll({
+    attributes: ["status", [fn("COUNT", col("status")), "count"]],
+    group: ["status"],
+    raw: true,
+  });
+
+  const map = {
+    "Chờ xác nhận": 0,
+    "Đang xử lý": 0,
+    "Đang giao": 0,
+    "Hoàn thành": 0,
+    "Đã hủy": 0,
+  };
+
+  rows.forEach((row) => {
+    map[row.status] = Number(row.count) || 0;
+  });
+
+  return map;
+};
+
+const getAdminDashboardData = async () => {
+  const [stats, revenue, recentOrders, statusBreakdown] = await Promise.all([
+    getDashboardStats(),
+    getRevenueSeries(),
+    getRecentOrders(),
+    getOrderStatusBreakdown(),
+  ]);
+
+  return {
+    stats,
+    revenueSeries: revenue.series,
+    revenueMax: revenue.revenueMax,
+    recentOrders,
+    statusBreakdown,
+  };
+};
 
 // Get the client
 
@@ -27,7 +161,7 @@ const handleUserPage = async (req, res) => {
   }
   let userlist = await adminService.getUserList();
   console.log("Check user list:", userlist);
-  return res.render("user.ejs", { userlist });
+  return res.render("admin/user.ejs", { userlist });
 };
 
 const handleCreateUser = async (req, res) => {
@@ -159,7 +293,7 @@ const handleSignIn = async (req, res) => {
 
     if (normalizedRole === "1") {
       console.log("[SIGNIN] Admin login success:", email, "(role: Admin)");
-      return res.redirect("/admin/users");
+      return res.redirect("/admin/dashboard");
     }
     if (normalizedRole === "2") {
       console.log("[SIGNIN] User login success:", email, "(role: Customer)");
@@ -527,4 +661,25 @@ module.exports = {
   handleAddToCart,
   renderCheckoutPage,
   handleCheckout,
+  renderAdminDashboard: async (req, res) => {
+    if (!isAdminSession(req)) {
+      return res.redirect("/signin");
+    }
+    try {
+      const theme =
+        (req.session && req.session.theme) ||
+        (req.cookies && req.cookies.theme);
+      return res.render("admin/dashboard.ejs", {
+        currentUser: req.session.user,
+        theme: theme || "light",
+      });
+    } catch (error) {
+      console.log("renderAdminDashboard error:", error);
+      return res.render("admin/dashboard.ejs", {
+        currentUser: req.session.user,
+        theme: "light",
+        errorMessage: "Không thể tải dữ liệu dashboard.",
+      });
+    }
+  },
 };

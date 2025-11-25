@@ -25,12 +25,20 @@
     "bcryptjs": "3.0.2",
     "bluebird": "^3.7.2",
     "body-parser": "2.2.0",
+    "cloudinary": "^2.8.0",
+    "date-fns": "^4.1.0",
     "dotenv": "17.2.3",
     "ejs": "3.1.10",
     "express": "5.1.0",
     "express-session": "^1.18.2",
+    "lucide-react": "^0.554.0",
+    "multer": "^1.4.5-lts.1",
     "mysql2": "^3.15.2",
     "nodemon": "3.1.10",
+    "recharts": "^3.5.0",
     "sequelize": "^6.37.7"
+  },
+  "devDependencies": {
+    "@babel/plugin-bugfix-firefox-class-in-computed-class-key": "^7.28.5"
   }
 }

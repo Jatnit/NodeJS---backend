@@ -241,4 +241,47 @@ FROM ProductSKUs s
 JOIN AttributeValues v ON s.SkuCode LIKE CONCAT('%-', v.Value)
 WHERE v.AttributeId = 2;
 
+
+INSERT INTO Orders (Id, UserId, OrderDate, TotalAmount, Status, PaymentMethod, IsPaid, ShippingName, ShippingPhone, ShippingAddress, Note) VALUES
+-- Đơn 1: Đã hoàn thành (Mua 2 món, đã thanh toán Banking) - Của Kim Phụng
+(1, 2, DATE_SUB(NOW(), INTERVAL 10 DAY), 550000, 'Hoàn thành', 'Banking', 1, 'Kim Phụng', '0909123456', '123 Đường Lê Lợi, Q.1, TP.HCM', 'Giao giờ hành chính'),
+
+-- Đơn 2: Đang xử lý (Mua 1 món, COD) - Của Kim Phụng
+(2, 2, DATE_SUB(NOW(), INTERVAL 2 DAY), 150000, 'Đang xử lý', 'COD', 0, 'Kim Phụng', '0909123456', 'Văn phòng Bitexco, Q.1, TP.HCM', NULL),
+
+-- Đơn 3: Đang giao hàng (Mua số lượng lớn, VNPAY) - Của Kim Phụng
+(3, 2, DATE_SUB(NOW(), INTERVAL 1 DAY), 1250000, 'Đang giao', 'VNPAY', 1, 'Kim Phụng', '0909123456', '123 Đường Lê Lợi, Q.1, TP.HCM', 'Gọi trước khi giao'),
+
+-- Đơn 4: Đã hủy (Khách đổi ý) - Của Kim Phụng
+(4, 2, DATE_SUB(NOW(), INTERVAL 15 DAY), 300000, 'Đã hủy', 'COD', 0, 'Kim Phụng', '0909123456', '123 Đường Lê Lợi, Q.1, TP.HCM', 'Hủy do đặt nhầm size'),
+
+-- Đơn 5: Chờ xác nhận (Admin test đặt hàng) - Của Jatnit
+(5, 1, NOW(), 200000, 'Chờ xác nhận', 'COD', 0, 'Jatnit Admin', '0988888888', 'Kho hàng Quận 7', 'Test đơn hàng');
+
+-- 2. Tạo dữ liệu bảng ORDER DETAILS
+-- Lưu ý: Cột TotalPrice là cột tự động tính (Generated Column) nên không cần Insert
+INSERT INTO OrderDetails (OrderId, ProductSkuId, ProductName, Quantity, UnitPrice) VALUES
+-- Chi tiết Đơn 1 (Tổng 550k = 2 áo thun + 1 áo polo)
+(1, 5, 'Áo Thun Basic 01 (Trắng - S)', 2, 150000),    -- SKU ID 5 thuộc Product 1
+(1, 95, 'Áo Thun Polo 01 (Đen - M)', 1, 250000),     -- SKU ID 95 thuộc Product 7
+
+-- Chi tiết Đơn 2 (Tổng 150k)
+(2, 20, 'Áo Thun Basic 02 (Vàng - XS)', 1, 150000),  -- SKU ID 20 thuộc Product 2
+
+-- Chi tiết Đơn 3 (Tổng 1tr250k = 5 áo Polo)
+(3, 110, 'Áo Thun Polo 02 (Trắng - L)', 5, 250000),  -- SKU ID 110 thuộc Product 8
+
+-- Chi tiết Đơn 4 (Đã hủy - Tổng 300k)
+(4, 50, 'Áo Thun Basic 04 (Đen - XL)', 2, 150000),   -- SKU ID 50 thuộc Product 4
+
+-- Chi tiết Đơn 5 (Test - Tổng 200k)
+(5, 130, 'Áo Thun Dài Tay 01 (Trắng - M)', 1, 200000); -- SKU ID 130 thuộc Product 9
+
+-- 3. Tạo dữ liệu ĐÁNH GIÁ (REVIEWS)
+-- Chỉ đánh giá cho các đơn hàng đã "Hoàn thành" (Đơn số 1)
+INSERT INTO Reviews (UserId, ProductId, Rating, Comment, CreatedAt) VALUES
+(2, 1, 5, 'Áo thun vải rất mát, thấm hút mồ hôi tốt. Sẽ ủng hộ tiếp.', DATE_SUB(NOW(), INTERVAL 9 DAY)),
+(2, 7, 4, 'Áo Polo form đẹp nhưng giao hàng hơi chậm một chút.', DATE_SUB(NOW(), INTERVAL 8 DAY));
+
+
 SET FOREIGN_KEY_CHECKS = 1;
