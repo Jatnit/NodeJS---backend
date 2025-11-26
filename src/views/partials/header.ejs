@@ -49,8 +49,8 @@
                         <a class="btn btn-dark" href="/signin">Đăng nhập</a>
                     </div>
                     <% } %>
-                        <button class="btn btn-outline-theme ms-lg-3 mt-3 mt-lg-0" id="openCartDrawer">
-                            Cart (<%= (cartItems && cartItems.length) || 0 %>)
+                        <button type="button" class="btn btn-outline-theme ms-lg-3 mt-3 mt-lg-0" id="openCartDrawer">
+                            Cart (<span id="cartCount"><%= (cartItems && cartItems.length) || 0 %></span>)
                         </button>
                         <a class="btn btn-dark ms-2 mt-3 mt-lg-0" href="/checkout" <%=cartItems && cartItems.length ? ""
                             : "aria-disabled='true' tabindex='-1' class='btn btn-dark disabled'" %>>
@@ -161,8 +161,61 @@
         const overlay = document.getElementById("cartOverlay");
         const openBtn = document.getElementById("openCartDrawer");
         const closeBtn = document.getElementById("closeCartDrawer");
+        const itemsContainer = document.getElementById("cartDrawerItems");
+        const subtotalEl = document.getElementById("cartSubtotalAmount");
+        const checkoutBtn = document.getElementById("checkoutBtn");
+        const cartCountEl = document.getElementById("cartCount");
 
-        if (!drawer || !overlay || !openBtn || !closeBtn) return;
+        if (!drawer || !overlay) return;
+
+        const currencyFormatter = new Intl.NumberFormat("vi-VN", {
+            style: "currency",
+            currency: "VND",
+        });
+
+        const renderCart = (cartPayload) => {
+            if (!itemsContainer || !subtotalEl) return;
+            const cart = cartPayload && typeof cartPayload === "object" ? cartPayload : {};
+            const items = Array.isArray(cart.items) ? cart.items : [];
+            const subtotal = Number(cart.subtotal) || 0;
+
+            if (!items.length) {
+                itemsContainer.innerHTML = "<p class='text-muted'>Giỏ hàng trống.</p>";
+            } else {
+                itemsContainer.innerHTML = items
+                    .map(
+                        (item) => `
+                <div class="cart-line d-flex justify-content-between align-items-start">
+                    <div>
+                        <p class="mb-1 fw-bold">${item.name}</p>
+                        ${
+                            item.variantLabel
+                                ? `<small class="text-muted">${item.variantLabel}</small>`
+                                : ""
+                        }
+                        <p class="mb-0">${item.quantity} x ${currencyFormatter.format(
+                            Number(item.price) || 0
+                        )}</p>
+                    </div>
+                    <div class="text-end fw-semibold">
+                        ${currencyFormatter.format((Number(item.price) || 0) * (Number(item.quantity) || 0))}
+                    </div>
+                </div>
+            `
+                    )
+                    .join("");
+            }
+
+            subtotalEl.textContent = currencyFormatter.format(subtotal);
+
+            if (checkoutBtn) {
+                checkoutBtn.disabled = items.length === 0;
+            }
+
+            if (cartCountEl) {
+                cartCountEl.textContent = items.length;
+            }
+        };
 
         const openDrawer = () => {
             drawer.classList.add("active");
@@ -174,8 +227,20 @@
             overlay.classList.remove("active");
         };
 
-        openBtn.addEventListener("click", openDrawer);
-        closeBtn.addEventListener("click", closeDrawer);
+        openBtn && openBtn.addEventListener("click", openDrawer);
+        closeBtn && closeBtn.addEventListener("click", closeDrawer);
         overlay.addEventListener("click", closeDrawer);
+
+        window.__CART_DRAWER__ = {
+            open: openDrawer,
+            close: closeDrawer,
+            update: renderCart,
+        };
+
+        window.addEventListener("cart:updated", (event) => {
+            renderCart(event.detail || {});
+        });
+
+        window.addEventListener("cart:open", openDrawer);
     });
 </script>

@@ -10,15 +10,26 @@ const {
   Tooltip: RechartsTooltip,
 } = Recharts || {};
 
-const lucide = window.lucideReact || window.LucideReact || {};
-const {
-  DollarSign,
-  ShoppingBag,
-  Package,
-  BarChart3,
-  AlertCircle,
-  Loader2,
-} = lucide;
+const createIcon = (iconClass) => {
+  return ({ size = 18, className = "" }) => (
+    <i
+      className={`bi ${iconClass} ${className}`}
+      style={{ fontSize: `${size}px`, lineHeight: 1, display: "inline-flex" }}
+    />
+  );
+};
+
+const DollarSign = createIcon("bi-currency-dollar");
+const ShoppingBag = createIcon("bi-bag");
+const Package = createIcon("bi-box-seam");
+const BarChart3 = createIcon("bi-graph-up");
+const AlertCircle = createIcon("bi-exclamation-circle");
+const Loader2 = ({ size = 16, className = "" }) => (
+  <i
+    className={`bi bi-arrow-repeat ${className}`}
+    style={{ fontSize: `${size}px`, lineHeight: 1, display: "inline-flex" }}
+  />
+);
 
 const formatCurrency = (value) =>
   new Intl.NumberFormat("vi-VN", {

@@ -1134,6 +1134,20 @@ const ProductDetailModal = ({ product, onClose, onSelectProduct }) => {
       if (!payload.success) {
         throw new Error(payload.message || "Unable to add");
       }
+      if (typeof window !== "undefined" && payload.cart) {
+        if (
+          window.__CART_DRAWER__ &&
+          typeof window.__CART_DRAWER__.update === "function"
+        ) {
+          window.__CART_DRAWER__.update(payload.cart);
+        }
+        if (typeof window.dispatchEvent === "function") {
+          window.dispatchEvent(
+            new CustomEvent("cart:updated", { detail: payload.cart })
+          );
+          window.dispatchEvent(new CustomEvent("cart:open"));
+        }
+      }
       setCartFeedback({ state: "success", message: "Đã thêm vào giỏ hàng." });
     } catch (error) {
       setCartFeedback({

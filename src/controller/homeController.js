@@ -17,6 +17,136 @@ const isAuthenticated = (req) => req.session && req.session.user;
 const isAdminSession = (req) =>
   isAuthenticated(req) && String(req.session.user.roleId) === "1";
 
+const formatFullAddress = (address) => {
+  if (!address) return "";
+  return [
+    address.addressLine,
+    address.ward,
+    address.district,
+    address.city,
+  ]
+    .filter((part) => part && String(part).trim() !== "")
+    .join(", ");
+};
+
+const selectPreferredAddress = (addresses = []) => {
+  if (!Array.isArray(addresses) || !addresses.length) return null;
+  return (
+    addresses.find((addr) => addr.isDefault) ||
+    addresses.find((addr) => addr.isDefault === true) ||
+    addresses[0]
+  );
+};
+
+const buildShippingPrefill = ({ addresses = [], user = null, overrides = null }) => {
+  if (overrides) {
+    return {
+      name:
+        overrides.shippingName ||
+        overrides.name ||
+        overrides.recipientName ||
+        "",
+      phone: overrides.shippingPhone || overrides.phone || "",
+      address: overrides.shippingAddress || overrides.address || "",
+      note: overrides.note || "",
+    };
+  }
+
+  const preferred = selectPreferredAddress(addresses);
+  if (preferred) {
+    return {
+      name:
+        preferred.recipientName ||
+        user?.fullName ||
+        user?.username ||
+        user?.email ||
+        "",
+      phone: preferred.phoneNumber || "",
+      address: formatFullAddress(preferred),
+      note: "",
+    };
+  }
+
+  return {
+    name: (user && (user.fullName || user.username || user.email)) || "",
+    phone: "",
+    address: "",
+    note: "",
+  };
+};
+
+const getUserAddresses = async (req) => {
+  if (!isAuthenticated(req)) {
+    return [];
+  }
+  return UserAddress.findAll({
+    where: { userId: req.session.user.id },
+    raw: true,
+    order: [
+      ["isDefault", "DESC"],
+      ["id", "DESC"],
+    ],
+  });
+};
+
+const buildQrPaymentConfig = (amount = 0, user = null) => {
+  const bankCode = (process.env.QR_BANK_CODE || "VCB").toUpperCase();
+  const accountNumber = process.env.QR_ACCOUNT_NUMBER || "0123456789";
+  const accountName = process.env.QR_ACCOUNT_NAME || "MODA STUDIO";
+  const template = process.env.QR_TEMPLATE || "compact2";
+  const baseUrl = process.env.QR_IMAGE_BASE || "https://img.vietqr.io/image";
+  const prefix = process.env.QR_TRANSFER_NOTE_PREFIX || "MODA";
+  const userSegment = user?.id ? `-${user.id}` : "-GUEST";
+  const timestampSegment = `-${Date.now().toString().slice(-6)}`;
+  const transferNote = `${prefix}${userSegment}${timestampSegment}`.toUpperCase();
+  const sanitizedAmount = Number(amount) || 0;
+  const encodedNote = encodeURIComponent(transferNote);
+  const encodedName = encodeURIComponent(accountName);
+  const imageUrl = `${baseUrl}/${bankCode}-${accountNumber}-${template}.png?amount=${sanitizedAmount}&addInfo=${encodedNote}&accountName=${encodedName}`;
+
+  return {
+    bankCode,
+    accountNumber,
+    accountName,
+    amount: sanitizedAmount,
+    transferNote,
+    imageUrl,
+  };
+};
+
+const buildCheckoutViewModel = (req, cart, addresses, options = {}) => {
+  const sanitizedCart = cart || { items: [], subtotal: 0 };
+  return {
+    cart: sanitizedCart,
+    addresses,
+    errorMessage: options.errorMessage || null,
+    shippingPrefill: buildShippingPrefill({
+      addresses,
+      user: req.session.user,
+      overrides: options.shippingOverrides,
+    }),
+    paymentPrefill: options.paymentMethod || "COD",
+    qrPaymentConfig: buildQrPaymentConfig(
+      sanitizedCart.subtotal,
+      req.session.user
+    ),
+  };
+};
+
+const renderCheckoutWithError = async (
+  req,
+  res,
+  { cart, message, overrides, paymentMethod = "COD", statusCode = 400 }
+) => {
+  const addresses = await getUserAddresses(req);
+  const viewModel = buildCheckoutViewModel(req, cart, addresses, {
+    shippingOverrides: overrides,
+    paymentMethod,
+    errorMessage: message,
+  });
+  return res.status(statusCode).render("checkout.ejs", viewModel);
+};
+
 const getRevenueSeries = async () => {
   const start = new Date();
   start.setHours(0, 0, 0, 0);
@@ -567,32 +697,16 @@ const renderCheckoutPage = async (req, res) => {
     return res.redirect("/products");
   }
 
-  let addresses = [];
-  if (isAuthenticated(req)) {
-    addresses = await UserAddress.findAll({
-      where: { userId: req.session.user.id },
-      raw: true,
-      order: [["isDefault", "DESC"]],
-    });
-  }
-
-  return res.render("checkout.ejs", {
-    cart,
-    addresses,
-    errorMessage: null,
+  const addresses = await getUserAddresses(req);
+  const viewModel = buildCheckoutViewModel(req, cart, addresses, {
+    paymentMethod: "COD",
   });
+
+  return res.render("checkout.ejs", viewModel);
 };
 
 const handleCheckout = async (req, res) => {
   const cart = req.session.cart;
-  if (!cart || !cart.items.length) {
-    return res.status(400).render("checkout.ejs", {
-      cart: { items: [], subtotal: 0 },
-      addresses: [],
-      errorMessage: "Giỏ hàng đang trống.",
-    });
-  }
-
   const {
     shippingName,
     shippingPhone,
@@ -600,11 +714,27 @@ const handleCheckout = async (req, res) => {
     paymentMethod = "COD",
   } = req.body;
 
+  const normalizedPaymentMethod =
+    typeof paymentMethod === "string" &&
+    paymentMethod.toLowerCase() === "banking"
+      ? "Banking"
+      : "COD";
+
+  if (!cart || !cart.items.length) {
+    return renderCheckoutWithError(req, res, {
+      cart: cart || { items: [], subtotal: 0 },
+      message: "Giỏ hàng đang trống.",
+      overrides: req.body,
+      paymentMethod: normalizedPaymentMethod,
+    });
+  }
+
   if (!shippingName || !shippingPhone || !shippingAddress) {
-    return res.status(400).render("checkout.ejs", {
+    return renderCheckoutWithError(req, res, {
       cart,
-      addresses: [],
-      errorMessage: "Vui lòng nhập đầy đủ thông tin giao hàng.",
+      message: "Vui lòng nhập đầy đủ thông tin giao hàng.",
+      overrides: req.body,
+      paymentMethod: normalizedPaymentMethod,
     });
   }
 
@@ -613,8 +743,8 @@ const handleCheckout = async (req, res) => {
       userId: isAuthenticated(req) ? req.session.user.id : null,
       totalAmount: cart.subtotal,
       status: "Chờ xác nhận",
-      paymentMethod,
-      isPaid: paymentMethod !== "COD",
+      paymentMethod: normalizedPaymentMethod,
+      isPaid: normalizedPaymentMethod !== "COD",
       shippingName,
       shippingPhone,
       shippingAddress,
@@ -636,10 +766,12 @@ const handleCheckout = async (req, res) => {
     return res.render("checkout-success.ejs", { order });
   } catch (error) {
     console.log("handleCheckout error:", error);
-    return res.status(500).render("checkout.ejs", {
+    return renderCheckoutWithError(req, res, {
       cart,
-      addresses: [],
-      errorMessage: "Đặt hàng thất bại. Vui lòng thử lại.",
+      message: "Đặt hàng thất bại. Vui lòng thử lại.",
+      overrides: req.body,
+      paymentMethod: normalizedPaymentMethod,
+      statusCode: 500,
     });
   }
 };

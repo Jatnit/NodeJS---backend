@@ -57,6 +57,23 @@
             background: var(--card-bg, #fff);
             box-shadow: 0 25px 40px rgba(0, 0, 0, 0.08);
         }
+
+        .qr-card {
+            border: 1px dashed var(--border-color, #ccc);
+            border-radius: 20px;
+            padding: 1.5rem;
+            background: rgba(0, 0, 0, 0.02);
+        }
+
+        body.theme-dark .qr-card {
+            background: rgba(255, 255, 255, 0.04);
+            border-color: rgba(255, 255, 255, 0.25);
+        }
+
+        .qr-card img {
+            max-width: 260px;
+            border-radius: 16px;
+        }
     </style>
 </head>
 
@@ -73,23 +90,33 @@
 
                 <% if (!cart || !cart.items || !cart.items.length) { %>
                     <p class="text-center text-muted">Giỏ hàng trống. <a href="/products">Tiếp tục mua sắm</a></p>
-                <% } else { %>
+                <% } else { 
+                    const shippingData = (shippingPrefill && typeof shippingPrefill === 'object')
+                        ? shippingPrefill
+                        : { name: '', phone: '', address: '', note: '' };
+                    const selectedPayment = paymentPrefill || 'COD';
+                    const hasSavedAddresses = addresses && addresses.length > 0;
+                    const qrConfig = qrPaymentConfig || {};
+                %>
                     <form action="/checkout" method="POST" class="checkout-layout" id="checkoutForm">
                         <section>
                             <h3 class="mb-4 text-uppercase" style="letter-spacing: 0.2em;">Thông tin giao hàng</h3>
 
-                            <% if (addresses && addresses.length > 0) { %>
+                            <% if (hasSavedAddresses) { %>
+                                <% const hasDefaultAddress = (addresses || []).some(function(addr){ return addr.isDefault; }); %>
                                 <div class="mb-4">
                                     <label class="form-label text-muted">Chọn địa chỉ đã lưu</label>
                                     <div class="list-group">
-                                        <% addresses.forEach(function(address){ %>
+                                        <% addresses.forEach(function(address, index){ 
+                                            const shouldCheck = address.isDefault || (!hasDefaultAddress && index === 0);
+                                        %>
                                             <label class="list-group-item list-group-item-action">
                                                 <input type="radio" name="addressId" value="<%= address.id %>"
                                                     class="form-check-input me-2"
                                                     data-name="<%= address.recipientName || '' %>"
                                                     data-phone="<%= address.phoneNumber || '' %>"
                                                     data-address="<%= [address.addressLine, address.ward, address.district, address.city].filter(Boolean).join(', ') %>"
-                                                    <%= address.isDefault ? "checked" : "" %>>
+                                                    <%= shouldCheck ? "checked" : "" %>>
                                                 <div>
                                                     <strong><%= address.recipientName %></strong>
                                                     <p class="mb-0"><%= address.phoneNumber %></p>
@@ -99,43 +126,67 @@
                                         <% }) %>
                                     </div>
                                 </div>
+                            <% } else { %>
+                                <div class="alert alert-warning border-0 bg-warning-subtle text-dark">
+                                    Bạn chưa có địa chỉ nhận hàng đã lưu. Vui lòng nhập thông tin vào biểu mẫu bên dưới để tiếp tục.
+                                </div>
                             <% } %>
 
                             <div class="row g-3 mb-3 floating-label">
                                 <div class="col-md-6">
                                     <label for="shippingName" class="form-label">Tên người nhận</label>
-                                    <input type="text" class="form-control" id="shippingName" name="shippingName" required>
+                                    <input type="text" class="form-control" id="shippingName" name="shippingName"
+                                        value="<%= shippingData.name || '' %>" required>
                                 </div>
                                 <div class="col-md-6">
                                     <label for="shippingPhone" class="form-label">Số điện thoại</label>
                                     <input type="text" class="form-control" id="shippingPhone" name="shippingPhone"
-                                        required>
+                                        value="<%= shippingData.phone || '' %>" required>
                                 </div>
                             </div>
                             <div class="floating-label mb-3">
                                 <label for="shippingAddress" class="form-label">Địa chỉ giao hàng</label>
                                 <textarea class="form-control" id="shippingAddress" name="shippingAddress" rows="3"
-                                    required></textarea>
+                                    required><%= shippingData.address || '' %></textarea>
                             </div>
                             <div class="floating-label mb-4">
                                 <label for="note" class="form-label">Ghi chú (tuỳ chọn)</label>
-                                <textarea class="form-control" id="note" name="note" rows="2"></textarea>
+                                <textarea class="form-control" id="note" name="note" rows="2"><%= shippingData.note || '' %></textarea>
                             </div>
 
                             <h3 class="mb-3 text-uppercase" style="letter-spacing: 0.2em;">Phương thức thanh toán</h3>
                             <div class="d-flex flex-column flex-md-row gap-3">
-                                <label class="payment-card flex-fill" data-payment="COD">
+                                <label class="payment-card flex-fill <%= selectedPayment === 'COD' ? 'selected' : '' %>" data-payment="COD">
                                     <input type="radio" name="paymentMethod" value="COD" class="form-check-input me-2"
-                                        checked hidden>
+                                        <%= selectedPayment === 'COD' ? 'checked' : '' %> hidden>
                                     <strong>COD</strong>
                                     <p class="mb-0 text-muted">Thanh toán khi nhận hàng</p>
                                 </label>
-                                <label class="payment-card flex-fill" data-payment="Banking">
+                                <label class="payment-card flex-fill <%= selectedPayment === 'Banking' ? 'selected' : '' %>" data-payment="Banking">
                                     <input type="radio" name="paymentMethod" value="Banking"
-                                        class="form-check-input me-2" hidden>
+                                        class="form-check-input me-2" <%= selectedPayment === 'Banking' ? 'checked' : '' %> hidden>
                                     <strong>Banking</strong>
-                                    <p class="mb-0 text-muted">Chuyển khoản ngân hàng</p>
+                                    <p class="mb-0 text-muted">Chuyển khoản ngân hàng qua VietQR</p>
                                 </label>
+                            </div>
+                            <div id="qrPaymentPanel" class="qr-card mt-3 <%= selectedPayment === 'Banking' ? '' : 'd-none' %>">
+                                <% if (qrConfig && qrConfig.imageUrl) { %>
+                                    <div class="d-flex flex-column flex-md-row gap-4 align-items-start">
+                                        <img src="<%= qrConfig.imageUrl %>" alt="QR thanh toán" class="img-fluid border" loading="lazy">
+                                        <div>
+                                            <h5 class="mb-2">Quét mã VietQR để chuyển khoản</h5>
+                                            <p class="mb-1">Ngân hàng: <strong><%= qrConfig.bankCode %></strong></p>
+                                            <p class="mb-1">Số tài khoản: <strong><%= qrConfig.accountNumber %></strong></p>
+                                            <p class="mb-1">Chủ tài khoản: <strong><%= qrConfig.accountName %></strong></p>
+                                            <p class="mb-1">Số tiền: <strong><%= (qrConfig.amount || 0).toLocaleString('vi-VN', { style: 'currency', currency: 'VND' }) %></strong></p>
+                                            <p class="mb-1">Nội dung chuyển khoản:</p>
+                                            <p class="fw-semibold" id="qrTransferNote"><%= qrConfig.transferNote %></p>
+                                            <small class="text-muted d-block">Vui lòng giữ nguyên nội dung chuyển khoản để hệ thống tự động xác thực.</small>
+                                        </div>
+                                    </div>
+                                <% } else { %>
+                                    <p class="mb-0 text-muted">Thông tin QR chưa sẵn sàng. Vui lòng thử lại sau hoặc chọn hình thức thanh toán khác.</p>
+                                <% } %>
                             </div>
                         </section>
 
@@ -185,25 +236,44 @@
                     const phoneInput = document.getElementById("shippingPhone");
                     const addressInput = document.getElementById("shippingAddress");
                     const paymentCards = document.querySelectorAll(".payment-card");
+                    const qrPanel = document.getElementById("qrPaymentPanel");
 
-                    addressRadios.forEach((radio) => {
-                        radio.addEventListener("change", () => {
-                            nameInput.value = radio.dataset.name || "";
-                            phoneInput.value = radio.dataset.phone || "";
-                            addressInput.value = radio.dataset.address || "";
+                    if (addressRadios.length && nameInput && phoneInput && addressInput) {
+                        addressRadios.forEach((radio) => {
+                            radio.addEventListener("change", () => {
+                                nameInput.value = radio.dataset.name || "";
+                                phoneInput.value = radio.dataset.phone || "";
+                                addressInput.value = radio.dataset.address || "";
+                            });
+                            if (radio.checked) {
+                                radio.dispatchEvent(new Event("change"));
+                            }
                         });
-                        if (radio.checked) radio.dispatchEvent(new Event("change"));
-                    });
+                    }
+
+                    const toggleQrPanel = (method) => {
+                        if (!qrPanel) return;
+                        if (method === "Banking") {
+                            qrPanel.classList.remove("d-none");
+                        } else {
+                            qrPanel.classList.add("d-none");
+                        }
+                    };
 
                     paymentCards.forEach((card) => {
                         card.addEventListener("click", () => {
                             paymentCards.forEach((c) => c.classList.remove("selected"));
                             card.classList.add("selected");
                             const input = card.querySelector('input[name="paymentMethod"]');
-                            if (input) input.checked = true;
+                            if (input) {
+                                input.checked = true;
+                                toggleQrPanel(card.dataset.payment);
+                            }
                         });
-                        if (card.querySelector('input[name="paymentMethod"]').checked) {
+                        const input = card.querySelector('input[name="paymentMethod"]');
+                        if (input && input.checked) {
                             card.classList.add("selected");
+                            toggleQrPanel(card.dataset.payment);
                         }
                     });
                 });
