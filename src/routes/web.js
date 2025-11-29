@@ -28,6 +28,11 @@ const initWebRoutes = (app) => {
   router.post("/admin/delete-user/:id", homeController.handleDeleteUser);
   router.post("/admin/edit-user", homeController.handleEditUser);
   router.get("/admin/dashboard", homeController.renderAdminDashboard);
+  router.get("/user/orders/:orderId", homeController.renderOrderDetailPage);
+  router.post(
+    "/user/orders/:orderId/cancel",
+    homeController.handleOrderCancellation
+  );
 
   // admin categories
   router.get("/admin/categories", adminCategoryController.listCategories);

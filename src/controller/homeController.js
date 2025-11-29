@@ -19,12 +19,7 @@ const isAdminSession = (req) =>
 
 const formatFullAddress = (address) => {
   if (!address) return "";
-  return [
-    address.addressLine,
-    address.ward,
-    address.district,
-    address.city,
-  ]
+  return [address.addressLine, address.ward, address.district, address.city]
     .filter((part) => part && String(part).trim() !== "")
     .join(", ");
 };
@@ -38,7 +33,30 @@ const selectPreferredAddress = (addresses = []) => {
   );
 };
 
-const buildShippingPrefill = ({ addresses = [], user = null, overrides = null }) => {
+const ORDER_PROGRESS_STEPS = [
+  { key: "Chờ xác nhận", label: "Chờ xác nhận" },
+  { key: "Đang xử lý", label: "Đang xử lý" },
+  { key: "Đang giao", label: "Đang giao" },
+  { key: "Hoàn thành", label: "Hoàn thành" },
+];
+
+const getAddressesByUserId = async (userId) => {
+  if (!userId) return [];
+  return UserAddress.findAll({
+    where: { userId },
+    raw: true,
+    order: [
+      ["isDefault", "DESC"],
+      ["id", "DESC"],
+    ],
+  });
+};
+
+const buildShippingPrefill = ({
+  addresses = [],
+  user = null,
+  overrides = null,
+}) => {
   if (overrides) {
     return {
       name:
@@ -79,14 +97,7 @@ const getUserAddresses = async (req) => {
   if (!isAuthenticated(req)) {
     return [];
   }
-  return UserAddress.findAll({
-    where: { userId: req.session.user.id },
-    raw: true,
-    order: [
-      ["isDefault", "DESC"],
-      ["id", "DESC"],
-    ],
-  });
+  return getAddressesByUserId(req.session.user.id);
 };
 
 const buildQrPaymentConfig = (amount = 0, user = null) => {
@@ -98,7 +109,8 @@ const buildQrPaymentConfig = (amount = 0, user = null) => {
   const prefix = process.env.QR_TRANSFER_NOTE_PREFIX || "MODA";
   const userSegment = user?.id ? `-${user.id}` : "-GUEST";
   const timestampSegment = `-${Date.now().toString().slice(-6)}`;
-  const transferNote = `${prefix}${userSegment}${timestampSegment}`.toUpperCase();
+  const transferNote =
+    `${prefix}${userSegment}${timestampSegment}`.toUpperCase();
   const sanitizedAmount = Number(amount) || 0;
   const encodedNote = encodeURIComponent(transferNote);
   const encodedName = encodeURIComponent(accountName);
@@ -145,6 +157,146 @@ const renderCheckoutWithError = async (
     errorMessage: message,
   });
   return res.status(statusCode).render("checkout.ejs", viewModel);
+};
+
+const mapAddressesForProfile = (addresses = []) =>
+  addresses.map((address) => ({
+    id: address.id,
+    recipientName: address.recipientName || "Chưa có tên",
+    phoneNumber: address.phoneNumber || "Chưa cập nhật",
+    fullAddress: formatFullAddress(address) || "Chưa có địa chỉ",
+    isDefault: Boolean(address.isDefault),
+  }));
+
+const buildOrderProgress = (status) => {
+  if (status === "Đã hủy") {
+    return ORDER_PROGRESS_STEPS.map((step, idx) => ({
+      ...step,
+      isCompleted: false,
+      isActive: idx === 0,
+      isDisabled: true,
+    }));
+  }
+
+  const stepIndex = ORDER_PROGRESS_STEPS.findIndex(
+    (step) => step.key === status
+  );
+  const normalizedIndex = stepIndex >= 0 ? stepIndex : 0;
+
+  return ORDER_PROGRESS_STEPS.map((step, idx) => ({
+    ...step,
+    isCompleted: idx <= normalizedIndex,
+    isActive: idx === normalizedIndex,
+    isDisabled: false,
+  }));
+};
+
+const getOrdersForProfile = async (userId, limit = 6) => {
+  if (!userId) return [];
+  const rows = await Order.findAll({
+    where: { userId },
+    order: [
+      ["orderDate", "DESC"],
+      ["id", "DESC"],
+    ],
+    limit,
+    raw: true,
+  });
+
+  return rows.map((order) => {
+    const status = order.status || "Chờ xác nhận";
+    return {
+      id: order.id,
+      code: `#${String(order.id).padStart(5, "0")}`,
+      status,
+      totalAmount: Number(order.totalAmount) || 0,
+      paymentMethod: order.paymentMethod || "COD",
+      orderDate: order.orderDate
+        ? new Date(order.orderDate).toISOString()
+        : null,
+      progress: buildOrderProgress(status),
+      isCancelled: status === "Đã hủy",
+    };
+  });
+};
+
+const toCurrencyNumber = (value) => {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : 0;
+};
+
+const mapOrderDetailItems = (details = []) =>
+  details.map((detail) => {
+    const unitPrice = toCurrencyNumber(detail.unitPrice);
+    const quantity = Number(detail.quantity) || 0;
+    return {
+      id: detail.id,
+      productSkuId: detail.productSkuId,
+      name:
+        detail.productName ||
+        (detail.productSkuId ? `SKU #${detail.productSkuId}` : "Sản phẩm"),
+      quantity,
+      unitPrice,
+      lineTotal: unitPrice * quantity,
+    };
+  });
+
+const buildOrderBreakdown = (orderRecord, items) => {
+  const itemsTotal = items.reduce((sum, item) => sum + item.lineTotal, 0);
+  const shippingFee = toCurrencyNumber(orderRecord.shippingFee);
+  const discount = toCurrencyNumber(orderRecord.discountAmount);
+  const computedTotal = itemsTotal + shippingFee - discount;
+  const grandTotal =
+    toCurrencyNumber(orderRecord.totalAmount) || computedTotal || itemsTotal;
+  return {
+    itemsTotal,
+    shippingFee,
+    discount,
+    grandTotal,
+  };
+};
+
+const getStatusBadgeClass = (status) => {
+  switch (status) {
+    case "Hoàn thành":
+      return "success";
+    case "Đang giao":
+      return "info";
+    case "Đã hủy":
+      return "danger";
+    default:
+      return "warning";
+  }
+};
+
+const buildOrderDetailViewModel = (orderRecord, detailRecords) => {
+  const items = mapOrderDetailItems(detailRecords);
+  const breakdown = buildOrderBreakdown(orderRecord, items);
+  const status = orderRecord.status || "Chờ xác nhận";
+  return {
+    orderSummary: {
+      id: orderRecord.id,
+      code: `#${String(orderRecord.id).padStart(5, "0")}`,
+      status,
+      statusBadge: getStatusBadgeClass(status),
+      orderDate: orderRecord.orderDate
+        ? new Date(orderRecord.orderDate).toISOString()
+        : null,
+      paymentMethod: orderRecord.paymentMethod || "COD",
+      isPaid: Boolean(orderRecord.isPaid),
+      note: orderRecord.note || "",
+    },
+    items,
+    breakdown,
+    shippingInfo: {
+      name: orderRecord.shippingName || "Không xác định",
+      phone: orderRecord.shippingPhone || "Chưa cập nhật",
+      address:
+        orderRecord.shippingAddress || "Địa chỉ giao hàng sẽ được bổ sung sau.",
+    },
+    timeline: buildOrderProgress(status),
+    canCancel: status === "Chờ xác nhận",
+  };
 };
 
 const getRevenueSeries = async () => {
@@ -460,19 +612,144 @@ const handleUserProfile = async (req, res) => {
     if (!user) {
       return res.status(404).render("user-profile.ejs", {
         user: null,
+        addresses: [],
+        orders: [],
         errorMessage: "Không tìm thấy thông tin người dùng.",
       });
     }
+    const [addresses, orders] = await Promise.all([
+      getAddressesByUserId(id).then((list) => mapAddressesForProfile(list)),
+      getOrdersForProfile(id),
+    ]);
     return res.render("user-profile.ejs", {
       user,
+      addresses,
+      orders,
       errorMessage: null,
     });
   } catch (error) {
     console.log("handleUserProfile error:", error);
     return res.status(500).render("user-profile.ejs", {
       user: null,
+      addresses: [],
+      orders: [],
       errorMessage: "Có lỗi xảy ra. Vui lòng thử lại.",
     });
+  }
+};
+
+const renderOrderDetailPage = async (req, res) => {
+  if (!isAuthenticated(req)) {
+    return res.redirect("/signin");
+  }
+  const { orderId } = req.params;
+  const parsedId = Number(orderId);
+  if (!Number.isFinite(parsedId)) {
+    return res.redirect(`/user/profile/${req.session.user.id}`);
+  }
+
+  const statusFlag = req.query.status;
+  const successMessage =
+    statusFlag === "cancel_success"
+      ? "Yêu cầu hủy đơn đã được ghi nhận thành công."
+      : null;
+  const warningMessage =
+    statusFlag === "cancel_error"
+      ? "Không thể hủy đơn hàng này. Vui lòng thử lại."
+      : null;
+
+  try {
+    const orderRecord = await Order.findOne({
+      where: { id: parsedId },
+      raw: true,
+    });
+    const hasAccess =
+      orderRecord &&
+      (isAdminSession(req) ||
+        Number(orderRecord.userId) === Number(req.session.user.id));
+
+    if (!hasAccess) {
+      return res.status(404).render("order-detail.ejs", {
+        orderSummary: null,
+        items: [],
+        breakdown: null,
+        shippingInfo: null,
+        timeline: [],
+        canCancel: false,
+        cancelAction: null,
+        successMessage: null,
+        errorMessage:
+          "Không tìm thấy đơn hàng hoặc bạn không có quyền truy cập.",
+        currentUser: req.session.user,
+      });
+    }
+
+    const detailRecords = await OrderDetail.findAll({
+      where: { orderId: parsedId },
+      raw: true,
+      order: [["id", "ASC"]],
+    });
+
+    const viewModel = buildOrderDetailViewModel(orderRecord, detailRecords);
+    return res.render("order-detail.ejs", {
+      ...viewModel,
+      cancelAction: `/user/orders/${orderRecord.id}/cancel`,
+      successMessage,
+      errorMessage: warningMessage,
+      currentUser: req.session.user,
+    });
+  } catch (error) {
+    console.log("renderOrderDetailPage error:", error);
+    return res.status(500).render("order-detail.ejs", {
+      orderSummary: null,
+      items: [],
+      breakdown: null,
+      shippingInfo: null,
+      timeline: [],
+      canCancel: false,
+      cancelAction: null,
+      successMessage: null,
+      errorMessage: "Không thể tải chi tiết đơn hàng. Vui lòng thử lại.",
+      currentUser: req.session.user,
+    });
+  }
+};
+
+const handleOrderCancellation = async (req, res) => {
+  if (!isAuthenticated(req)) {
+    return res.redirect("/signin");
+  }
+  const { orderId } = req.params;
+  const parsedId = Number(orderId);
+  if (!Number.isFinite(parsedId)) {
+    return res.redirect(`/user/profile/${req.session.user.id}`);
+  }
+
+  try {
+    const orderRecord = await Order.findOne({
+      where: { id: parsedId },
+      raw: true,
+    });
+    const hasAccess =
+      orderRecord &&
+      (isAdminSession(req) ||
+        Number(orderRecord.userId) === Number(req.session.user.id));
+
+    if (!hasAccess || orderRecord.status !== "Chờ xác nhận") {
+      return res.redirect(`/user/orders/${orderId}?status=cancel_error`);
+    }
+
+    await Order.update(
+      { status: "Đã hủy" },
+      {
+        where: { id: parsedId },
+      }
+    );
+
+    return res.redirect(`/user/orders/${orderId}?status=cancel_success`);
+  } catch (error) {
+    console.log("handleOrderCancellation error:", error);
+    return res.redirect(`/user/orders/${orderId}?status=cancel_error`);
   }
 };
 
@@ -793,6 +1070,8 @@ module.exports = {
   handleAddToCart,
   renderCheckoutPage,
   handleCheckout,
+  renderOrderDetailPage,
+  handleOrderCancellation,
   renderAdminDashboard: async (req, res) => {
     if (!isAdminSession(req)) {
       return res.redirect("/signin");
