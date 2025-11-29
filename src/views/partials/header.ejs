@@ -50,7 +50,9 @@
                     </div>
                     <% } %>
                         <button type="button" class="btn btn-outline-theme ms-lg-3 mt-3 mt-lg-0" id="openCartDrawer">
-                            Cart (<span id="cartCount"><%= (cartItems && cartItems.length) || 0 %></span>)
+                            Cart (<span id="cartCount">
+                                <%= (cartItems && cartItems.length) || 0 %>
+                            </span>)
                         </button>
                         <a class="btn btn-dark ms-2 mt-3 mt-lg-0" href="/checkout" <%=cartItems && cartItems.length ? ""
                             : "aria-disabled='true' tabindex='-1' class='btn btn-dark disabled'" %>>
@@ -188,14 +190,13 @@
                 <div class="cart-line d-flex justify-content-between align-items-start">
                     <div>
                         <p class="mb-1 fw-bold">${item.name}</p>
-                        ${
-                            item.variantLabel
+                        ${item.variantLabel
                                 ? `<small class="text-muted">${item.variantLabel}</small>`
                                 : ""
-                        }
+                            }
                         <p class="mb-0">${item.quantity} x ${currencyFormatter.format(
-                            Number(item.price) || 0
-                        )}</p>
+                                Number(item.price) || 0
+                            )}</p>
                     </div>
                     <div class="text-end fw-semibold">
                         ${currencyFormatter.format((Number(item.price) || 0) * (Number(item.quantity) || 0))}
@@ -230,6 +231,13 @@
         openBtn && openBtn.addEventListener("click", openDrawer);
         closeBtn && closeBtn.addEventListener("click", closeDrawer);
         overlay.addEventListener("click", closeDrawer);
+
+        if (checkoutBtn) {
+            checkoutBtn.addEventListener("click", () => {
+                if (checkoutBtn.disabled) return;
+                window.location.href = "/checkout";
+            });
+        }
 
         window.__CART_DRAWER__ = {
             open: openDrawer,
