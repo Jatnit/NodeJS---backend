@@ -43,6 +43,12 @@ configViewEngine(app);
 initApiRoutes(app);
 //init web routes
 initWebRoutes(app);
+// 404 fallback
+app.use((req, res) => {
+  return res.status(404).render("404.ejs", {
+    errorMessage: "Trang bạn đang truy cập hiện không tồn tại.",
+  });
+});
 
 const ensureDefaultRoles = async () => {
   const defaultRoles = [
