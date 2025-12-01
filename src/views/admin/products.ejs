@@ -116,6 +116,30 @@
                                                             <% } %>
                                                     </div>
                                                 </form>
+                                                <% if (editingProduct) { %>
+                                                    <div class="mt-4">
+                                                        <div class="card shadow-sm">
+                                                            <div class="card-body">
+                                                                <div
+                                                                    class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-3">
+                                                                    <div>
+                                                                        <h5 class="card-title mb-1">Inventory Matrix
+                                                                        </h5>
+                                                                        <small class="text-muted">Quản lý tồn kho theo
+                                                                            màu &amp;
+                                                                            size</small>
+                                                                    </div>
+                                                                </div>
+                                                                <div id="inventory-matrix-root"
+                                                                    data-product-id="<%= editingProduct.id %>">
+                                                                    <div class="text-muted text-center py-4">Đang chuẩn
+                                                                        bị
+                                                                        dữ liệu...</div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <% } %>
                                             </div>
                                         </div>
                                     </div>
@@ -125,41 +149,52 @@
                                             <div class="card-body">
                                                 <h5 class="card-title">Danh sách sản phẩm</h5>
                                                 <div class="table-responsive">
-                                                    <table class="table table-hover align-middle">
+                                                    <table class="table table-borderless align-middle"
+                                                        style="min-width: 640px;">
                                                         <thead>
-                                                            <tr>
-                                                                <th>ID</th>
-                                                                <th>Sản phẩm</th>
-                                                                <th>Giá</th>
+                                                            <tr class="text-uppercase small text-muted">
+                                                                <th style="width: 4rem;">ID</th>
+                                                                <th style="min-width: 220px;">Sản phẩm</th>
+                                                                <th style="width: 120px;" class="text-end">Giá</th>
                                                                 <th>Danh mục</th>
-                                                                <th>Trạng thái</th>
-                                                                <th></th>
+                                                                <th style="width: 120px;">Trạng thái</th>
+                                                                <th style="width: 130px;" class="text-end">Thao tác</th>
                                                             </tr>
                                                         </thead>
                                                         <tbody>
                                                             <% if (products && products.length) { %>
                                                                 <% products.forEach(function(product){ %>
-                                                                    <tr>
-                                                                        <td>
+                                                                    <tr class="border-bottom"
+                                                                        style="background: #f8f8f8;">
+                                                                        <td class="fw-semibold">
                                                                             <%= product.id %>
                                                                         </td>
-                                                                        <td class="d-flex align-items-center gap-2">
-                                                                            <% if (product.thumbnailUrl) { %>
-                                                                                <img src="<%= product.thumbnailUrl %>"
-                                                                                    alt="<%= product.name %>"
-                                                                                    class="rounded"
-                                                                                    style="height: 48px; width: 48px; object-fit: cover;">
-                                                                                <% } %>
-                                                                                    <div>
-                                                                                        <div class="fw-semibold">
-                                                                                            <%= product.name %>
-                                                                                        </div>
-                                                                                        <small class="text-muted">
-                                                                                            <%= product.slug %>
-                                                                                        </small>
-                                                                                    </div>
-                                                                        </td>
                                                                         <td>
+                                                                            <div
+                                                                                class="d-flex align-items-center gap-3">
+                                                                                <div class="rounded-3 overflow-hidden"
+                                                                                    style="width: 64px; height: 64px; background: #fff;">
+                                                                                    <% if (product.thumbnailUrl) { %>
+                                                                                        <img src="<%= product.thumbnailUrl %>"
+                                                                                            alt="<%= product.name %>"
+                                                                                            style="width: 100%; height: 100%; object-fit: cover;">
+                                                                                        <% } else { %>
+                                                                                            <div class="w-100 h-100 d-flex align-items-center justify-content-center text-muted small"
+                                                                                                style="background: #f0f0f0;">
+                                                                                                N/A</div>
+                                                                                            <% } %>
+                                                                                </div>
+                                                                                <div>
+                                                                                    <div class="fw-semibold fs-5 mb-1">
+                                                                                        <%= product.name %>
+                                                                                    </div>
+                                                                                    <small class="text-muted">Slug:
+                                                                                        <%= product.slug %>
+                                                                                    </small>
+                                                                                </div>
+                                                                            </div>
+                                                                        </td>
+                                                                        <td class="text-end fw-semibold">
                                                                             <%= Number(product.basePrice ||
                                                                                 0).toLocaleString('vi-VN', {
                                                                                 style: 'currency' , currency: 'VND' })
@@ -168,32 +203,34 @@
                                                                         <td>
                                                                             <% if (product.Categories &&
                                                                                 product.Categories.length) { %>
-                                                                                <small class="text-muted">
-                                                                                    <%= product.Categories.map((cat)=>
-                                                                                        cat.name).join(", ") %>
-                                                                                </small>
-                                                                                <% } else { %>
-                                                                                    <span class="text-muted">Chưa
-                                                                                        gán</span>
-                                                                                    <% } %>
+                                                                                <div class="d-flex flex-wrap gap-1">
+                                                                                    <% product.Categories.forEach(function(category){ %>
+                                                                                        <span class="badge bg-light text-muted fw-normal">
+                                                                                            <%= category.name %>
+                                                                                        </span>
+                                                                                    <% }) %>
+                                                                                </div>
+                                                                            <% } else { %>
+                                                                                <span class="text-muted">Chưa gán</span>
+                                                                            <% } %>
                                                                         </td>
                                                                         <td>
                                                                             <% if (product.isActive) { %>
                                                                                 <span
-                                                                                    class="badge bg-success-subtle text-success">Active</span>
+                                                                                    class="badge rounded-pill bg-success-subtle text-success px-3 py-2">Active</span>
                                                                                 <% } else { %>
                                                                                     <span
-                                                                                        class="badge bg-secondary">Ẩn</span>
+                                                                                        class="badge rounded-pill bg-secondary px-3 py-2">Ẩn</span>
                                                                                     <% } %>
                                                                         </td>
                                                                         <td class="text-end">
-                                                                            <a class="btn btn-sm btn-outline-dark"
+                                                                            <a class="btn btn-outline-dark btn-sm me-2"
                                                                                 href="/admin/products/<%= product.id %>/edit">Edit</a>
                                                                             <form class="d-inline-block" method="POST"
                                                                                 action="/admin/products/<%= product.id %>/delete"
                                                                                 onsubmit="return confirm('Xoá sản phẩm này?');">
                                                                                 <button
-                                                                                    class="btn btn-sm btn-outline-danger"
+                                                                                    class="btn btn-outline-danger btn-sm"
                                                                                     type="submit">Delete</button>
                                                                             </form>
                                                                         </td>
@@ -202,8 +239,9 @@
                                                                         <% } else { %>
                                                                             <tr>
                                                                                 <td colspan="6"
-                                                                                    class="text-center text-muted">Chưa
-                                                                                    có sản phẩm nào.</td>
+                                                                                    class="text-center text-muted py-4">
+                                                                                    Chưa có sản phẩm
+                                                                                    nào.</td>
                                                                             </tr>
                                                                             <% } %>
                                                         </tbody>
@@ -212,11 +250,16 @@
                                             </div>
                                         </div>
                                     </div>
-                                </div>
-            </div>
         </main>
         <%- include('../partials/footer') %>
             <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+            <% if (editingProduct) { %>
+                <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+                <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+                <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+                <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+                <script type="text/babel" data-presets="env,react" src="/js/AdminStockMatrix.jsx"></script>
+                <% } %>
 </body>
 
 </html>

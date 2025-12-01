@@ -44,10 +44,23 @@ initApiRoutes(app);
 //init web routes
 initWebRoutes(app);
 // 404 fallback
-app.use((req, res) => {
+app.use((req, res, next) => {
+  if (res.headersSent) {
+    return next();
+  }
   return res.status(404).render("404.ejs", {
     errorMessage: "Trang bạn đang truy cập hiện không tồn tại.",
   });
+});
+
+// generic error handler to avoid crashing on double responses
+// eslint-disable-next-line no-unused-vars
+app.use((err, req, res, next) => {
+  console.log("Unexpected error:", err);
+  if (res.headersSent) {
+    return;
+  }
+  res.status(500).render("404.ejs", { errorMessage: "Đã xảy ra lỗi máy chủ." });
 });
 
 const ensureDefaultRoles = async () => {
