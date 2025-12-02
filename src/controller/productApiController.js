@@ -149,6 +149,18 @@ const buildSortClause = (sort) => {
   }
 };
 
+const ensureAdminApi = (req, res) => {
+  const user = req.session?.user;
+  if (!user || String(user.roleId) !== "1") {
+    res.status(403).json({
+      success: false,
+      message: "Bạn không có quyền truy cập tính năng này.",
+    });
+    return null;
+  }
+  return user;
+};
+
 const formatProductPayload = (product) => {
   const categories =
     product.Categories?.map((category) => ({
@@ -491,6 +503,185 @@ export default {
       console.log("getProductDetail error:", error);
       return res.status(500).json({
         message: "Không thể tải thông tin sản phẩm.",
+      });
+    }
+  },
+  async getStockMatrix(req, res) {
+    if (!ensureAdminApi(req, res)) {
+      return;
+    }
+    const { id } = req.params;
+    try {
+      const product = await Product.findByPk(id, {
+        attributes: ["id", "name"],
+      });
+      if (!product) {
+        return res
+          .status(404)
+          .json({ success: false, message: "Không tìm thấy sản phẩm." });
+      }
+
+      const skuRecords = await ProductSKU.findAll({
+        where: { productId: id },
+        attributes: ["id", "stockQuantity"],
+        include: [
+          {
+            model: AttributeValue,
+            attributes: ["id", "value", "attributeId"],
+            through: { attributes: [] },
+          },
+        ],
+        order: [["id", "ASC"]],
+      });
+
+      const colorMap = new Map();
+      const sizeMap = new Map();
+      const cellMap = new Map();
+
+      skuRecords.forEach((record) => {
+        const plain = record.get({ plain: true });
+        const attrs = plain.AttributeValues || [];
+        const colorAttr = attrs.find(
+          (attr) => attr.attributeId === COLOR_ATTRIBUTE_ID
+        );
+        const sizeAttr = attrs.find(
+          (attr) => attr.attributeId === SIZE_ATTRIBUTE_ID
+        );
+        if (!colorAttr || !sizeAttr) {
+          return;
+        }
+        colorMap.set(colorAttr.id, {
+          id: colorAttr.id,
+          label: colorAttr.value,
+        });
+        sizeMap.set(sizeAttr.id, {
+          id: sizeAttr.id,
+          label: sizeAttr.value,
+        });
+        const key = `${colorAttr.id}-${sizeAttr.id}`;
+        cellMap.set(key, {
+          skuId: plain.id,
+          quantity: Number(plain.stockQuantity) || 0,
+        });
+      });
+
+      const colors = Array.from(colorMap.values()).sort((a, b) =>
+        a.label.localeCompare(b.label)
+      );
+      const sizes = Array.from(sizeMap.values()).sort((a, b) =>
+        a.label.localeCompare(b.label)
+      );
+
+      const cells = [];
+      colors.forEach((color) => {
+        sizes.forEach((size) => {
+          const key = `${color.id}-${size.id}`;
+          const cell = cellMap.get(key);
+          cells.push({
+            key,
+            colorId: color.id,
+            colorLabel: color.label,
+            sizeId: size.id,
+            sizeLabel: size.label,
+            skuId: cell ? cell.skuId : null,
+            quantity: cell ? cell.quantity : 0,
+          });
+        });
+      });
+
+      return res.json({
+        success: true,
+        data: {
+          productId: product.id,
+          productName: product.name,
+          colors,
+          sizes,
+          cells,
+        },
+      });
+    } catch (error) {
+      console.log("getStockMatrix error:", error);
+      return res.status(500).json({
+        success: false,
+        message: "Không thể tải tồn kho sản phẩm.",
+      });
+    }
+  },
+  async updateStockMatrix(req, res) {
+    if (!ensureAdminApi(req, res)) {
+      return;
+    }
+    const { id } = req.params;
+    const { updates } = req.body || {};
+
+    if (!Array.isArray(updates) || !updates.length) {
+      return res.status(400).json({
+        success: false,
+        message: "Vui lòng gửi dữ liệu cập nhật hợp lệ.",
+      });
+    }
+
+    try {
+      const product = await Product.findByPk(id, { attributes: ["id"] });
+      if (!product) {
+        return res
+          .status(404)
+          .json({ success: false, message: "Không tìm thấy sản phẩm." });
+      }
+
+      const skuRecords = await ProductSKU.findAll({
+        where: { productId: id },
+        attributes: ["id", "stockQuantity"],
+      });
+      const skuMap = new Map(
+        skuRecords.map((sku) => [Number(sku.id), sku.stockQuantity])
+      );
+
+      const normalizedUpdates = updates
+        .map((item) => ({
+          skuId: Number(item.skuId),
+          quantity: Number(item.quantity),
+        }))
+        .filter(
+          (item) =>
+            Number.isFinite(item.skuId) &&
+            skuMap.has(item.skuId) &&
+            Number.isFinite(item.quantity)
+        )
+        .map((item) => ({
+          skuId: item.skuId,
+          quantity: item.quantity < 0 ? 0 : Math.floor(item.quantity),
+        }));
+
+      if (!normalizedUpdates.length) {
+        return res.status(400).json({
+          success: false,
+          message: "Không có dữ liệu hợp lệ để cập nhật.",
+        });
+      }
+
+      await sequelize.transaction(async (transaction) => {
+        for (const update of normalizedUpdates) {
+          await ProductSKU.update(
+            { stockQuantity: update.quantity },
+            {
+              where: { id: update.skuId, productId: id },
+              transaction,
+            }
+          );
+        }
+      });
+
+      return res.json({
+        success: true,
+        message: "Đã cập nhật tồn kho thành công.",
+        updated: normalizedUpdates.length,
+      });
+    } catch (error) {
+      console.log("updateStockMatrix error:", error);
+      return res.status(500).json({
+        success: false,
+        message: "Không thể cập nhật tồn kho.",
       });
     }
   },

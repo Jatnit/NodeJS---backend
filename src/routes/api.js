@@ -7,6 +7,14 @@ const router = express.Router();
 const initApiRoutes = (app) => {
   router.get("/products", productApiController.getProducts);
   router.get("/products/:id", productApiController.getProductDetail);
+  router.get(
+    "/products/:id/stock-matrix",
+    productApiController.getStockMatrix
+  );
+  router.put(
+    "/products/:id/stock-matrix",
+    productApiController.updateStockMatrix
+  );
   router.get("/dashboard/summary", DashboardController.getSummary);
   router.get("/orders/recent", DashboardController.getRecentOrders);
   return app.use("/api", router);
