@@ -13,10 +13,39 @@ import { Op, fn, col, literal } from "sequelize";
 import bcrypt from "bcryptjs";
 import userService from "../service/userService";
 import adminService from "../service/adminService";
+import { CheckoutError, createOrderTransaction } from "../service/orderService";
 
 const isAuthenticated = (req) => req.session && req.session.user;
 const isAdminSession = (req) =>
   isAuthenticated(req) && String(req.session.user.roleId) === "1";
+const isManagerOrAdminSession = (req) =>
+  isAuthenticated(req) &&
+  (String(req.session.user.roleId) === "1" ||
+    String(req.session.user.roleId) === "2");
+
+const ensureAdminPage = (req, res) => {
+  if (!isAuthenticated(req)) {
+    res.redirect("/signin");
+    return false;
+  }
+  if (!isAdminSession(req)) {
+    res.redirect("/admin/dashboard?status=forbidden");
+    return false;
+  }
+  return true;
+};
+
+const ensureManagerOrAdminPage = (req, res) => {
+  if (!isAuthenticated(req)) {
+    res.redirect("/signin");
+    return false;
+  }
+  if (!isManagerOrAdminSession(req)) {
+    res.redirect("/signin");
+    return false;
+  }
+  return true;
+};
 
 const formatFullAddress = (address) => {
   if (!address) return "";
@@ -35,7 +64,7 @@ const selectPreferredAddress = (addresses = []) => {
 };
 
 const ORDER_PROGRESS_STEPS = [
-  { key: "Chờ xác nhận", label: "Chờ xác nhận" },
+  { key: "Mới", label: "Chờ xác nhận" },
   { key: "Đang xử lý", label: "Đang xử lý" },
   { key: "Đang giao", label: "Đang giao" },
   { key: "Hoàn thành", label: "Hoàn thành" },
@@ -205,7 +234,7 @@ const getOrdersForProfile = async (userId, limit = 6) => {
   });
 
   return rows.map((order) => {
-    const status = order.status || "Chờ xác nhận";
+    const status = order.status || "Mới";
     return {
       id: order.id,
       code: `#${String(order.id).padStart(5, "0")}`,
@@ -279,7 +308,7 @@ const getStatusBadgeClass = (status) => {
 const buildOrderDetailViewModel = (orderRecord, detailRecords) => {
   const items = mapOrderDetailItems(detailRecords);
   const breakdown = buildOrderBreakdown(orderRecord, items);
-  const status = orderRecord.status || "Chờ xác nhận";
+  const status = orderRecord.status || "Mới";
   return {
     orderSummary: {
       id: orderRecord.id,
@@ -302,7 +331,7 @@ const buildOrderDetailViewModel = (orderRecord, detailRecords) => {
         orderRecord.shippingAddress || "Địa chỉ giao hàng sẽ được bổ sung sau.",
     },
     timeline: buildOrderProgress(status),
-    canCancel: status === "Chờ xác nhận",
+    canCancel: status === "Mới",
   };
 };
 
@@ -395,7 +424,7 @@ const getRecentOrders = async () => {
     customer: order.shippingName || "Khách lẻ",
     date: order.orderDate || new Date(),
     total: Number(order.totalAmount) || 0,
-    status: order.status || "Chờ xác nhận",
+    status: order.status || "Mới",
   }));
 };
 
@@ -407,7 +436,7 @@ const getOrderStatusBreakdown = async () => {
   });
 
   const map = {
-    "Chờ xác nhận": 0,
+    Mới: 0,
     "Đang xử lý": 0,
     "Đang giao": 0,
     "Hoàn thành": 0,
@@ -445,8 +474,8 @@ const handleHelloWorld = (req, res) => {
 };
 
 const handleUserPage = async (req, res) => {
-  if (!isAdminSession(req)) {
-    return res.redirect("/signin");
+  if (!ensureAdminPage(req, res)) {
+    return;
   }
   let userlist = await adminService.getUserList();
   console.log("Check user list:", userlist);
@@ -462,8 +491,8 @@ const handleCreateUser = async (req, res) => {
       return res.redirect("/signin?status=signup_success");
     }
 
-    if (!isAdminSession(req)) {
-      return res.redirect("/signin");
+    if (!ensureAdminPage(req, res)) {
+      return;
     }
 
     const normalizedRole = role && role !== "" ? role : "2";
@@ -488,8 +517,8 @@ const handleCreateUser = async (req, res) => {
 };
 
 const handleDeleteUser = async (req, res) => {
-  if (!isAdminSession(req)) {
-    return res.redirect("/signin");
+  if (!ensureAdminPage(req, res)) {
+    return;
   }
   let id = req.params.id;
   if (id) {
@@ -499,8 +528,8 @@ const handleDeleteUser = async (req, res) => {
 };
 
 const handleEditUser = async (req, res) => {
-  if (!isAdminSession(req)) {
-    return res.redirect("/signin");
+  if (!ensureAdminPage(req, res)) {
+    return;
   }
   const { id, email, username, role } = req.body;
 
@@ -742,7 +771,7 @@ const handleOrderCancellation = async (req, res) => {
       (isAdminSession(req) ||
         Number(orderRecord.userId) === Number(req.session.user.id));
 
-    if (!hasAccess || orderRecord.status !== "Chờ xác nhận") {
+    if (!hasAccess || orderRecord.status !== "Mới") {
       return res.redirect(`/user/orders/${orderId}?status=cancel_error`);
     }
 
@@ -1073,41 +1102,40 @@ const handleCheckout = async (req, res) => {
   }
 
   try {
-    const order = await Order.create({
+    const checkoutResult = await createOrderTransaction({
       userId: isAuthenticated(req) ? req.session.user.id : null,
-      totalAmount: cart.subtotal,
-      status: "Chờ xác nhận",
-      paymentMethod: normalizedPaymentMethod,
-      isPaid: normalizedPaymentMethod !== "COD",
+      items: cart.items.map((item) => ({
+        skuId: item.skuId,
+        quantity: item.quantity,
+      })),
       shippingName,
       shippingPhone,
       shippingAddress,
+      paymentMethod: normalizedPaymentMethod,
       note: req.body.note || null,
     });
 
-    const detailPayload = cart.items.map((item) => ({
-      orderId: order.id,
-      productSkuId: item.skuId,
-      productName: item.name,
-      color: item.colorLabel || null,
-      size: item.sizeLabel || null,
-      quantity: item.quantity,
-      unitPrice: item.price,
-    }));
-
-    await OrderDetail.bulkCreate(detailPayload);
-
     req.session.cart = { items: [], subtotal: 0 };
 
-    return res.render("checkout-success.ejs", { order });
+    return res.render("checkout-success.ejs", {
+      order: checkoutResult.order,
+    });
   } catch (error) {
-    console.log("handleCheckout error:", error);
+    const message =
+      error instanceof CheckoutError
+        ? error.message
+        : "Đặt hàng thất bại. Vui lòng thử lại.";
+    const statusCode =
+      error instanceof CheckoutError ? error.statusCode || 400 : 500;
+    if (!(error instanceof CheckoutError)) {
+      console.log("handleCheckout error:", error);
+    }
     return renderCheckoutWithError(req, res, {
       cart,
-      message: "Đặt hàng thất bại. Vui lòng thử lại.",
+      message,
       overrides: req.body,
       paymentMethod: normalizedPaymentMethod,
-      statusCode: 500,
+      statusCode,
     });
   }
 };
@@ -1132,8 +1160,8 @@ module.exports = {
   renderOrderDetailPage,
   handleOrderCancellation,
   renderAdminDashboard: async (req, res) => {
-    if (!isAdminSession(req)) {
-      return res.redirect("/signin");
+    if (!ensureManagerOrAdminPage(req, res)) {
+      return;
     }
     try {
       const theme =
@@ -1142,6 +1170,10 @@ module.exports = {
       return res.render("admin/dashboard.ejs", {
         currentUser: req.session.user,
         theme: theme || "light",
+        accessNotice:
+          req.query && req.query.status === "forbidden"
+            ? "Bạn không có quyền truy cập trang vừa yêu cầu."
+            : null,
       });
     } catch (error) {
       console.log("renderAdminDashboard error:", error);
@@ -1149,7 +1181,30 @@ module.exports = {
         currentUser: req.session.user,
         theme: "light",
         errorMessage: "Không thể tải dữ liệu dashboard.",
+        accessNotice: null,
       });
     }
+  },
+  renderAdminOrders: (req, res) => {
+    if (!ensureManagerOrAdminPage(req, res)) {
+      return;
+    }
+    const theme =
+      (req.session && req.session.theme) || (req.cookies && req.cookies.theme);
+    return res.render("admin/orders.ejs", {
+      currentUser: req.session.user,
+      theme: theme || "light",
+    });
+  },
+  renderAdminInventory: (req, res) => {
+    if (!ensureManagerOrAdminPage(req, res)) {
+      return;
+    }
+    const theme =
+      (req.session && req.session.theme) || (req.cookies && req.cookies.theme);
+    return res.render("admin/inventory.ejs", {
+      currentUser: req.session.user,
+      theme: theme || "light",
+    });
   },
 };

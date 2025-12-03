@@ -26,18 +26,15 @@
 
         <main class="site-main py-5">
             <div class="container pt-5">
-                <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 mb-4">
+                <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 mb-3">
                     <div>
                         <p class="text-muted text-uppercase mb-1" style="letter-spacing: 0.3em;">Admin</p>
                         <h2 class="fw-bold mb-0">Bảng điều khiển doanh thu</h2>
                         <small class="text-muted">Theo dõi hiệu suất bán hàng theo thời gian thực.</small>
                     </div>
-                    <div class="btn-group">
-                        <a class="btn btn-dark" href="/admin/dashboard">Dashboard</a>
-                        <a class="btn btn-outline-dark" href="/admin/users">Users</a>
-                        <a class="btn btn-outline-dark" href="/admin/categories">Categories</a>
-                        <a class="btn btn-outline-dark" href="/admin/products">Products</a>
-                    </div>
+                </div>
+                <div class="admin-subnav mb-3" data-role="<%= currentUser ? currentUser.roleId : '' %>">
+                    <div id="admin-sidebar-root"></div>
                 </div>
 
                 <% if (typeof errorMessage !=='undefined' && errorMessage) { %>
@@ -45,13 +42,19 @@
                         <%= errorMessage %>
                     </div>
                     <% } %>
-
-                        <div id="admin-dashboard-root" class="dashboard-shell">
-                            <div class="dashboard-fallback text-center text-muted py-5">
-                                <div class="spinner-border text-dark mb-3" role="status" aria-hidden="true"></div>
-                                <p class="mb-0">Đang tải dữ liệu dashboard...</p>
+                        <% if (accessNotice) { %>
+                            <div class="alert alert-warning border-0 bg-warning-subtle text-dark">
+                                <%= accessNotice %>
                             </div>
-                        </div>
+                            <% } %>
+
+                                <div id="admin-dashboard-root" class="dashboard-shell">
+                                    <div class="dashboard-fallback text-center text-muted py-5">
+                                        <div class="spinner-border text-dark mb-3" role="status" aria-hidden="true">
+                                        </div>
+                                        <p class="mb-0">Đang tải dữ liệu dashboard...</p>
+                                    </div>
+                                </div>
             </div>
         </main>
 
@@ -84,7 +87,12 @@
             <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
             <script src="https://cdn.jsdelivr.net/npm/recharts/umd/Recharts.min.js"></script>
             <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-            <script type="text/babel" data-presets="env,react" src="/js/AdminDashboard.jsx"></script>
+            <script type="text/babel" data-presets="env,react"
+                data-plugins="proposal-class-properties,proposal-object-rest-spread,proposal-optional-chaining,proposal-nullish-coalescing-operator"
+                src="/js/AdminSidebar.jsx"></script>
+            <script type="text/babel" data-presets="env,react"
+                data-plugins="proposal-class-properties,proposal-object-rest-spread,proposal-optional-chaining,proposal-nullish-coalescing-operator"
+                src="/js/AdminDashboard.jsx"></script>
 </body>
 
 </html>

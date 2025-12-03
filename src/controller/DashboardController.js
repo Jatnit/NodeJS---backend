@@ -114,7 +114,7 @@ const getRecentOrders = async (_req, res) => {
         customerName,
         orderDate: orderDate.toISOString(),
         totalAmount: Number(order.totalAmount) || 0,
-        status: order.status || "Chờ xác nhận",
+        status: order.status || "Mới",
       };
     });
 

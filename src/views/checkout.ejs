@@ -87,6 +87,7 @@
                         <%= errorMessage %>
                     </div>
                     <% } %>
+                        <div id="checkoutFeedback"></div>
 
                         <% if (!cart || !cart.items || !cart.items.length) { %>
                             <p class="text-center text-muted">Giỏ hàng trống. <a href="/products">Tiếp tục mua sắm</a>
@@ -275,6 +276,12 @@
 
         <%- include('partials/footer') %>
 
+            <script id="checkout-data" type="application/json">
+        <%- JSON.stringify({
+            cart: cart || { items: [], subtotal: 0 },
+            userId: currentUser ? currentUser.id : null,
+          }) %>
+    </script>
             <script>
                 document.addEventListener("DOMContentLoaded", () => {
                     const addressRadios = document.querySelectorAll('input[name="addressId"]');
@@ -283,6 +290,23 @@
                     const addressInput = document.getElementById("shippingAddress");
                     const paymentCards = document.querySelectorAll(".payment-card");
                     const qrPanel = document.getElementById("qrPaymentPanel");
+                    const form = document.getElementById("checkoutForm");
+                    const feedbackBox = document.getElementById("checkoutFeedback");
+                    const checkoutDataNode = document.getElementById("checkout-data");
+                    let checkoutData = {};
+
+                    const showFeedback = (type, message) => {
+                        if (!feedbackBox) return;
+                        feedbackBox.innerHTML = `<div class="alert alert-${type}">${message}</div>`;
+                    };
+
+                    if (checkoutDataNode) {
+                        try {
+                            checkoutData = JSON.parse(checkoutDataNode.textContent || "{}") || {};
+                        } catch (error) {
+                            checkoutData = {};
+                        }
+                    }
 
                     if (addressRadios.length && nameInput && phoneInput && addressInput) {
                         addressRadios.forEach((radio) => {
@@ -322,6 +346,72 @@
                             toggleQrPanel(card.dataset.payment);
                         }
                     });
+
+                    const placeOrderBtn =
+                        form && form.querySelector(".summary-card button[type='submit']");
+
+                    const cartItems =
+                        (checkoutData.cart && Array.isArray(checkoutData.cart.items)
+                            ? checkoutData.cart.items
+                            : []);
+
+                    if (form && cartItems.length) {
+                        const originalBtnText = placeOrderBtn ? placeOrderBtn.textContent : "";
+                        form.addEventListener("submit", async (event) => {
+                            event.preventDefault();
+                            const formData = new FormData(form);
+                            const payload = {
+                                items: cartItems.map((item) => ({
+                                    skuId: item.skuId,
+                                    quantity: item.quantity,
+                                })),
+                                shippingName: formData.get("shippingName") || "",
+                                shippingPhone: formData.get("shippingPhone") || "",
+                                shippingAddress: formData.get("shippingAddress") || "",
+                                paymentMethod: formData.get("paymentMethod") || "COD",
+                                note: formData.get("note") || "",
+                            };
+
+                            if (placeOrderBtn) {
+                                placeOrderBtn.disabled = true;
+                                placeOrderBtn.textContent = "Đang xử lý...";
+                            }
+                            showFeedback("info", "Đang xử lý đơn hàng của bạn...");
+
+                            try {
+                                const response = await fetch("/api/orders", {
+                                    method: "POST",
+                                    headers: { "Content-Type": "application/json" },
+                                    body: JSON.stringify(payload),
+                                    credentials: "same-origin",
+                                });
+                                const result = await response.json();
+                                if (!response.ok) {
+                                    throw new Error(result.message || "Không thể đặt hàng.");
+                                }
+                                showFeedback(
+                                    "success",
+                                    "Đặt hàng thành công! Đang chuyển tới lịch sử đơn hàng..."
+                                );
+                                setTimeout(() => {
+                                    if (checkoutData.userId) {
+                                        window.location.href = `/user/profile/${checkoutData.userId}`;
+                                    } else {
+                                        window.location.href = "/products";
+                                    }
+                                }, 1200);
+                            } catch (error) {
+                                showFeedback(
+                                    "danger",
+                                    error.message || "Không thể đặt hàng. Vui lòng thử lại."
+                                );
+                                if (placeOrderBtn) {
+                                    placeOrderBtn.disabled = false;
+                                    placeOrderBtn.textContent = originalBtnText || "Đặt hàng";
+                                }
+                            }
+                        });
+                    }
                 });
             </script>
 

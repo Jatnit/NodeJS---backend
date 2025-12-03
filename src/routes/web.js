@@ -34,6 +34,8 @@ const initWebRoutes = (app) => {
   router.post("/admin/delete-user/:id", homeController.handleDeleteUser);
   router.post("/admin/edit-user", homeController.handleEditUser);
   router.get("/admin/dashboard", homeController.renderAdminDashboard);
+  router.get("/admin/orders", homeController.renderAdminOrders);
+  router.get("/admin/inventory", homeController.renderAdminInventory);
   router.get("/user/orders/:orderId", homeController.renderOrderDetailPage);
   router.post(
     "/user/orders/:orderId/cancel",

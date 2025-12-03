@@ -76,7 +76,7 @@ const StatusBadge = ({ status }) => {
     "Đang xử lý": "bg-blue-100 text-blue-700 border-blue-200",
     "Đang giao": "bg-sky-100 text-sky-700 border-sky-200",
     "Đã hủy": "bg-rose-100 text-rose-700 border-rose-200",
-    "Chờ xác nhận": "bg-amber-100 text-amber-700 border-amber-200",
+    Mới: "bg-amber-100 text-amber-700 border-amber-200",
   };
   const style = colors[status] || "bg-gray-100 text-gray-700 border-gray-200";
   return (

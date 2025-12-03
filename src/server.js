@@ -34,6 +34,7 @@ app.use((req, res, next) => {
   const cart = req.session.cart || { items: [], subtotal: 0 };
   res.locals.cartItems = cart.items;
   res.locals.cartSubtotal = cart.subtotal;
+  res.locals.currentPath = req.path;
   next();
 });
 

@@ -13,14 +13,15 @@ const COLOR_ATTRIBUTE_ID = Number(process.env.COLOR_ATTRIBUTE_ID || 1);
 const SIZE_ATTRIBUTE_ID = Number(process.env.SIZE_ATTRIBUTE_ID || 2);
 
 const ensureAdmin = (req, res) => {
-  const isAdmin =
-    req.session &&
-    req.session.user &&
-    String(req.session.user.roleId) === "1";
-  if (!isAdmin) {
-    return res.redirect("/signin");
+  if (!req.session || !req.session.user) {
+    res.redirect("/signin");
+    return true;
   }
-  return null;
+  if (String(req.session.user.roleId) !== "1") {
+    res.redirect("/admin/dashboard?status=forbidden");
+    return true;
+  }
+  return false;
 };
 
 const normalizeSlug = (value = "") =>

@@ -2,12 +2,15 @@ import { Category } from "../models";
 import cloudinaryService from "../service/cloudinaryService";
 
 const ensureAdmin = (req, res) => {
-  const isAdmin =
-    req.session && req.session.user && String(req.session.user.roleId) === "1";
-  if (!isAdmin) {
-    return res.redirect("/signin");
+  if (!req.session || !req.session.user) {
+    res.redirect("/signin");
+    return true;
   }
-  return null;
+  if (String(req.session.user.roleId) !== "1") {
+    res.redirect("/admin/dashboard?status=forbidden");
+    return true;
+  }
+  return false;
 };
 
 const normalizeSlug = (value = "") =>
