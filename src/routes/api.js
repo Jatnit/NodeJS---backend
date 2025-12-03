@@ -29,6 +29,8 @@ const initApiRoutes = (app) => {
     authorize("admin", "manager"),
     orderController.listOrders
   );
+  // IMPORTANT: /orders/recent phải đặt TRƯỚC /orders/:id để không bị match sai
+  router.get("/orders/recent", DashboardController.getRecentOrders);
   router.get(
     "/orders/:id",
     verifyToken,
@@ -54,7 +56,6 @@ const initApiRoutes = (app) => {
     inventoryController.getBestSellers
   );
   router.get("/dashboard/summary", DashboardController.getSummary);
-  router.get("/orders/recent", DashboardController.getRecentOrders);
   return app.use("/api", router);
 };
 

@@ -1,35 +1,4 @@
-const { useEffect, useMemo, useState } = React;
-
-const {
-  ResponsiveContainer,
-  AreaChart,
-  Area,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip: RechartsTooltip,
-} = Recharts || {};
-
-const createIcon = (iconClass) => {
-  return ({ size = 18, className = "" }) => (
-    <i
-      className={`bi ${iconClass} ${className}`}
-      style={{ fontSize: `${size}px`, lineHeight: 1, display: "inline-flex" }}
-    />
-  );
-};
-
-const DollarSign = createIcon("bi-currency-dollar");
-const ShoppingBag = createIcon("bi-bag");
-const Package = createIcon("bi-box-seam");
-const BarChart3 = createIcon("bi-graph-up");
-const AlertCircle = createIcon("bi-exclamation-circle");
-const Loader2 = ({ size = 16, className = "" }) => (
-  <i
-    className={`bi bi-arrow-repeat ${className}`}
-    style={{ fontSize: `${size}px`, lineHeight: 1, display: "inline-flex" }}
-  />
-);
+const { useEffect, useState } = React;
 
 const formatCurrency = (value) =>
   new Intl.NumberFormat("vi-VN", {
@@ -38,401 +7,371 @@ const formatCurrency = (value) =>
     maximumFractionDigits: 0,
   }).format(Number(value) || 0);
 
-const Skeleton = ({ className = "" }) => (
-  <div className={`animate-pulse rounded-lg bg-gray-200 ${className}`} />
-);
+const formatDate = (dateStr) => {
+  if (!dateStr) return "--";
+  return new Date(dateStr).toLocaleDateString("vi-VN", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
+};
 
-const StatCard = ({ title, value, icon: Icon, loading, accent }) => (
-  <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 flex flex-col gap-3">
-    <div className="flex items-center justify-between">
-      <p className="text-sm text-gray-500 font-medium">{title}</p>
-      <div
-        className={`w-10 h-10 rounded-xl flex items-center justify-center ${accent}`}
-      >
-        {Icon ? <Icon size={18} /> : null}
+const StatCard = ({ title, value, icon, color, loading }) => (
+  <div className="col-md-4">
+    <div
+      className="card border-0 shadow-sm h-100"
+      style={{ borderRadius: "16px", overflow: "hidden" }}
+    >
+      <div className="card-body p-4">
+        <div className="d-flex align-items-center justify-content-between">
+          <div>
+            <p className="text-muted small text-uppercase mb-1 fw-semibold" style={{ letterSpacing: "0.05em" }}>
+              {title}
+            </p>
+            {loading ? (
+              <div className="placeholder-glow">
+                <span className="placeholder col-8" style={{ height: "32px" }}></span>
+              </div>
+            ) : (
+              <h3 className="fw-bold mb-0" style={{ fontSize: "1.75rem" }}>{value}</h3>
+            )}
+          </div>
+          <div
+            className="d-flex align-items-center justify-content-center"
+            style={{
+              width: "56px",
+              height: "56px",
+              borderRadius: "14px",
+              background: color,
+            }}
+          >
+            <i className={`bi ${icon} text-white`} style={{ fontSize: "24px" }}></i>
+          </div>
+        </div>
       </div>
     </div>
-    {loading ? (
-      <>
-        <Skeleton className="h-6 w-24" />
-        <Skeleton className="h-3 w-16" />
-      </>
-    ) : (
-      <>
-        <p className="text-3xl font-semibold text-gray-900 leading-none">
-          {value}
-        </p>
-        <span className="text-sm text-emerald-600 font-medium">
-          Dữ liệu thực
-        </span>
-      </>
-    )}
   </div>
 );
 
 const StatusBadge = ({ status }) => {
-  const colors = {
-    "Hoàn thành": "bg-emerald-100 text-emerald-700 border-emerald-200",
-    "Đang xử lý": "bg-blue-100 text-blue-700 border-blue-200",
-    "Đang giao": "bg-sky-100 text-sky-700 border-sky-200",
-    "Đã hủy": "bg-rose-100 text-rose-700 border-rose-200",
-    Mới: "bg-amber-100 text-amber-700 border-amber-200",
+  const styles = {
+    "Hoàn thành": { bg: "#d1fae5", color: "#065f46" },
+    "Đang xử lý": { bg: "#dbeafe", color: "#1e40af" },
+    "Đang giao": { bg: "#e0f2fe", color: "#0369a1" },
+    "Đã hủy": { bg: "#fee2e2", color: "#991b1b" },
+    "Mới": { bg: "#fef3c7", color: "#92400e" },
   };
-  const style = colors[status] || "bg-gray-100 text-gray-700 border-gray-200";
+  const style = styles[status] || { bg: "#f3f4f6", color: "#374151" };
+  
   return (
     <span
-      className={`inline-flex items-center justify-center px-3 py-1 text-xs font-semibold rounded-full border ${style}`}
+      className="badge fw-semibold"
+      style={{
+        background: style.bg,
+        color: style.color,
+        padding: "6px 12px",
+        borderRadius: "20px",
+        fontSize: "12px",
+      }}
     >
       {status}
     </span>
   );
 };
 
-const RevenueChart = ({ data, loading }) => {
-  if (!AreaChart) {
-    return (
-      <div className="h-72 flex items-center justify-center text-gray-500 text-sm">
-        Biểu đồ đang được tải...
-      </div>
-    );
-  }
-
-  const hasData = data && data.length > 0;
-
-  return (
-    <div className="h-72">
-      {loading ? (
-        <Skeleton className="w-full h-full rounded-xl" />
-      ) : hasData ? (
-        <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={data}>
-            <defs>
-              <linearGradient id="revenueGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#7C3AED" stopOpacity={0.35} />
-                <stop offset="95%" stopColor="#7C3AED" stopOpacity={0} />
-              </linearGradient>
-            </defs>
-            <CartesianGrid strokeDasharray="4 4" stroke="#f1f5f9" />
-            <XAxis
-              dataKey="label"
-              tickLine={false}
-              axisLine={false}
-              tick={{ fill: "#94a3b8", fontSize: 12 }}
-            />
-            <YAxis
-              tickLine={false}
-              axisLine={false}
-              tickFormatter={(value) =>
-                value >= 1_000_000
-                  ? `${Math.round(value / 1_000_000)}M`
-                  : `${value}`
-              }
-              tick={{ fill: "#94a3b8", fontSize: 12 }}
-            />
-            <RechartsTooltip
-              formatter={(value) => formatCurrency(value)}
-              labelFormatter={(label) => `Ngày ${label}`}
-              contentStyle={{
-                borderRadius: "14px",
-                borderColor: "#e2e8f0",
-              }}
-            />
-            <Area
-              type="monotone"
-              dataKey="revenue"
-              stroke="#7C3AED"
-              strokeWidth={3}
-              fillOpacity={1}
-              fill="url(#revenueGradient)"
-            />
-          </AreaChart>
-        </ResponsiveContainer>
-      ) : (
-        <div className="h-full flex items-center justify-center text-gray-500 text-sm">
-          Chưa có dữ liệu doanh thu trong 7 ngày.
-        </div>
-      )}
-    </div>
-  );
-};
-
-const RecentOrdersTable = ({ orders, loading }) => {
+const RevenueBar = ({ data, loading }) => {
   if (loading) {
     return (
-      <div className="space-y-3">
-        {Array.from({ length: 4 }).map((_, idx) => (
-          <div
-            key={idx}
-            className="grid grid-cols-5 gap-4 items-center border border-gray-100 rounded-xl px-4 py-3"
-          >
-            <Skeleton className="h-4 w-16" />
-            <Skeleton className="h-4 w-32" />
-            <Skeleton className="h-4 w-20" />
-            <Skeleton className="h-4 w-24 justify-self-end" />
-            <Skeleton className="h-6 w-24 justify-self-end" />
+      <div className="d-flex align-items-end gap-2" style={{ height: "160px" }}>
+        {[...Array(7)].map((_, i) => (
+          <div key={i} className="flex-fill placeholder-glow">
+            <span
+              className="placeholder w-100"
+              style={{ height: `${40 + Math.random() * 80}px`, borderRadius: "8px" }}
+            ></span>
           </div>
         ))}
       </div>
     );
   }
 
-  if (!orders.length) {
-    return (
-      <div className="text-sm text-gray-500 flex items-center gap-2 bg-gray-50 border border-dashed border-gray-200 rounded-xl px-4 py-6">
-        <BarChart3 size={18} className="text-gray-400" />
-        Chưa có đơn hàng nào gần đây.
-      </div>
-    );
-  }
+  const maxValue = Math.max(...data.map((d) => d.total), 1);
 
   return (
-    <div className="space-y-3">
-      {orders.map((order) => (
-        <div
-          key={order.id}
-          className="grid grid-cols-5 gap-4 items-center border border-gray-100 rounded-xl px-4 py-3 hover:border-gray-200 transition"
-        >
-          <div className="text-sm font-semibold text-gray-900">
-            {order.code}
+    <div className="d-flex align-items-end gap-2" style={{ height: "160px" }}>
+      {data.map((item, index) => {
+        const height = Math.max((item.total / maxValue) * 140, 8);
+        return (
+          <div
+            key={index}
+            className="flex-fill d-flex flex-column align-items-center"
+            style={{ minWidth: 0 }}
+          >
+            <div
+              className="w-100 position-relative"
+              style={{
+                height: `${height}px`,
+                background: "linear-gradient(180deg, #6366f1 0%, #8b5cf6 100%)",
+                borderRadius: "8px",
+                transition: "height 0.3s ease",
+              }}
+              title={formatCurrency(item.total)}
+            >
+              {item.total > 0 && (
+                <div
+                  className="position-absolute w-100 text-center text-white small fw-semibold"
+                  style={{ top: "-22px", fontSize: "10px" }}
+                >
+                  {item.total >= 1000000
+                    ? `${(item.total / 1000000).toFixed(1)}M`
+                    : item.total >= 1000
+                    ? `${(item.total / 1000).toFixed(0)}K`
+                    : item.total}
+                </div>
+              )}
+            </div>
+            <span className="text-muted mt-2" style={{ fontSize: "11px" }}>
+              {item.label}
+            </span>
           </div>
-          <div className="text-sm text-gray-700">{order.customerName}</div>
-          <div className="text-sm text-gray-500">
-            {new Date(order.orderDate).toLocaleDateString("vi-VN")}
-          </div>
-          <div className="text-right text-sm font-semibold text-gray-900">
-            {formatCurrency(order.totalAmount)}
-          </div>
-          <div className="justify-self-end">
-            <StatusBadge status={order.status} />
-          </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 };
 
-const DashboardHome = () => {
+const DashboardPage = () => {
   const [summary, setSummary] = useState(null);
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  const currentUser =
-    (window.__ADMIN_DASHBOARD__ && window.__ADMIN_DASHBOARD__.currentUser) ||
-    null;
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    let isMounted = true;
-
     const fetchData = async () => {
       setLoading(true);
-      setError(null);
+      setError("");
       try {
         const [summaryRes, ordersRes] = await Promise.all([
           axios.get("/api/dashboard/summary"),
           axios.get("/api/orders/recent"),
         ]);
-
-        if (!isMounted) return;
-
-        setSummary(summaryRes.data?.data || summaryRes.data || null);
-        setOrders(ordersRes.data?.data || ordersRes.data || []);
+        setSummary(summaryRes.data?.data || {});
+        setOrders(ordersRes.data?.data || []);
       } catch (err) {
-        console.log("Dashboard fetch error:", err);
-        if (isMounted) {
-          setError("Không thể tải dữ liệu dashboard. Vui lòng thử lại sau.");
-        }
+        console.error("Dashboard error:", err);
+        setError("Không thể tải dữ liệu. Vui lòng thử lại.");
       } finally {
-        if (isMounted) {
-          setLoading(false);
-        }
+        setLoading(false);
       }
     };
-
     fetchData();
-    return () => {
-      isMounted = false;
-    };
   }, []);
-
-  const chartData = useMemo(
-    () =>
-      (summary?.recentRevenue || []).map((item) => ({
-        label: item.label || item.date,
-        revenue: Number(item.total || item.value || 0),
-      })),
-    [summary]
-  );
 
   const stats = [
     {
-      key: "revenue",
       title: "Tổng doanh thu",
-      value: formatCurrency(summary?.totalRevenue),
-      icon: DollarSign,
-      accent: "bg-indigo-50 text-indigo-600",
+      value: formatCurrency(summary?.totalRevenue || 0),
+      icon: "bi-cash-stack",
+      color: "linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)",
     },
     {
-      key: "orders",
       title: "Tổng đơn hàng",
       value: (summary?.totalOrders || 0).toLocaleString("vi-VN"),
-      icon: ShoppingBag,
-      accent: "bg-blue-50 text-blue-600",
+      icon: "bi-bag-check",
+      color: "linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)",
     },
     {
-      key: "products",
       title: "Tổng sản phẩm",
       value: (summary?.totalProducts || 0).toLocaleString("vi-VN"),
-      icon: Package,
-      accent: "bg-emerald-50 text-emerald-600",
+      icon: "bi-box-seam",
+      color: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
     },
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-6xl mx-auto px-6 py-10 flex flex-col gap-6">
-        <header className="flex flex-col gap-2">
-          <p className="inline-flex items-center gap-2 text-sm text-indigo-600 font-semibold">
-            <span className="h-2 w-2 rounded-full bg-indigo-500 animate-pulse" />
-            Bảng điều khiển
-          </p>
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            <div>
-              <h1 className="text-3xl font-semibold text-gray-900">
-                Xin chào, {currentUser?.username || currentUser?.email || "Admin"}
-              </h1>
-              <p className="text-gray-500">
-                Cập nhật nhanh hiệu suất kinh doanh trong 7 ngày qua.
-              </p>
+    <div className="pb-5">
+      {error && (
+        <div className="alert alert-danger d-flex align-items-center gap-2 mb-4">
+          <i className="bi bi-exclamation-triangle"></i>
+          {error}
+          <button
+            type="button"
+            className="btn btn-sm btn-outline-danger ms-auto"
+            onClick={() => window.location.reload()}
+          >
+            Thử lại
+          </button>
+        </div>
+      )}
+
+      {/* Stat Cards */}
+      <div className="row g-4 mb-4">
+        {stats.map((stat, index) => (
+          <StatCard key={index} {...stat} loading={loading} />
+        ))}
+      </div>
+
+      <div className="row g-4">
+        {/* Revenue Chart */}
+        <div className="col-lg-8">
+          <div
+            className="card border-0 shadow-sm h-100"
+            style={{ borderRadius: "16px" }}
+          >
+            <div className="card-body p-4">
+              <div className="d-flex align-items-center justify-content-between mb-4">
+                <div>
+                  <h5 className="fw-bold mb-1">Doanh thu 7 ngày</h5>
+                  <p className="text-muted small mb-0">
+                    Tổng hợp từ các đơn hoàn thành
+                  </p>
+                </div>
+                <div
+                  className="d-flex align-items-center gap-2 px-3 py-2 rounded-pill"
+                  style={{ background: "#f0fdf4", color: "#166534" }}
+                >
+                  <i className="bi bi-graph-up-arrow"></i>
+                  <span className="small fw-semibold">Realtime</span>
+                </div>
+              </div>
+              <RevenueBar data={summary?.recentRevenue || []} loading={loading} />
             </div>
-            <a
-              href="/admin/orders"
-              className="inline-flex items-center gap-2 text-sm font-semibold px-4 py-2 rounded-full bg-gray-900 text-white hover:bg-gray-800 transition"
-            >
-              <BarChart3 size={16} />
-              Xem đơn hàng
-            </a>
           </div>
-        </header>
+        </div>
 
-        {error ? (
-          <div className="flex items-start gap-3 bg-rose-50 border border-rose-100 text-rose-700 rounded-2xl px-4 py-3">
-            {AlertCircle ? <AlertCircle size={18} className="mt-0.5" /> : null}
-            <div>
-              <p className="font-semibold">Đã xảy ra lỗi</p>
-              <p className="text-sm text-rose-600">{error}</p>
-            </div>
-          </div>
-        ) : null}
-
-        <section className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-          {stats.map((stat) => (
-            <StatCard
-              key={stat.key}
-              title={stat.title}
-              value={stat.value}
-              icon={stat.icon}
-              accent={stat.accent}
-              loading={loading}
-            />
-          ))}
-        </section>
-
-        <section className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-          <div className="bg-white shadow-sm rounded-2xl border border-gray-100 p-6 xl:col-span-2">
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <p className="text-xs uppercase tracking-[0.2em] text-indigo-500 font-semibold">
-                  Revenue
+        {/* Quick Stats */}
+        <div className="col-lg-4">
+          <div
+            className="card border-0 shadow-sm h-100 text-white"
+            style={{
+              borderRadius: "16px",
+              background: "linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4c1d95 100%)",
+            }}
+          >
+            <div className="card-body p-4 d-flex flex-column">
+              <div className="mb-4">
+                <p className="text-white-50 small text-uppercase mb-1" style={{ letterSpacing: "0.1em" }}>
+                  Tổng quan tuần
                 </p>
-                <h3 className="text-xl font-semibold text-gray-900">
-                  Doanh thu 7 ngày gần nhất
-                </h3>
-                <p className="text-sm text-gray-500">
-                  Số liệu được tổng hợp từ các đơn đã hoàn thành.
+                <h5 className="fw-bold mb-0">Hiệu suất kinh doanh</h5>
+              </div>
+              
+              <div className="flex-grow-1 d-flex flex-column justify-content-center gap-3">
+                <div className="d-flex justify-content-between align-items-center py-2 border-bottom border-white border-opacity-10">
+                  <span className="text-white-50">Doanh thu tuần</span>
+                  <span className="fw-bold">
+                    {formatCurrency(
+                      (summary?.recentRevenue || []).reduce((sum, d) => sum + (d.total || 0), 0)
+                    )}
+                  </span>
+                </div>
+                <div className="d-flex justify-content-between align-items-center py-2 border-bottom border-white border-opacity-10">
+                  <span className="text-white-50">Số đơn hàng</span>
+                  <span className="fw-bold">{summary?.totalOrders || 0}</span>
+                </div>
+                <div className="d-flex justify-content-between align-items-center py-2">
+                  <span className="text-white-50">Sản phẩm</span>
+                  <span className="fw-bold">{summary?.totalProducts || 0}</span>
+                </div>
+              </div>
+
+              <div
+                className="mt-4 p-3 rounded-3"
+                style={{ background: "rgba(255,255,255,0.1)" }}
+              >
+                <p className="small mb-1 fw-semibold">
+                  <i className="bi bi-lightbulb me-2"></i>Gợi ý
+                </p>
+                <p className="small mb-0 text-white-50">
+                  Theo dõi sát các đơn đang xử lý để tối ưu thời gian giao hàng.
                 </p>
               </div>
-              <div className="flex items-center gap-2 text-sm text-gray-500">
-                {Loader2 && loading ? (
-                  <Loader2 className="animate-spin" size={16} />
-                ) : null}
-                <span>{loading ? "Đang tải" : "Cập nhật thời gian thực"}</span>
-              </div>
             </div>
-            <RevenueChart data={chartData} loading={loading} />
           </div>
+        </div>
+      </div>
 
-          <div className="bg-gradient-to-br from-indigo-600 via-indigo-500 to-purple-500 rounded-2xl p-6 text-white shadow-sm">
-            <p className="text-xs uppercase tracking-[0.2em] text-white/80 font-semibold">
-              Snapshot
-            </p>
-            <h3 className="text-xl font-semibold mt-1 mb-4">
-              Hiệu suất ngắn hạn
-            </h3>
-            <div className="space-y-4 text-sm">
-              <div className="flex items-center justify-between">
-                <span className="text-white/80">Doanh thu tuần</span>
-                <span className="font-semibold">
-                  {formatCurrency(
-                    chartData.reduce((sum, item) => sum + (item.revenue || 0), 0)
-                  )}
-                </span>
+      {/* Recent Orders */}
+      <div className="row mt-4">
+        <div className="col-12">
+          <div
+            className="card border-0 shadow-sm"
+            style={{ borderRadius: "16px" }}
+          >
+            <div className="card-body p-4">
+              <div className="d-flex align-items-center justify-content-between mb-4">
+                <div>
+                  <h5 className="fw-bold mb-1">Đơn hàng gần đây</h5>
+                  <p className="text-muted small mb-0">8 đơn mới nhất</p>
+                </div>
+                <a
+                  href="/admin/orders"
+                  className="btn btn-dark btn-sm rounded-pill px-3"
+                >
+                  <i className="bi bi-arrow-right me-1"></i>
+                  Xem tất cả
+                </a>
               </div>
-              <div className="flex items-center justify-between">
-                <span className="text-white/80">Số đơn</span>
-                <span className="font-semibold">
-                  {(summary?.totalOrders || 0).toLocaleString("vi-VN")}
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-white/80">Sản phẩm đang bán</span>
-                <span className="font-semibold">
-                  {(summary?.totalProducts || 0).toLocaleString("vi-VN")}
-                </span>
-              </div>
-            </div>
-            <div className="mt-6 rounded-xl bg-white/10 border border-white/20 p-3 text-sm text-white/90">
-              <p className="font-semibold mb-1">Gợi ý</p>
-              <p>
-                Theo dõi sát đơn đang xử lý và tối ưu tồn kho cho các sản phẩm
-                bán chạy.
-              </p>
-            </div>
-          </div>
-        </section>
 
-        <section className="bg-white shadow-sm rounded-2xl border border-gray-100 p-6">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <p className="text-xs uppercase tracking-[0.2em] text-gray-500 font-semibold">
-                Recent orders
-              </p>
-              <h3 className="text-xl font-semibold text-gray-900">
-                Đơn hàng gần đây
-              </h3>
-              <p className="text-sm text-gray-500">
-                Danh sách 8 đơn mới nhất cập nhật theo thời gian thực.
-              </p>
+              {loading ? (
+                <div className="text-center py-5">
+                  <div className="spinner-border text-dark" role="status">
+                    <span className="visually-hidden">Loading...</span>
+                  </div>
+                </div>
+              ) : orders.length === 0 ? (
+                <div className="text-center py-5 text-muted">
+                  <i className="bi bi-inbox" style={{ fontSize: "48px" }}></i>
+                  <p className="mt-2 mb-0">Chưa có đơn hàng nào</p>
+                </div>
+              ) : (
+                <div className="table-responsive">
+                  <table className="table table-hover align-middle mb-0">
+                    <thead>
+                      <tr className="text-muted small text-uppercase" style={{ letterSpacing: "0.05em" }}>
+                        <th className="border-0 py-3">Mã đơn</th>
+                        <th className="border-0 py-3">Khách hàng</th>
+                        <th className="border-0 py-3">Ngày đặt</th>
+                        <th className="border-0 py-3 text-end">Tổng tiền</th>
+                        <th className="border-0 py-3 text-end">Trạng thái</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {orders.map((order) => (
+                        <tr key={order.id}>
+                          <td className="py-3">
+                            <span className="fw-semibold">{order.code}</span>
+                          </td>
+                          <td className="py-3">{order.customerName}</td>
+                          <td className="py-3 text-muted">
+                            {formatDate(order.orderDate)}
+                          </td>
+                          <td className="py-3 text-end fw-semibold">
+                            {formatCurrency(order.totalAmount)}
+                          </td>
+                          <td className="py-3 text-end">
+                            <StatusBadge status={order.status} />
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </div>
-            <a
-              href="/admin/orders"
-              className="text-sm font-semibold text-indigo-600 hover:text-indigo-500"
-            >
-              Xem tất cả
-            </a>
           </div>
-          <RecentOrdersTable orders={orders} loading={loading} />
-        </section>
+        </div>
       </div>
     </div>
   );
 };
 
+// Mount
 const mountAdminDashboard = () => {
   const container = document.getElementById("admin-dashboard-root");
-  if (!container || !window.ReactDOM) return;
+  if (!container || !window.ReactDOM || !window.React) return;
   const root = ReactDOM.createRoot(container);
-  root.render(<DashboardHome />);
+  root.render(<DashboardPage />);
 };
 
 if (document.readyState === "loading") {
