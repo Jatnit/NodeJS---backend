@@ -1,254 +1,632 @@
-<nav class="navbar navbar-expand-lg navbar-global fixed-top py-3">
+<nav class="navbar navbar-expand-lg navbar-global fixed-top">
     <div class="container">
-        <a class="navbar-brand fw-bold" href="/">MODA STUDIO</a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarGlobal">
-            <span class="navbar-toggler-icon"></span>
+        <a class="navbar-brand" href="/">
+            <span class="brand-text">MODA STUDIO</span>
+        </a>
+        
+        <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarGlobal" aria-controls="navbarGlobal" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-list" style="font-size: 24px;"></i>
         </button>
+        
         <div class="collapse navbar-collapse" id="navbarGlobal">
-            <ul class="navbar-nav ms-auto gap-3 align-items-lg-center">
-                <li class="nav-item"><a class="nav-link" href="/#collections">Collections</a></li>
-                <li class="nav-item"><a class="nav-link" href="/products">Danh mục sản phẩm</a></li>
-                <li class="nav-item"><a class="nav-link" href="/#stories">Stories</a></li>
-                <li class="nav-item"><a class="nav-link" href="/#shop">Shop</a></li>
+            <ul class="navbar-nav mx-auto gap-lg-4">
+                <li class="nav-item">
+                    <a class="nav-link" href="/#collections">Collections</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/products">Danh mục sản phẩm</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/#stories">Stories</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/#shop">Shop</a>
+                </li>
             </ul>
-            <% if (currentUser) { %>
-                <div class="dropdown ms-lg-4 mt-3 mt-lg-0">
-                    <button class="btn btn-dark dropdown-toggle" type="button" data-bs-toggle="dropdown"
-                        aria-expanded="false">
-                        <span class="me-2">Xin chào, <%= currentUser.username || currentUser.email %></span>
-                    </button>
-                    <ul class="dropdown-menu dropdown-menu-end">
-                        <li><a class="dropdown-item" href="/user/profile/<%= currentUser.id %>">Thông tin tài khoản</a>
-                        </li>
-                        <li>
-                            <form action="/user/theme" method="POST">
-                                <% const nextTheme=theme==="dark" ? "light" : "dark" ; %>
-                                    <input type="hidden" name="theme" value="<%= nextTheme %>">
-                                    <button type="submit"
-                                        class="dropdown-item w-100 text-start bg-transparent border-0">
-                                        Chuyển sang <%= nextTheme==="dark" ? "Chế độ tối" : "Chế độ sáng" %>
-                                    </button>
-                            </form>
-                        </li>
-                        <li>
-                            <hr class="dropdown-divider">
-                        </li>
-                        <li>
-                            <form action="/logout" method="POST">
-                                <button type="submit"
-                                    class="dropdown-item w-100 text-start text-danger bg-transparent border-0">
-                                    Đăng xuất
-                                </button>
-                            </form>
-                        </li>
-                    </ul>
-                </div>
-                <% } else { %>
-                    <div class="d-flex align-items-center gap-2 ms-lg-4 mt-3 mt-lg-0">
-                        <a class="btn btn-outline-theme" href="/signup">Tạo tài khoản</a>
-                        <a class="btn btn-dark" href="/signin">Đăng nhập</a>
-                    </div>
-                    <% } %>
-                        <button type="button" class="btn btn-outline-theme ms-lg-3 mt-3 mt-lg-0" id="openCartDrawer">
-                            Cart (<span id="cartCount">
-                                <%= (cartItems && cartItems.length) || 0 %>
-                            </span>)
+            
+            <div class="d-flex align-items-center gap-2 flex-wrap justify-content-center mt-3 mt-lg-0">
+                <% if (currentUser) { %>
+                    <div class="dropdown">
+                        <button class="btn btn-user-menu dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <span class="user-avatar">
+                                <%= (currentUser.username || currentUser.email || 'U').charAt(0).toUpperCase() %>
+                            </span>
+                            <span class="d-none d-md-inline ms-2">Xin chào, <%= currentUser.username || currentUser.email %></span>
                         </button>
-                        <a class="btn btn-dark ms-2 mt-3 mt-lg-0" href="/checkout" <%=cartItems && cartItems.length ? ""
-                            : "aria-disabled='true' tabindex='-1' class='btn btn-dark disabled'" %>>
-                            Checkout
-                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li class="dropdown-header small text-muted px-3 py-2">
+                                <i class="bi bi-person-circle me-2"></i><%= currentUser.email %>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item d-flex align-items-center gap-2" href="/user/profile/<%= currentUser.id %>">
+                                    <i class="bi bi-person"></i>Thông tin tài khoản
+                                </a>
+                            </li>
+                            <% if (currentUser.roleId === 1 || currentUser.roleId === 2) { %>
+                                <li>
+                                    <a class="dropdown-item d-flex align-items-center gap-2" href="/admin/dashboard">
+                                        <i class="bi bi-speedometer2"></i>Quản trị
+                                    </a>
+                                </li>
+                            <% } %>
+                            <li>
+                                <form action="/user/theme" method="POST" class="m-0">
+                                    <% const nextTheme = theme === "dark" ? "light" : "dark"; %>
+                                    <input type="hidden" name="theme" value="<%= nextTheme %>">
+                                    <button type="submit" class="dropdown-item d-flex align-items-center gap-2 w-100 text-start border-0 bg-transparent">
+                                        <i class="bi bi-<%= nextTheme === 'dark' ? 'moon-stars' : 'sun' %>"></i>
+                                        <%= nextTheme === "dark" ? "Chế độ tối" : "Chế độ sáng" %>
+                                    </button>
+                                </form>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <form action="/logout" method="POST" class="m-0">
+                                    <button type="submit" class="dropdown-item d-flex align-items-center gap-2 text-danger w-100 text-start border-0 bg-transparent">
+                                        <i class="bi bi-box-arrow-right"></i>Đăng xuất
+                                    </button>
+                                </form>
+                            </li>
+                        </ul>
+                    </div>
+                <% } else { %>
+                    <a class="btn btn-outline-nav btn-sm" href="/signin">Đăng nhập</a>
+                    <a class="btn btn-dark btn-sm" href="/signup">Tạo tài khoản</a>
+                <% } %>
+                
+                <button type="button" class="btn btn-cart" id="openCartDrawer">
+                    <i class="bi bi-bag"></i>
+                    <span class="cart-badge" id="cartCount"><%= (cartItems && cartItems.length) || 0 %></span>
+                </button>
+                
+                <a class="btn btn-dark btn-sm btn-checkout" href="/checkout" 
+                   <% if (!cartItems || !cartItems.length) { %>disabled aria-disabled="true"<% } %>>
+                    Checkout
+                </a>
+            </div>
         </div>
     </div>
 </nav>
 
+<!-- Cart Drawer -->
 <div class="cart-overlay" id="cartOverlay"></div>
 <aside class="cart-drawer" id="cartDrawer">
-    <div class="cart-drawer-header d-flex justify-content-between align-items-center">
-        <h5 class="mb-0 text-uppercase" style="letter-spacing: 0.3em;">Your Cart</h5>
-        <button type="button" class="btn-close" id="closeCartDrawer"></button>
+    <div class="cart-drawer-header">
+        <div>
+            <h5 class="mb-0 fw-bold">Giỏ hàng</h5>
+            <small class="text-muted"><span id="cartItemCount"><%= (cartItems && cartItems.length) || 0 %></span> sản phẩm</small>
+        </div>
+        <button type="button" class="btn btn-close-cart" id="closeCartDrawer">
+            <i class="bi bi-x-lg"></i>
+        </button>
     </div>
+    
     <div class="cart-drawer-body" id="cartDrawerItems">
-        <% if (cartItems && cartItems.length> 0) { %>
-            <% cartItems.forEach(function(item){ %>
-                <div class="cart-line d-flex justify-content-between align-items-start">
-                    <div>
-                        <p class="mb-1 fw-bold">
-                            <%= item.name %>
-                        </p>
-                        <% if (item.variantLabel) { %>
-                            <small class="text-muted">
-                                <%= item.variantLabel %>
-                            </small>
-                            <% } %>
-                                <p class="mb-0">
-                                    <%= item.quantity %> x <%= item.price.toLocaleString('vi-VN', { style: 'currency' ,
-                                            currency: 'VND' }) %>
-                                </p>
+        <% if (cartItems && cartItems.length > 0) { %>
+            <% cartItems.forEach(function(item) { %>
+                <div class="cart-item">
+                    <div class="cart-item-image">
+                        <% if (item.image) { %>
+                            <img src="<%= item.image %>" alt="<%= item.name %>">
+                        <% } else { %>
+                            <i class="bi bi-image"></i>
+                        <% } %>
                     </div>
-                    <div class="text-end fw-semibold">
-                        <%= (item.price * item.quantity).toLocaleString('vi-VN', { style: 'currency' , currency: 'VND'
-                            }) %>
+                    <div class="cart-item-details">
+                        <h6 class="cart-item-name"><%= item.name %></h6>
+                        <% if (item.variantLabel) { %>
+                            <small class="text-muted"><%= item.variantLabel %></small>
+                        <% } %>
+                        <div class="cart-item-price">
+                            <span class="qty"><%= item.quantity %> ×</span>
+                            <span class="price"><%= item.price.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' }) %></span>
+                        </div>
+                    </div>
+                    <div class="cart-item-total">
+                        <%= (item.price * item.quantity).toLocaleString('vi-VN', { style: 'currency', currency: 'VND' }) %>
                     </div>
                 </div>
-                <% }) %>
-                    <% } else { %>
-                        <p class="text-muted">Giỏ hàng trống.</p>
-                        <% } %>
+            <% }) %>
+        <% } else { %>
+            <div class="cart-empty">
+                <i class="bi bi-bag-x"></i>
+                <p>Giỏ hàng trống</p>
+                <a href="/products" class="btn btn-outline-dark btn-sm">Xem sản phẩm</a>
+            </div>
+        <% } %>
     </div>
+    
     <div class="cart-drawer-footer">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <span class="text-muted text-uppercase" style="letter-spacing: 0.2em;">Subtotal</span>
+        <div class="cart-subtotal">
+            <span>Tạm tính</span>
             <strong id="cartSubtotalAmount">
-                <%= (cartSubtotal || 0).toLocaleString('vi-VN', { style: 'currency' , currency: 'VND' }) %>
+                <%= (cartSubtotal || 0).toLocaleString('vi-VN', { style: 'currency', currency: 'VND' }) %>
             </strong>
         </div>
-        <button class="btn btn-dark w-100 py-3" id="checkoutBtn" <%=cartItems && cartItems.length ? "" : "disabled" %>>
-            Checkout
+        <button class="btn btn-checkout-drawer" id="checkoutBtn" <% if (!cartItems || !cartItems.length) { %>disabled<% } %>>
+            <i class="bi bi-credit-card me-2"></i>Thanh toán
         </button>
+        <p class="cart-note">Phí vận chuyển sẽ được tính ở bước thanh toán</p>
     </div>
 </aside>
 
 <style>
-    .cart-overlay {
-        position: fixed;
-        inset: 0;
-        background: rgba(0, 0, 0, 0.35);
-        opacity: 0;
-        visibility: hidden;
-        transition: opacity 0.3s ease;
-        z-index: 1030;
-    }
+/* ===== NAVBAR ===== */
+.navbar-global {
+    background: var(--nav-bg, rgba(255, 255, 255, 0.95));
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border-color, rgba(0, 0, 0, 0.08));
+    padding: 0.75rem 0;
+    transition: all 0.3s ease;
+}
 
-    .cart-overlay.active {
-        opacity: 1;
-        visibility: visible;
-    }
+.navbar-global .brand-text {
+    font-size: 1.1rem;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    color: var(--app-text);
+}
 
+.navbar-global .nav-link {
+    color: var(--app-text);
+    font-size: 0.85rem;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    padding: 0.5rem 0;
+    position: relative;
+    transition: color 0.2s ease;
+}
+
+.navbar-global .nav-link::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background: var(--app-text);
+    transition: width 0.3s ease;
+}
+
+.navbar-global .nav-link:hover::after {
+    width: 100%;
+}
+
+.navbar-global .nav-link:hover {
+    color: var(--app-text);
+}
+
+/* User Menu */
+.btn-user-menu {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: transparent;
+    border: 1px solid var(--border-color);
+    border-radius: 50px;
+    padding: 0.35rem 1rem 0.35rem 0.35rem;
+    color: var(--app-text);
+    font-size: 0.85rem;
+    transition: all 0.2s ease;
+}
+
+.btn-user-menu:hover {
+    background: var(--card-bg);
+    border-color: var(--app-text);
+    color: var(--app-text);
+}
+
+.user-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+/* Cart Button */
+.btn-cart {
+    position: relative;
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: transparent;
+    border: 1px solid var(--border-color);
+    color: var(--app-text);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.btn-cart:hover {
+    background: var(--app-text);
+    color: var(--app-bg);
+    border-color: var(--app-text);
+}
+
+.cart-badge {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    min-width: 20px;
+    height: 20px;
+    border-radius: 10px;
+    background: #ef4444;
+    color: #fff;
+    font-size: 0.7rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 5px;
+}
+
+.btn-outline-nav {
+    border: 1px solid var(--border-color);
+    color: var(--app-text);
+    border-radius: 8px;
+    font-size: 0.85rem;
+    padding: 0.5rem 1rem;
+}
+
+.btn-outline-nav:hover {
+    background: var(--app-text);
+    color: var(--app-bg);
+    border-color: var(--app-text);
+}
+
+.btn-checkout {
+    border-radius: 8px;
+    font-size: 0.85rem;
+    padding: 0.5rem 1rem;
+}
+
+/* ===== CART DRAWER ===== */
+.cart-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+    z-index: 1040;
+}
+
+.cart-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.cart-drawer {
+    position: fixed;
+    top: 0;
+    right: -100%;
+    width: 100%;
+    max-width: 420px;
+    height: 100vh;
+    background: var(--card-bg, #fff);
+    box-shadow: -10px 0 40px rgba(0, 0, 0, 0.15);
+    display: flex;
+    flex-direction: column;
+    transition: right 0.3s ease;
+    z-index: 1050;
+}
+
+.cart-drawer.active {
+    right: 0;
+}
+
+.cart-drawer-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.btn-close-cart {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--border-color);
+    border: none;
+    color: var(--app-text);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.btn-close-cart:hover {
+    background: #ef4444;
+    color: #fff;
+}
+
+.cart-drawer-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1rem 1.5rem;
+}
+
+.cart-item {
+    display: flex;
+    gap: 1rem;
+    padding: 1rem 0;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.cart-item-image {
+    width: 64px;
+    height: 64px;
+    border-radius: 12px;
+    background: #f3f4f6;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.cart-item-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.cart-item-image i {
+    font-size: 24px;
+    color: #9ca3af;
+}
+
+.cart-item-details {
+    flex: 1;
+    min-width: 0;
+}
+
+.cart-item-name {
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.cart-item-price {
+    font-size: 0.85rem;
+    margin-top: 0.5rem;
+}
+
+.cart-item-price .qty {
+    color: var(--muted-text);
+}
+
+.cart-item-total {
+    font-weight: 600;
+    font-size: 0.9rem;
+    white-space: nowrap;
+}
+
+.cart-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    text-align: center;
+    color: var(--muted-text);
+}
+
+.cart-empty i {
+    font-size: 64px;
+    margin-bottom: 1rem;
+    opacity: 0.5;
+}
+
+.cart-drawer-footer {
+    padding: 1.25rem 1.5rem;
+    border-top: 1px solid var(--border-color);
+    background: var(--card-bg);
+}
+
+.cart-subtotal {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    font-size: 1rem;
+}
+
+.cart-subtotal strong {
+    font-size: 1.25rem;
+}
+
+.btn-checkout-drawer {
+    width: 100%;
+    padding: 0.875rem;
+    background: #1f2937;
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    transition: all 0.2s ease;
+}
+
+.btn-checkout-drawer:hover:not(:disabled) {
+    background: #111827;
+}
+
+.btn-checkout-drawer:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.cart-note {
+    font-size: 0.75rem;
+    color: var(--muted-text);
+    text-align: center;
+    margin: 0.75rem 0 0;
+}
+
+/* Dropdown improvements */
+.dropdown-menu {
+    border-radius: 12px;
+    padding: 0.5rem;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+    border: 1px solid var(--border-color);
+}
+
+.dropdown-item {
+    border-radius: 8px;
+    padding: 0.6rem 1rem;
+    font-size: 0.9rem;
+}
+
+.dropdown-header {
+    font-size: 0.8rem;
+}
+
+/* Mobile responsive */
+@media (max-width: 991.98px) {
+    .navbar-global {
+        padding: 0.5rem 0;
+    }
+    
+    .navbar-collapse {
+        background: var(--card-bg);
+        padding: 1rem;
+        margin-top: 0.5rem;
+        border-radius: 12px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+    }
+    
+    .navbar-nav {
+        gap: 0 !important;
+    }
+    
+    .nav-link {
+        padding: 0.75rem 0 !important;
+        border-bottom: 1px solid var(--border-color);
+    }
+    
+    .nav-item:last-child .nav-link {
+        border-bottom: none;
+    }
+}
+
+@media (max-width: 576px) {
     .cart-drawer {
-        position: fixed;
-        top: 0;
-        right: -420px;
-        width: 420px;
-        height: 100vh;
-        background: var(--card-bg, #fff);
-        box-shadow: -25px 0 60px rgba(0, 0, 0, 0.15);
-        padding: 2rem;
-        display: flex;
-        flex-direction: column;
-        gap: 1.5rem;
-        transition: right 0.3s ease;
-        z-index: 1031;
+        max-width: 100%;
     }
-
-    .cart-drawer.active {
-        right: 0;
+    
+    .btn-user-menu span:not(.user-avatar) {
+        display: none;
     }
-
-    .cart-drawer-body {
-        flex: 1;
-        overflow-y: auto;
+    
+    .btn-user-menu {
+        padding: 0.25rem;
+        border-radius: 50%;
     }
-
-    .cart-line {
-        border-bottom: 1px solid var(--border-color, #eee);
-        padding-bottom: 1rem;
-        margin-bottom: 1rem;
-    }
+}
 </style>
 
 <script>
-    document.addEventListener("DOMContentLoaded", () => {
-        const drawer = document.getElementById("cartDrawer");
-        const overlay = document.getElementById("cartOverlay");
-        const openBtn = document.getElementById("openCartDrawer");
-        const closeBtn = document.getElementById("closeCartDrawer");
-        const itemsContainer = document.getElementById("cartDrawerItems");
-        const subtotalEl = document.getElementById("cartSubtotalAmount");
-        const checkoutBtn = document.getElementById("checkoutBtn");
-        const cartCountEl = document.getElementById("cartCount");
+document.addEventListener("DOMContentLoaded", () => {
+    const drawer = document.getElementById("cartDrawer");
+    const overlay = document.getElementById("cartOverlay");
+    const openBtn = document.getElementById("openCartDrawer");
+    const closeBtn = document.getElementById("closeCartDrawer");
+    const itemsContainer = document.getElementById("cartDrawerItems");
+    const subtotalEl = document.getElementById("cartSubtotalAmount");
+    const checkoutBtn = document.getElementById("checkoutBtn");
+    const cartCountEl = document.getElementById("cartCount");
+    const cartItemCountEl = document.getElementById("cartItemCount");
 
-        if (!drawer || !overlay) return;
+    if (!drawer || !overlay) return;
 
-        const currencyFormatter = new Intl.NumberFormat("vi-VN", {
-            style: "currency",
-            currency: "VND",
-        });
+    const currencyFormatter = new Intl.NumberFormat("vi-VN", {
+        style: "currency",
+        currency: "VND",
+    });
 
-        const renderCart = (cartPayload) => {
-            if (!itemsContainer || !subtotalEl) return;
-            const cart = cartPayload && typeof cartPayload === "object" ? cartPayload : {};
-            const items = Array.isArray(cart.items) ? cart.items : [];
-            const subtotal = Number(cart.subtotal) || 0;
+    const renderCart = (cartPayload) => {
+        if (!itemsContainer || !subtotalEl) return;
+        const cart = cartPayload && typeof cartPayload === "object" ? cartPayload : {};
+        const items = Array.isArray(cart.items) ? cart.items : [];
+        const subtotal = Number(cart.subtotal) || 0;
 
-            if (!items.length) {
-                itemsContainer.innerHTML = "<p class='text-muted'>Giỏ hàng trống.</p>";
-            } else {
-                itemsContainer.innerHTML = items
-                    .map(
-                        (item) => `
-                <div class="cart-line d-flex justify-content-between align-items-start">
-                    <div>
-                        <p class="mb-1 fw-bold">${item.name}</p>
-                        ${item.variantLabel
-                                ? `<small class="text-muted">${item.variantLabel}</small>`
-                                : ""
-                            }
-                        <p class="mb-0">${item.quantity} x ${currencyFormatter.format(
-                                Number(item.price) || 0
-                            )}</p>
+        if (!items.length) {
+            itemsContainer.innerHTML = `
+                <div class="cart-empty">
+                    <i class="bi bi-bag-x"></i>
+                    <p>Giỏ hàng trống</p>
+                    <a href="/products" class="btn btn-outline-dark btn-sm">Xem sản phẩm</a>
+                </div>
+            `;
+        } else {
+            itemsContainer.innerHTML = items.map(item => `
+                <div class="cart-item">
+                    <div class="cart-item-image">
+                        ${item.image 
+                            ? `<img src="${item.image}" alt="${item.name}">` 
+                            : '<i class="bi bi-image"></i>'
+                        }
                     </div>
-                    <div class="text-end fw-semibold">
+                    <div class="cart-item-details">
+                        <h6 class="cart-item-name">${item.name}</h6>
+                        ${item.variantLabel ? `<small class="text-muted">${item.variantLabel}</small>` : ''}
+                        <div class="cart-item-price">
+                            <span class="qty">${item.quantity} ×</span>
+                            <span class="price">${currencyFormatter.format(Number(item.price) || 0)}</span>
+                        </div>
+                    </div>
+                    <div class="cart-item-total">
                         ${currencyFormatter.format((Number(item.price) || 0) * (Number(item.quantity) || 0))}
                     </div>
                 </div>
-            `
-                    )
-                    .join("");
-            }
-
-            subtotalEl.textContent = currencyFormatter.format(subtotal);
-
-            if (checkoutBtn) {
-                checkoutBtn.disabled = items.length === 0;
-            }
-
-            if (cartCountEl) {
-                cartCountEl.textContent = items.length;
-            }
-        };
-
-        const openDrawer = () => {
-            drawer.classList.add("active");
-            overlay.classList.add("active");
-        };
-
-        const closeDrawer = () => {
-            drawer.classList.remove("active");
-            overlay.classList.remove("active");
-        };
-
-        openBtn && openBtn.addEventListener("click", openDrawer);
-        closeBtn && closeBtn.addEventListener("click", closeDrawer);
-        overlay.addEventListener("click", closeDrawer);
-
-        if (checkoutBtn) {
-            checkoutBtn.addEventListener("click", () => {
-                if (checkoutBtn.disabled) return;
-                window.location.href = "/checkout";
-            });
+            `).join("");
         }
 
-        window.__CART_DRAWER__ = {
-            open: openDrawer,
-            close: closeDrawer,
-            update: renderCart,
-        };
+        subtotalEl.textContent = currencyFormatter.format(subtotal);
+        if (checkoutBtn) checkoutBtn.disabled = items.length === 0;
+        if (cartCountEl) cartCountEl.textContent = items.length;
+        if (cartItemCountEl) cartItemCountEl.textContent = items.length;
+    };
 
-        window.addEventListener("cart:updated", (event) => {
-            renderCart(event.detail || {});
+    const openDrawer = () => {
+        drawer.classList.add("active");
+        overlay.classList.add("active");
+        document.body.style.overflow = "hidden";
+    };
+
+    const closeDrawer = () => {
+        drawer.classList.remove("active");
+        overlay.classList.remove("active");
+        document.body.style.overflow = "";
+    };
+
+    openBtn && openBtn.addEventListener("click", openDrawer);
+    closeBtn && closeBtn.addEventListener("click", closeDrawer);
+    overlay.addEventListener("click", closeDrawer);
+
+    if (checkoutBtn) {
+        checkoutBtn.addEventListener("click", () => {
+            if (checkoutBtn.disabled) return;
+            window.location.href = "/checkout";
         });
+    }
 
-        window.addEventListener("cart:open", openDrawer);
-    });
+    window.__CART_DRAWER__ = { open: openDrawer, close: closeDrawer, update: renderCart };
+    window.addEventListener("cart:updated", (event) => renderCart(event.detail || {}));
+    window.addEventListener("cart:open", openDrawer);
+});
 </script>
