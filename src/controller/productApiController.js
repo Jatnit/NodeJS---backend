@@ -5,13 +5,13 @@ import {
   ProductSKU,
   Category,
   AttributeValue,
-  Attribute,
+  ProductGallery,
+  ProductColorImage,
   Review,
+  ReviewImage,
   User,
 } from "../models";
 
-const COLOR_ATTRIBUTE_ID = Number(process.env.COLOR_ATTRIBUTE_ID || 1);
-const SIZE_ATTRIBUTE_ID = Number(process.env.SIZE_ATTRIBUTE_ID || 2);
 const MAX_LIMIT = 60;
 const DEFAULT_LIMIT = 9;
 
@@ -66,58 +66,22 @@ const findProductIdsByAttributes = async (colorIds, sizeIds) => {
     return null;
   }
 
-  const attributeClauses = [];
+  const where = {};
   if (colorIds.length) {
-    attributeClauses.push({
-      attributeId: COLOR_ATTRIBUTE_ID,
-      id: { [Op.in]: colorIds },
-    });
+    where.colorValueId = { [Op.in]: colorIds };
   }
   if (sizeIds.length) {
-    attributeClauses.push({
-      attributeId: SIZE_ATTRIBUTE_ID,
-      id: { [Op.in]: sizeIds },
-    });
+    where.sizeValueId = { [Op.in]: sizeIds };
   }
 
-  const skuMatches = await ProductSKU.findAll({
-    attributes: ["id", "productId"],
-    include: [
-      {
-        model: AttributeValue,
-        attributes: ["id", "attributeId"],
-        through: { attributes: [] },
-        where: {
-          [Op.or]: attributeClauses,
-        },
-        required: true,
-      },
-    ],
+  const rows = await ProductSKU.findAll({
+    attributes: ["productId"],
+    where,
+    group: ["productId"],
+    raw: true,
   });
 
-  const matchedProductIds = new Set();
-
-  skuMatches.forEach((sku) => {
-    const attributeValues = sku.AttributeValues || [];
-    const hasColor =
-      !colorIds.length ||
-      attributeValues.some(
-        (attr) =>
-          attr.attributeId === COLOR_ATTRIBUTE_ID && colorIds.includes(attr.id)
-      );
-    const hasSize =
-      !sizeIds.length ||
-      attributeValues.some(
-        (attr) =>
-          attr.attributeId === SIZE_ATTRIBUTE_ID && sizeIds.includes(attr.id)
-      );
-
-    if (hasColor && hasSize) {
-      matchedProductIds.add(sku.productId);
-    }
-  });
-
-  return Array.from(matchedProductIds);
+  return rows.map((row) => row.productId);
 };
 
 const buildSortClause = (sort) => {
@@ -161,78 +125,98 @@ const ensureAdminApi = (req, res) => {
   return user;
 };
 
-const formatProductPayload = (product) => {
-  const categories =
-    product.Categories?.map((category) => ({
-      id: category.id,
-      name: category.name,
-      slug: category.slug,
-    })) || [];
+const mapCategories = (categories = []) =>
+  categories.map((category) => ({
+    id: category.id,
+    name: category.name,
+    slug: category.slug,
+  }));
 
-  const skus = product.ProductSKUs || [];
+const buildPriceRange = (skus = [], fallbackPrice = 0) => {
   const priceList = skus
     .map((sku) => Number(sku.price))
     .filter((price) => Number.isFinite(price));
+  if (!priceList.length) {
+    return { min: fallbackPrice, max: fallbackPrice };
+  }
+  return {
+    min: Math.min(...priceList),
+    max: Math.max(...priceList),
+  };
+};
 
-  const minPrice =
-    priceList.length > 0
-      ? Math.min(...priceList)
-      : Number(product.basePrice) || 0;
-  const maxPrice =
-    priceList.length > 0
-      ? Math.max(...priceList)
-      : Number(product.basePrice) || 0;
-
-  const variants = skus.map((sku) => ({
-    id: sku.id,
-    price: Number(sku.price),
-    stockQuantity: sku.stockQuantity,
-    imageUrl: sku.imageUrl || product.thumbnailUrl,
-    attributes:
-      sku.AttributeValues?.map((attr) => ({
-        id: attr.id,
-        attributeId: attr.attributeId,
-        attributeName: attr.Attribute ? attr.Attribute.name : null,
-        value: attr.value,
-      })) || [],
-  }));
-
+const formatProductPayload = (product) => {
+  const basePrice = Number(product.basePrice) || 0;
   return {
     id: product.id,
     name: product.name,
     slug: product.slug,
     description: product.description,
     thumbnailUrl: product.thumbnailUrl,
-    priceRange: {
-      min: minPrice,
-      max: maxPrice,
-    },
-    categories,
-    variants,
+    basePrice,
+    priceRange: buildPriceRange(product.ProductSKUs || [], basePrice),
+    categories: mapCategories(product.Categories || []),
   };
 };
 
-const extractAttributeOptions = (variants) => {
+const mapGalleries = (product) => {
+  const galleries = (product.ProductGalleries || [])
+    .slice()
+    .sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0))
+    .map((item) => item.imageUrl)
+    .filter(Boolean);
+  if (galleries.length) {
+    return galleries;
+  }
+  return product.thumbnailUrl ? [product.thumbnailUrl] : [];
+};
+
+const mapColorImages = (product) =>
+  (product.ProductColorImages || []).map((item) => ({
+    id: item.id,
+    colorValueId: item.colorValueId,
+    colorLabel: item.colorValue?.value || null,
+    colorCode: item.colorValue?.code || null,
+    imageUrl: item.imageUrl,
+  }));
+
+const mapSkuRecords = (product) =>
+  (product.ProductSKUs || []).map((sku) => ({
+    id: sku.id,
+    skuCode: sku.skuCode,
+    colorValueId: sku.colorValueId,
+    sizeValueId: sku.sizeValueId,
+    color: {
+      id: sku.colorValueId,
+      label: sku.colorValue?.value || null,
+      code: sku.colorValue?.code || null,
+    },
+    size: {
+      id: sku.sizeValueId,
+      label: sku.sizeValue?.value || null,
+    },
+    price: Number(sku.price),
+    stockQuantity: Number(sku.stockQuantity) || 0,
+  }));
+
+const collectAttributeOptionsFromSkus = (skus = []) => {
   const colors = new Map();
   const sizes = new Map();
 
-  variants.forEach((variant) => {
-    (variant.attributes || []).forEach((attr) => {
-      if (attr.attributeId === COLOR_ATTRIBUTE_ID) {
-        colors.set(attr.id, {
-          id: attr.id,
-          label: attr.value,
-          attributeName: attr.attributeName,
-        });
-      }
-      if (attr.attributeId === SIZE_ATTRIBUTE_ID) {
-        sizes.set(attr.id, {
-          id: attr.id,
-          label: attr.value,
-          attributeName: attr.attributeName,
-        });
-      }
-    });
+  skus.forEach((sku) => {
+    if (sku.color?.id) {
+      colors.set(sku.color.id, {
+        id: sku.color.id,
+        label: sku.color.label,
+        code: sku.color.code,
+      });
+    }
+    if (sku.size?.id) {
+      sizes.set(sku.size.id, {
+        id: sku.size.id,
+        label: sku.size.label,
+      });
+    }
   });
 
   return {
@@ -243,21 +227,17 @@ const extractAttributeOptions = (variants) => {
 
 const buildProductDetailPayload = (product) => {
   const basePayload = formatProductPayload(product);
-  const variants = basePayload.variants || [];
-  const images = [
-    ...(product.thumbnailUrl ? [product.thumbnailUrl] : []),
-    ...new Set(
-      (product.ProductSKUs || [])
-        .map((sku) => sku.imageUrl)
-        .filter((url) => Boolean(url))
-    ),
-  ];
+  const galleries = mapGalleries(product);
+  const colorImages = mapColorImages(product);
+  const skus = mapSkuRecords(product);
+  const attributes = collectAttributeOptionsFromSkus(skus);
 
   return {
     ...basePayload,
-    description: product.description,
-    images: images.length ? images : [product.thumbnailUrl].filter(Boolean),
-    attributes: extractAttributeOptions(variants),
+    galleries,
+    colorImages,
+    skus,
+    attributes,
   };
 };
 
@@ -300,6 +280,7 @@ const summarizeReviews = (reviews) => {
       comment: review.comment,
       author: review.User?.username || "Ẩn danh",
       createdAt: review.createdAt,
+      images: (review.ReviewImages || []).map((image) => image.imageUrl),
     }));
 
   return {
@@ -374,15 +355,7 @@ const getProducts = async (req, res) => {
 
     const productSkusInclude = {
       model: ProductSKU,
-      attributes: ["id", "price", "stockQuantity", "imageUrl"],
-      include: [
-        {
-          model: AttributeValue,
-          attributes: ["id", "value", "attributeId"],
-          include: [{ model: Attribute, attributes: ["id", "name"] }],
-          through: { attributes: [] },
-        },
-      ],
+      attributes: ["id", "price", "stockQuantity", "colorValueId", "sizeValueId"],
     };
 
     const products = await Product.findAndCountAll({
@@ -435,20 +408,49 @@ export default {
           },
           {
             model: ProductSKU,
-            attributes: ["id", "price", "stockQuantity", "imageUrl"],
+            attributes: [
+              "id",
+              "skuCode",
+              "price",
+              "stockQuantity",
+              "colorValueId",
+              "sizeValueId",
+            ],
             include: [
               {
                 model: AttributeValue,
-                attributes: ["id", "value", "attributeId"],
-                include: [{ model: Attribute, attributes: ["id", "name"] }],
-                through: { attributes: [] },
+                as: "colorValue",
+                attributes: ["id", "value", "code"],
+              },
+              {
+                model: AttributeValue,
+                as: "sizeValue",
+                attributes: ["id", "value"],
+              },
+            ],
+          },
+          {
+            model: ProductGallery,
+            attributes: ["id", "imageUrl", "displayOrder"],
+          },
+          {
+            model: ProductColorImage,
+            attributes: ["id", "colorValueId", "imageUrl"],
+            include: [
+              {
+                model: AttributeValue,
+                as: "colorValue",
+                attributes: ["id", "value", "code"],
               },
             ],
           },
           {
             model: Review,
-            attributes: ["id", "rating", "comment", "createdAt"],
-            include: [{ model: User, attributes: ["username"] }],
+            attributes: ["id", "rating", "comment", "createdAt", "orderId"],
+            include: [
+              { model: User, attributes: ["username"] },
+              { model: ReviewImage, attributes: ["id", "imageUrl"] },
+            ],
           },
         ],
       });
@@ -523,15 +525,28 @@ export default {
 
       const skuRecords = await ProductSKU.findAll({
         where: { productId: id },
-        attributes: ["id", "stockQuantity"],
+        attributes: [
+          "id",
+          "stockQuantity",
+          "colorValueId",
+          "sizeValueId",
+        ],
         include: [
           {
             model: AttributeValue,
-            attributes: ["id", "value", "attributeId"],
-            through: { attributes: [] },
+            as: "colorValue",
+            attributes: ["id", "value"],
+          },
+          {
+            model: AttributeValue,
+            as: "sizeValue",
+            attributes: ["id", "value"],
           },
         ],
-        order: [["id", "ASC"]],
+        order: [
+          ["colorValueId", "ASC"],
+          ["sizeValueId", "ASC"],
+        ],
       });
 
       const colorMap = new Map();
@@ -540,13 +555,8 @@ export default {
 
       skuRecords.forEach((record) => {
         const plain = record.get({ plain: true });
-        const attrs = plain.AttributeValues || [];
-        const colorAttr = attrs.find(
-          (attr) => attr.attributeId === COLOR_ATTRIBUTE_ID
-        );
-        const sizeAttr = attrs.find(
-          (attr) => attr.attributeId === SIZE_ATTRIBUTE_ID
-        );
+        const colorAttr = plain.colorValue;
+        const sizeAttr = plain.sizeValue;
         if (!colorAttr || !sizeAttr) {
           return;
         }

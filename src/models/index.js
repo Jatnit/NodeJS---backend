@@ -6,11 +6,13 @@ import Product from "./Product";
 import Attribute from "./Attribute";
 import AttributeValue from "./AttributeValue";
 import ProductSKU from "./ProductSKU";
-import SKUAttributeValue from "./SKUAttributeValue";
 import Order from "./Order";
 import OrderDetail from "./OrderDetail";
 import Review from "./Review";
 import ProductCategory from "./ProductCategory";
+import ProductGallery from "./ProductGallery";
+import ProductColorImage from "./ProductColorImage";
+import ReviewImage from "./ReviewImage";
 
 Role.hasMany(User, { foreignKey: "roleId" });
 User.belongsTo(Role, { foreignKey: "roleId" });
@@ -41,18 +43,34 @@ Category.belongsToMany(Product, {
 Product.hasMany(ProductSKU, { foreignKey: "productId" });
 ProductSKU.belongsTo(Product, { foreignKey: "productId" });
 
+Product.hasMany(ProductGallery, { foreignKey: "productId" });
+ProductGallery.belongsTo(Product, { foreignKey: "productId" });
+
+Product.hasMany(ProductColorImage, { foreignKey: "productId" });
+ProductColorImage.belongsTo(Product, { foreignKey: "productId" });
+ProductColorImage.belongsTo(AttributeValue, {
+  foreignKey: "colorValueId",
+  as: "colorValue",
+});
+
 Attribute.hasMany(AttributeValue, { foreignKey: "attributeId" });
 AttributeValue.belongsTo(Attribute, { foreignKey: "attributeId" });
 
-ProductSKU.belongsToMany(AttributeValue, {
-  through: SKUAttributeValue,
-  foreignKey: "productSkuId",
-  otherKey: "attributeValueId",
+ProductSKU.belongsTo(AttributeValue, {
+  foreignKey: "colorValueId",
+  as: "colorValue",
 });
-AttributeValue.belongsToMany(ProductSKU, {
-  through: SKUAttributeValue,
-  foreignKey: "attributeValueId",
-  otherKey: "productSkuId",
+ProductSKU.belongsTo(AttributeValue, {
+  foreignKey: "sizeValueId",
+  as: "sizeValue",
+});
+AttributeValue.hasMany(ProductSKU, {
+  foreignKey: "colorValueId",
+  as: "colorVariants",
+});
+AttributeValue.hasMany(ProductSKU, {
+  foreignKey: "sizeValueId",
+  as: "sizeVariants",
 });
 
 User.hasMany(Order, { foreignKey: "userId" });
@@ -69,6 +87,8 @@ Review.belongsTo(User, { foreignKey: "userId" });
 
 Product.hasMany(Review, { foreignKey: "productId" });
 Review.belongsTo(Product, { foreignKey: "productId" });
+Review.hasMany(ReviewImage, { foreignKey: "reviewId" });
+ReviewImage.belongsTo(Review, { foreignKey: "reviewId" });
 
 export {
   Role,
@@ -79,9 +99,11 @@ export {
   Attribute,
   AttributeValue,
   ProductSKU,
-  SKUAttributeValue,
   ProductCategory,
   Order,
   OrderDetail,
   Review,
+  ProductGallery,
+  ProductColorImage,
+  ReviewImage,
 };

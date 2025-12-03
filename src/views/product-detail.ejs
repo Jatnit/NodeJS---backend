@@ -46,6 +46,34 @@
             object-fit: cover;
         }
 
+        .gallery-thumbs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            margin-top: 1.25rem;
+        }
+
+        .gallery-thumbs button {
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            padding: 0;
+            width: 78px;
+            height: 78px;
+            overflow: hidden;
+            background: #fff;
+            transition: border-color 0.2s ease;
+        }
+
+        .gallery-thumbs button.active {
+            border-color: #111;
+        }
+
+        .gallery-thumbs img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
         .pill-group {
             display: flex;
             flex-wrap: wrap;
@@ -60,6 +88,11 @@
             cursor: pointer;
             transition: all 0.3s ease-in-out;
             background: #fff;
+        }
+
+        .color-pill {
+            min-width: 48px;
+            text-transform: capitalize;
         }
 
         .pill.selected {
@@ -138,8 +171,19 @@
                                 data-base-price="<%= Number(product ? product.basePrice || 0 : 0) %>">
                                 <div class="gallery-column">
                                     <div class="gallery-card">
-                                        <img src="<%= product.thumbnailUrl || 'https://images.unsplash.com/photo-1503341455253-b2e723bb3dbb?auto=format&fit=crop&w=1200&q=80' %>"
+                                        <img id="mainProductImage"
+                                            src="<%= (galleries && galleries[0]) || product.thumbnailUrl || 'https://images.unsplash.com/photo-1503341455253-b2e723bb3dbb?auto=format&fit=crop&w=1200&q=80' %>"
                                             alt="<%= product.name %>">
+                                    </div>
+                                    <div class="gallery-thumbs" id="galleryThumbs">
+                                        <% if (galleries && galleries.length> 1) { %>
+                                            <% galleries.forEach(function(image, index) { %>
+                                                <button type="button" class="<%= index === 0 ? 'active' : '' %>"
+                                                    data-thumb-src="<%= image %>">
+                                                    <img src="<%= image %>" alt="gallery-thumb-<%= index %>">
+                                                </button>
+                                                <% }) %>
+                                                    <% } %>
                                     </div>
                                 </div>
                                 <div class="info-column">
@@ -152,40 +196,60 @@
                                             }).format(product.basePrice || 0) %>
                                     </p>
 
-                                    <% attributeGroups.forEach(function(group) { %>
+                                    <% if (colorOptions && colorOptions.length) { %>
                                         <div class="mb-4">
                                             <p class="text-uppercase text-muted small mb-2">
-                                                <%= group.attributeName %>
+                                                Màu sắc
                                             </p>
-                                            <div class="pill-group" data-attribute-id="<%= group.attributeId %>">
-                                                <% group.values.forEach(function(value) { %>
-                                                    <button type="button" class="pill"
-                                                        data-attribute-id="<%= group.attributeId %>"
-                                                        data-attribute-value-id="<%= value.id %>">
-                                                        <%= value.value %>
+                                            <div class="pill-group" id="colorOptions">
+                                                <% colorOptions.forEach(function(color) { %>
+                                                    <button type="button" class="pill color-pill"
+                                                        data-color-id="<%= color.id %>" <% if (color.code) { %>
+                                                        style="background:<%= color.code %>; color:<%=
+                                                                color.code==='#000000' ? '#fff' : '#111' %>"
+                                                                <% } %>>
+                                                                    <%= color.value %>
                                                     </button>
                                                     <% }); %>
                                             </div>
                                         </div>
-                                        <% }); %>
+                                        <% } %>
 
-                                            <input type="hidden" id="selectedSkuId">
-                                            <p id="stockStatus" class="text-muted mb-4">Chọn biến thể để xem tồn kho.
-                                            </p>
-
-                                            <button class="btn btn-dark btn-edgy w-100 mt-4" id="addToCartBtnDesktop"
-                                                disabled>Thêm
-                                                vào giỏ</button>
-                                            <div class="toast align-items-center text-bg-dark border-0 position-fixed bottom-0 end-0 m-3"
-                                                role="alert" id="selectionToast">
-                                                <div class="d-flex">
-                                                    <div class="toast-body">
-                                                        Please select options
+                                            <% if (sizeOptions && sizeOptions.length) { %>
+                                                <div class="mb-4">
+                                                    <p class="text-uppercase text-muted small mb-2">
+                                                        Size
+                                                    </p>
+                                                    <div class="pill-group" id="sizeOptions">
+                                                        <% sizeOptions.forEach(function(size) { %>
+                                                            <button type="button" class="pill"
+                                                                data-size-id="<%= size.id %>">
+                                                                <%= size.value %>
+                                                            </button>
+                                                            <% }); %>
                                                     </div>
-                                                    <button type="button" class="btn-close btn-close-white me-2 m-auto"
-                                                        data-bs-dismiss="toast"></button>
                                                 </div>
-                                            </div>
+                                                <% } %>
+
+                                                    <input type="hidden" id="selectedSkuId">
+                                                    <p id="stockStatus" class="text-muted mb-4">Chọn màu và size để xem
+                                                        tồn kho.
+                                                    </p>
+
+                                                    <button class="btn btn-dark btn-edgy w-100 mt-4"
+                                                        id="addToCartBtnDesktop" disabled>Thêm
+                                                        vào giỏ</button>
+                                                    <div class="toast align-items-center text-bg-dark border-0 position-fixed bottom-0 end-0 m-3"
+                                                        role="alert" id="selectionToast">
+                                                        <div class="d-flex">
+                                                            <div class="toast-body">
+                                                                Please select options
+                                                            </div>
+                                                            <button type="button"
+                                                                class="btn-close btn-close-white me-2 m-auto"
+                                                                data-bs-dismiss="toast"></button>
+                                                        </div>
+                                                    </div>
                                 </div>
                             </div>
                             <% } %>
@@ -208,29 +272,55 @@
                 <%- include('partials/footer') %>
 
                     <% if (product) { %>
-                        <script id="attribute-data" type="application/json">
-                    <%- JSON.stringify(attributeGroups || []) %>
+                        <script id="product-galleries" type="application/json">
+                    <%- JSON.stringify(galleries || []) %>
                 </script>
-                        <script id="sku-data" type="application/json">
+                        <script id="product-color-images" type="application/json">
+                    <%- JSON.stringify(colorImages || []) %>
+                </script>
+                        <script id="product-skus" type="application/json">
                     <%- JSON.stringify(skuOptions || []) %>
+                </script>
+                        <script id="product-colors" type="application/json">
+                    <%- JSON.stringify(colorOptions || []) %>
+                </script>
+                        <script id="product-sizes" type="application/json">
+                    <%- JSON.stringify(sizeOptions || []) %>
                 </script>
                         <% } %>
 
                             <script>
-                                const attributeGroups = (() => {
-                                    const el = document.getElementById("attribute-data");
-                                    return el ? JSON.parse(el.textContent || "[]") : [];
-                                })();
-                                const skuOptions = (() => {
-                                    const el = document.getElementById("sku-data");
-                                    return el ? JSON.parse(el.textContent || "[]") : [];
-                                })();
+                                const parseJsonData = (id, fallback) => {
+                                    const node = document.getElementById(id);
+                                    if (!node) {
+                                        return fallback;
+                                    }
+                                    try {
+                                        const parsed = JSON.parse(node.textContent || "null");
+                                        return parsed ?? fallback;
+                                    } catch (error) {
+                                        return fallback;
+                                    }
+                                };
 
                                 (function () {
-                                    const selectedValues = {};
                                     const rootEl = document.getElementById("productDetailRoot");
-                                    const basePrice = Number(rootEl?.dataset.basePrice || 0);
-                                    const pills = document.querySelectorAll(".pill-group .pill");
+                                    if (!rootEl) return;
+                                    const basePrice = Number(rootEl.dataset.basePrice || 0);
+                                    const galleries = parseJsonData("product-galleries", []);
+                                    const colorImages = parseJsonData("product-color-images", []);
+                                    const skuOptions = parseJsonData("product-skus", []);
+                                    const colorOptions = parseJsonData("product-colors", []);
+                                    const sizeOptions = parseJsonData("product-sizes", []);
+
+                                    const colorImageMap = new Map(
+                                        colorImages.map((item) => [Number(item.colorValueId), item.imageUrl])
+                                    );
+
+                                    const mainImageEl = document.getElementById("mainProductImage");
+                                    const thumbsContainer = document.getElementById("galleryThumbs");
+                                    const colorButtons = document.querySelectorAll("#colorOptions .pill");
+                                    const sizeButtons = document.querySelectorAll("#sizeOptions .pill");
                                     const skuPriceEl = document.getElementById("skuPrice");
                                     const stockStatusEl = document.getElementById("stockStatus");
                                     const desktopBtn = document.getElementById("addToCartBtnDesktop");
@@ -238,136 +328,187 @@
                                     const cartButtons = [desktopBtn, mobileBtn].filter(Boolean);
                                     const hiddenSkuInput = document.getElementById("selectedSkuId");
                                     const mobileSubtotal = document.getElementById("mobileSubtotal");
+                                    const toastEl = document.getElementById("selectionToast");
+                                    const toastInstance = toastEl ? new bootstrap.Toast(toastEl) : null;
+
                                     const currencyFormatter = new Intl.NumberFormat("vi-VN", {
                                         style: "currency",
                                         currency: "VND",
                                     });
 
-                                    const updatePriceDisplay = (price) => {
-                                        if (!skuPriceEl) return;
-                                        skuPriceEl.textContent = currencyFormatter.format(price || 0);
+                                    const baseImages =
+                                        galleries.length > 0
+                                            ? galleries.slice()
+                                            : mainImageEl && mainImageEl.src
+                                                ? [mainImageEl.src]
+                                                : [];
+
+                                    const state = {
+                                        selectedColor: null,
+                                        selectedSize: null,
+                                        selectedSku: null,
                                     };
 
-                                    const isValueAvailable = (attributeId, valueId) => {
-                                        const tentativeSelection = { ...selectedValues, [attributeId]: valueId };
-                                        return skuOptions.some((sku) => {
-                                            if (!sku.attributeValueIds.includes(Number(valueId))) {
-                                                return false;
-                                            }
-                                            return Object.entries(tentativeSelection).every(
-                                                ([attrId, attrValueId]) =>
-                                                    sku.attributeValueIds.includes(Number(attrValueId))
-                                            );
+                                    const setCartButtonsState = (enabled, text) => {
+                                        cartButtons.forEach((btn) => {
+                                            btn.disabled = !enabled;
+                                            btn.textContent = text;
                                         });
                                     };
 
-                                    const refreshPills = () => {
-                                        pills.forEach((pill) => {
-                                            const attributeId = Number(pill.dataset.attributeId);
-                                            const valueId = Number(pill.dataset.attributeValueId);
-                                            const selectedValue = selectedValues[attributeId];
-                                            const selectable = isValueAvailable(attributeId, valueId);
+                                    const renderThumbs = (images) => {
+                                        if (!thumbsContainer) return;
+                                        thumbsContainer.innerHTML = "";
+                                        if (!images || images.length <= 1) {
+                                            return;
+                                        }
+                                        images.forEach((image, index) => {
+                                            const button = document.createElement("button");
+                                            button.type = "button";
+                                            button.dataset.thumbSrc = image;
+                                            if (index === 0) {
+                                                button.classList.add("active");
+                                            }
+                                            button.addEventListener("click", () => {
+                                                if (mainImageEl) {
+                                                    mainImageEl.src = image;
+                                                }
+                                                Array.from(thumbsContainer.querySelectorAll("button")).forEach((node) =>
+                                                    node.classList.toggle("active", node === button)
+                                                );
+                                            });
+                                            const img = document.createElement("img");
+                                            img.src = image;
+                                            img.alt = `thumb-${index}`;
+                                            button.appendChild(img);
+                                            thumbsContainer.appendChild(button);
+                                        });
+                                    };
 
-                                            pill.classList.toggle(
-                                                "selected",
-                                                selectedValue && Number(selectedValue) === valueId
+                                    const updateGallery = () => {
+                                        const overrideImage =
+                                            state.selectedColor && colorImageMap.has(state.selectedColor)
+                                                ? colorImageMap.get(state.selectedColor)
+                                                : null;
+                                        const imagesToShow = overrideImage ? [overrideImage] : baseImages;
+                                        if (mainImageEl && imagesToShow.length) {
+                                            mainImageEl.src = imagesToShow[0];
+                                        }
+                                        renderThumbs(imagesToShow);
+                                    };
+
+                                    const refreshColorButtons = () => {
+                                        if (!colorButtons.length) return;
+                                        colorButtons.forEach((btn) => {
+                                            const colorId = Number(btn.dataset.colorId);
+                                            const available = skuOptions.some(
+                                                (sku) =>
+                                                    sku.colorValueId === colorId &&
+                                                    Number(sku.stockQuantity || 0) > 0
                                             );
-                                            pill.classList.toggle("disabled", !selectable);
-                                            pill.disabled = !selectable;
+                                            btn.disabled = !available;
+                                            btn.classList.toggle("disabled", !available);
+                                            btn.classList.toggle("selected", state.selectedColor === colorId);
+                                        });
+                                    };
+
+                                    const refreshSizeButtons = () => {
+                                        if (!sizeButtons.length) return;
+                                        sizeButtons.forEach((btn) => {
+                                            const sizeId = Number(btn.dataset.sizeId);
+                                            const available = skuOptions.some(
+                                                (sku) =>
+                                                    sku.sizeValueId === sizeId &&
+                                                    (!state.selectedColor || sku.colorValueId === state.selectedColor) &&
+                                                    Number(sku.stockQuantity || 0) > 0
+                                            );
+                                            const isSelected = state.selectedSize === sizeId && available;
+                                            if (!available && state.selectedSize === sizeId) {
+                                                state.selectedSize = null;
+                                            }
+                                            btn.disabled = !available;
+                                            btn.classList.toggle("disabled", !available);
+                                            btn.classList.toggle("selected", isSelected);
                                         });
                                     };
 
                                     const findMatchingSku = () => {
-                                        if (attributeGroups.length === 0) {
-                                            return skuOptions[0] || null;
-                                        }
-                                        if (Object.keys(selectedValues).length !== attributeGroups.length) {
+                                        if (!state.selectedColor || !state.selectedSize) {
                                             return null;
                                         }
-                                        return skuOptions.find((sku) =>
-                                            attributeGroups.every((group) => {
-                                                const selectedValue = selectedValues[group.attributeId];
-                                                return (
-                                                    selectedValue &&
-                                                    sku.attributeValueIds.includes(Number(selectedValue))
-                                                );
-                                            })
+                                        return skuOptions.find(
+                                            (sku) =>
+                                                sku.colorValueId === state.selectedColor &&
+                                                sku.sizeValueId === state.selectedSize
                                         );
                                     };
 
-                                    const resetState = () => {
-                                        stockStatusEl.textContent = attributeGroups.length
-                                            ? "Chọn biến thể để xem tồn kho."
-                                            : skuOptions.length && skuOptions[0].stockQuantity > 0
-                                                ? `Còn ${skuOptions[0].stockQuantity} sản phẩm`
-                                                : "Hết hàng";
-                                        const disabled =
-                                            !skuOptions.length || skuOptions[0].stockQuantity <= 0;
-                                        cartButtons.forEach((btn) => {
-                                            btn.disabled = disabled;
-                                            btn.textContent = disabled ? "Hết hàng" : "Thêm vào giỏ";
-                                        });
-                                        hiddenSkuInput.value = disabled ? "" : skuOptions[0]?.id || "";
-                                        if (mobileSubtotal) {
-                                            mobileSubtotal.textContent = currencyFormatter.format(
-                                                skuOptions[0]?.price || basePrice
-                                            );
-                                        }
-                                    };
-
-                                    const handleSelectionChange = () => {
+                                    const updateSummary = () => {
                                         const matchedSku = findMatchingSku();
+                                        state.selectedSku = matchedSku || null;
                                         if (matchedSku) {
-                                            updatePriceDisplay(matchedSku.price);
-                                            if (mobileSubtotal) {
-                                                mobileSubtotal.textContent = currencyFormatter.format(matchedSku.price || 0);
-                                            }
                                             hiddenSkuInput.value = matchedSku.id;
+                                            const formattedPrice = currencyFormatter.format(
+                                                Number(matchedSku.price) || basePrice
+                                            );
+                                            skuPriceEl.textContent = formattedPrice;
+                                            if (mobileSubtotal) {
+                                                mobileSubtotal.textContent = formattedPrice;
+                                            }
                                             if (matchedSku.stockQuantity > 0) {
                                                 stockStatusEl.textContent = `Còn ${matchedSku.stockQuantity} sản phẩm`;
-                                                cartButtons.forEach((btn) => {
-                                                    btn.disabled = false;
-                                                    btn.textContent = "Thêm vào giỏ";
-                                                });
+                                                setCartButtonsState(true, "Thêm vào giỏ");
                                             } else {
                                                 stockStatusEl.textContent = "Hết hàng";
-                                                cartButtons.forEach((btn) => {
-                                                    btn.disabled = true;
-                                                    btn.textContent = "Hết hàng";
-                                                });
+                                                setCartButtonsState(false, "Hết hàng");
                                             }
                                         } else {
-                                            updatePriceDisplay(basePrice);
+                                            hiddenSkuInput.value = "";
+                                            skuPriceEl.textContent = currencyFormatter.format(basePrice);
                                             if (mobileSubtotal) {
                                                 mobileSubtotal.textContent = currencyFormatter.format(basePrice);
                                             }
-                                            stockStatusEl.textContent = "Chọn biến thể để xem tồn kho.";
-                                            cartButtons.forEach((btn) => {
-                                                btn.disabled = true;
-                                                btn.textContent = "Thêm vào giỏ";
-                                            });
-                                            hiddenSkuInput.value = "";
+                                            stockStatusEl.textContent =
+                                                colorOptions.length && sizeOptions.length
+                                                    ? "Chọn màu và size để xem tồn kho."
+                                                    : "Chưa có biến thể để lựa chọn.";
+                                            setCartButtonsState(false, "Thêm vào giỏ");
                                         }
                                     };
 
-                                    const onPillClick = (event) => {
-                                        const pill = event.currentTarget;
-                                        if (pill.classList.contains("disabled")) return;
-                                        const attributeId = Number(pill.dataset.attributeId);
-                                        const valueId = Number(pill.dataset.attributeValueId);
-
-                                        if (selectedValues[attributeId] === valueId) {
-                                            delete selectedValues[attributeId];
-                                        } else {
-                                            selectedValues[attributeId] = valueId;
+                                    const handleColorClick = (event) => {
+                                        const button = event.currentTarget;
+                                        if (button.classList.contains("disabled")) {
+                                            return;
                                         }
-
-                                        refreshPills();
-                                        handleSelectionChange();
+                                        const colorId = Number(button.dataset.colorId);
+                                        state.selectedColor =
+                                            state.selectedColor === colorId ? null : colorId;
+                                        state.selectedSize = null;
+                                        refreshColorButtons();
+                                        refreshSizeButtons();
+                                        updateGallery();
+                                        updateSummary();
                                     };
 
-                                    const toastEl = document.getElementById("selectionToast");
-                                    const toastInstance = toastEl ? new bootstrap.Toast(toastEl) : null;
+                                    const handleSizeClick = (event) => {
+                                        const button = event.currentTarget;
+                                        if (button.classList.contains("disabled")) {
+                                            return;
+                                        }
+                                        const sizeId = Number(button.dataset.sizeId);
+                                        state.selectedSize =
+                                            state.selectedSize === sizeId ? null : sizeId;
+                                        refreshSizeButtons();
+                                        updateSummary();
+                                    };
+
+                                    colorButtons.forEach((btn) =>
+                                        btn.addEventListener("click", handleColorClick)
+                                    );
+                                    sizeButtons.forEach((btn) =>
+                                        btn.addEventListener("click", handleSizeClick)
+                                    );
 
                                     const handleAddToCart = async () => {
                                         const skuId = hiddenSkuInput.value;
@@ -381,6 +522,9 @@
                                                 headers: { "Content-Type": "application/json" },
                                                 body: JSON.stringify({ skuId }),
                                             });
+                                            if (!response.ok) {
+                                                throw new Error("Network error");
+                                            }
                                             const data = await response.json();
                                             if (!data.success) {
                                                 alert(data.message || "Unable to add to cart.");
@@ -406,17 +550,14 @@
                                         }
                                     };
 
-                                    if (pills.length) {
-                                        pills.forEach((pill) => pill.addEventListener("click", onPillClick));
-                                        refreshPills();
-                                        handleSelectionChange();
-                                    } else {
-                                        resetState();
-                                    }
+                                    cartButtons.forEach((btn) =>
+                                        btn.addEventListener("click", handleAddToCart)
+                                    );
 
-                                    cartButtons.forEach((btn) => {
-                                        btn.addEventListener("click", handleAddToCart);
-                                    });
+                                    refreshColorButtons();
+                                    refreshSizeButtons();
+                                    updateGallery();
+                                    updateSummary();
                                 })();
                             </script>
 

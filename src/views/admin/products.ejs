@@ -106,6 +106,116 @@
                                                                 style="max-height: 140px;">
                                                             <% } %>
                                                     </div>
+                                                    <div class="mb-3">
+                                                        <label class="form-label">Bộ sưu tập demo (3 ảnh)</label>
+                                                        <input type="file" name="galleryImages" class="form-control"
+                                                            accept="image/*" multiple>
+                                                        <small class="text-muted d-block mt-1">Vui lòng chọn đủ 3 ảnh để
+                                                            hiển thị
+                                                            ở trang chi tiết.</small>
+                                                        <% if (editingProduct && editingProduct.galleries &&
+                                                            editingProduct.galleries.length) { %>
+                                                            <div class="d-flex flex-wrap gap-2 mt-2">
+                                                                <% editingProduct.galleries.forEach(function(gallery){
+                                                                    %>
+                                                                    <img src="<%= gallery.imageUrl %>" alt="gallery"
+                                                                        class="rounded"
+                                                                        style="width: 90px; height: 90px; object-fit: cover;">
+                                                                    <% }) %>
+                                                            </div>
+                                                            <% } %>
+                                                    </div>
+                                                    <div class="mb-3">
+                                                        <label class="form-label">Ảnh theo màu sắc</label>
+                                                        <div id="color-image-list" class="d-flex flex-column gap-3">
+                                                            <div
+                                                                class="color-image-row d-flex gap-3 align-items-center">
+                                                                <select name="colorImageColorIds[]" class="form-select">
+                                                                    <option value="">Chọn màu</option>
+                                                                    <% colorOptions.forEach(function(color){ %>
+                                                                        <option value="<%= color.id %>">
+                                                                            <%= color.value %>
+                                                                        </option>
+                                                                        <% }) %>
+                                                                </select>
+                                                                <input type="file" name="colorImageFiles[]"
+                                                                    class="form-control" accept="image/*">
+                                                                <button type="button"
+                                                                    class="btn btn-outline-danger remove-color-image">&times;</button>
+                                                            </div>
+                                                        </div>
+                                                        <button type="button"
+                                                            class="btn btn-outline-secondary btn-sm mt-2"
+                                                            id="addColorImageRow">+ Thêm màu</button>
+                                                        <% if (editingProduct && editingProduct.colorImages &&
+                                                            editingProduct.colorImages.length) { %>
+                                                            <div class="d-flex flex-wrap gap-3 mt-3">
+                                                                <% editingProduct.colorImages.forEach(function(img){ %>
+                                                                    <div class="border rounded p-2 text-center"
+                                                                        style="width: 120px;">
+                                                                        <small class="d-block text-muted mb-1">#<%=
+                                                                                img.colorValueId %></small>
+                                                                        <img src="<%= img.imageUrl %>" alt="color-image"
+                                                                            class="img-fluid rounded"
+                                                                            style="height: 80px; object-fit: cover;">
+                                                                    </div>
+                                                                    <% }) %>
+                                                            </div>
+                                                            <% } %>
+                                                    </div>
+                                                    <div class="mb-4">
+                                                        <label class="form-label">Ma trận biến thể (Giá &amp; tồn
+                                                            kho)</label>
+                                                        <div class="table-responsive border rounded">
+                                                            <table
+                                                                class="table table-bordered align-middle text-center mb-0">
+                                                                <thead class="table-light">
+                                                                    <tr>
+                                                                        <th style="min-width: 160px;">Màu / Size</th>
+                                                                        <% sizeOptions.forEach(function(size){ %>
+                                                                            <th>
+                                                                                <%= size.value %>
+                                                                            </th>
+                                                                            <% }) %>
+                                                                    </tr>
+                                                                </thead>
+                                                                <tbody>
+                                                                    <% colorOptions.forEach(function(color){ %>
+                                                                        <tr>
+                                                                            <th class="text-start">
+                                                                                <span class="badge bg-light text-dark">
+                                                                                    <%= color.value %>
+                                                                                </span>
+                                                                            </th>
+                                                                            <% sizeOptions.forEach(function(size){ const
+                                                                                snapshot=inventorySnapshot &&
+                                                                                inventorySnapshot[String(color.id)] &&
+                                                                                inventorySnapshot[String(color.id)][String(size.id)]
+                                                                                ?
+                                                                                inventorySnapshot[String(color.id)][String(size.id)]
+                                                                                : null; %>
+                                                                                <td>
+                                                                                    <input type="number" step="1000"
+                                                                                        class="form-control form-control-sm mb-2"
+                                                                                        placeholder="Giá"
+                                                                                        name="inventory[<%= color.id %>][<%= size.id %>][price]"
+                                                                                        value="<%= snapshot ? snapshot.price : '' %>">
+                                                                                    <input type="number" min="0"
+                                                                                        class="form-control form-control-sm"
+                                                                                        placeholder="Tồn kho"
+                                                                                        name="inventory[<%= color.id %>][<%= size.id %>][stock]"
+                                                                                        value="<%= snapshot ? snapshot.stock : '' %>">
+                                                                                </td>
+                                                                                <% }) %>
+                                                                        </tr>
+                                                                        <% }) %>
+                                                                </tbody>
+                                                            </table>
+                                                        </div>
+                                                        <small class="text-muted d-block mt-2">
+                                                            Nếu bỏ trống giá, hệ thống sẽ dùng giá cơ bản của sản phẩm.
+                                                        </small>
+                                                    </div>
                                                     <div class="d-flex gap-2">
                                                         <button type="submit" class="btn btn-dark flex-grow-1">
                                                             <%= editingProduct ? "Cập nhật" : "Tạo mới" %>
@@ -204,15 +314,18 @@
                                                                             <% if (product.Categories &&
                                                                                 product.Categories.length) { %>
                                                                                 <div class="d-flex flex-wrap gap-1">
-                                                                                    <% product.Categories.forEach(function(category){ %>
-                                                                                        <span class="badge bg-light text-muted fw-normal">
+                                                                                    <% product.Categories.forEach(function(category){
+                                                                                        %>
+                                                                                        <span
+                                                                                            class="badge bg-light text-muted fw-normal">
                                                                                             <%= category.name %>
                                                                                         </span>
-                                                                                    <% }) %>
+                                                                                        <% }) %>
                                                                                 </div>
-                                                                            <% } else { %>
-                                                                                <span class="text-muted">Chưa gán</span>
-                                                                            <% } %>
+                                                                                <% } else { %>
+                                                                                    <span class="text-muted">Chưa
+                                                                                        gán</span>
+                                                                                    <% } %>
                                                                         </td>
                                                                         <td>
                                                                             <% if (product.isActive) { %>
@@ -253,6 +366,56 @@
         </main>
         <%- include('../partials/footer') %>
             <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+            <script>
+                (function () {
+                    const list = document.getElementById("color-image-list");
+                    const addBtn = document.getElementById("addColorImageRow");
+                    if (!list || !addBtn) return;
+                    const ensureSelectName = (row) => {
+                        const select = row.querySelector("select");
+                        const fileInput = row.querySelector('input[type="file"]');
+                        if (!select || !fileInput) return;
+                        if (!select.dataset.originalName) {
+                            select.dataset.originalName = select.name || "colorImageColorIds[]";
+                        }
+                        if (fileInput.files && fileInput.files.length > 0) {
+                            select.name = select.dataset.originalName;
+                        } else {
+                            select.name = "";
+                        }
+                    };
+                    const bindRowEvents = (row) => {
+                        const fileInput = row.querySelector('input[type="file"]');
+                        if (fileInput) {
+                            fileInput.addEventListener("change", () => ensureSelectName(row));
+                            ensureSelectName(row);
+                        }
+                        const removeBtn = row.querySelector(".remove-color-image");
+                        if (removeBtn) {
+                            removeBtn.addEventListener("click", () => {
+                                if (list.children.length > 1) {
+                                    row.remove();
+                                } else {
+                                    row.querySelectorAll("input").forEach((input) => (input.value = ""));
+                                    const select = row.querySelector("select");
+                                    if (select) select.selectedIndex = 0;
+                                }
+                            });
+                        }
+                    };
+                    Array.from(list.children).forEach((row) => bindRowEvents(row));
+                    addBtn.addEventListener("click", () => {
+                        const template = list.children[0];
+                        if (!template) return;
+                        const clone = template.cloneNode(true);
+                        clone.querySelectorAll("input").forEach((input) => (input.value = ""));
+                        const select = clone.querySelector("select");
+                        if (select) select.selectedIndex = 0;
+                        list.appendChild(clone);
+                        bindRowEvents(clone);
+                    });
+                })();
+            </script>
             <% if (editingProduct) { %>
                 <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
                 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>

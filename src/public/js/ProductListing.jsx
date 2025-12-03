@@ -1,4 +1,4 @@
-const { useEffect, useMemo, useState } = React;
+const { useEffect, useMemo, useState, useCallback } = React;
 const DEFAULT_LIMIT = 9;
 
 const REVIEW_TEMPLATE = {
@@ -1068,44 +1068,76 @@ const ProductListing = ({ initialCategories = [] }) => {
   );
 };
 
+const FALLBACK_PRODUCT_IMAGE =
+  "https://images.unsplash.com/photo-1504593811423-6dd665756598?auto=format&fit=crop&w=900&q=80";
+
 const ProductDetailModal = ({ product, onClose, onSelectProduct }) => {
+  const [selectedColor, setSelectedColor] = useState(null);
+  const [selectedSize, setSelectedSize] = useState(null);
   const [activeImage, setActiveImage] = useState(
-    (product.images && product.images[0]) || product.thumbnailUrl
-  );
-  const [selectedColor, setSelectedColor] = useState(
-    product.attributes?.colors?.[0]?.id || null
-  );
-  const [selectedSize, setSelectedSize] = useState(
-    product.attributes?.sizes?.[0]?.id || null
+    product.thumbnailUrl || FALLBACK_PRODUCT_IMAGE
   );
   const [cartFeedback, setCartFeedback] = useState({
     state: "idle",
     message: "",
   });
 
-  useEffect(() => {
-    setActiveImage(
-      (product.images && product.images[0]) || product.thumbnailUrl
-    );
-    setSelectedColor(product.attributes?.colors?.[0]?.id || null);
-    setSelectedSize(product.attributes?.sizes?.[0]?.id || null);
-    setCartFeedback({ state: "idle", message: "" });
-  }, [product]);
+  const fallbackImage = useMemo(
+    () => product.thumbnailUrl || FALLBACK_PRODUCT_IMAGE,
+    [product.thumbnailUrl]
+  );
 
-  const variants = product.variants || [];
+  const defaultImages = useMemo(() => {
+    const galleryImages = Array.isArray(product.galleries)
+      ? product.galleries.filter(Boolean)
+      : [];
+    if (galleryImages.length) {
+      return galleryImages;
+    }
+    return [fallbackImage];
+  }, [product.galleries, fallbackImage]);
+
+  const colorImageMap = useMemo(
+    () =>
+      new Map(
+        (product.colorImages || []).map((item) => [
+          item.colorValueId || item.colorId,
+          item.imageUrl,
+        ])
+      ),
+    [product.colorImages]
+  );
+
+  const displayedImages = useMemo(() => {
+    if (selectedColor && colorImageMap.has(selectedColor)) {
+      return [colorImageMap.get(selectedColor)];
+    }
+    return defaultImages;
+  }, [selectedColor, colorImageMap, defaultImages]);
+
+  useEffect(() => {
+    setActiveImage(displayedImages[0] || fallbackImage);
+  }, [displayedImages, fallbackImage]);
+
+  useEffect(() => {
+    setSelectedColor(null);
+    setSelectedSize(null);
+    setCartFeedback({ state: "idle", message: "" });
+  }, [product.id]);
+
+  const skus = product.skus || [];
+  const colorOptions = product.attributes?.colors || [];
+  const sizeOptions = product.attributes?.sizes || [];
 
   const selectedSku = useMemo(() => {
-    if (!variants.length) return null;
+    if (!selectedColor || !selectedSize) return null;
     return (
-      variants.find((variant) => {
-        const attributeIds =
-          variant.attributes?.map((attr) => Number(attr.id)) || [];
-        const colorMatch = !selectedColor || attributeIds.includes(selectedColor);
-        const sizeMatch = !selectedSize || attributeIds.includes(selectedSize);
-        return colorMatch && sizeMatch;
-      }) || variants[0]
+      skus.find(
+        (sku) =>
+          sku.color?.id === selectedColor && sku.size?.id === selectedSize
+      ) || null
     );
-  }, [variants, selectedColor, selectedSize]);
+  }, [skus, selectedColor, selectedSize]);
 
   const currentPriceLabel = selectedSku
     ? Number(selectedSku.price).toLocaleString("vi-VN", {
@@ -1114,6 +1146,41 @@ const ProductDetailModal = ({ product, onClose, onSelectProduct }) => {
       })
     : getPriceLabel(product.priceRange);
 
+  const isColorEnabled = useCallback(
+    (colorId) =>
+      skus.some(
+        (sku) => sku.color?.id === colorId && Number(sku.stockQuantity || 0) > 0
+      ),
+    [skus]
+  );
+
+  const isSizeEnabled = useCallback(
+    (sizeId) => {
+      if (!selectedColor) return false;
+      return skus.some((sku) => {
+        if (Number(sku.stockQuantity || 0) <= 0) return false;
+        if (sku.color?.id !== selectedColor) return false;
+        return sku.size?.id === sizeId;
+      });
+    },
+    [skus, selectedColor]
+  );
+
+  const handleColorSelect = (colorId) => {
+    if (!isColorEnabled(colorId)) {
+      return;
+    }
+    setSelectedColor((prev) => (prev === colorId ? null : colorId));
+    setSelectedSize(null);
+  };
+
+  const handleSizeSelect = (sizeId) => {
+    if (!isSizeEnabled(sizeId)) {
+      return;
+    }
+    setSelectedSize((prev) => (prev === sizeId ? null : sizeId));
+  };
+
   const recommendations = product.recommendations || [];
   const reviews = product.reviews || REVIEW_TEMPLATE;
   const summary = reviews.summary || REVIEW_TEMPLATE.summary;
@@ -1121,7 +1188,16 @@ const ProductDetailModal = ({ product, onClose, onSelectProduct }) => {
   const reviewItems = reviews.items || [];
 
   const handleAddToCart = async () => {
-    if (!selectedSku) return;
+    if (!selectedSku || Number(selectedSku.stockQuantity || 0) <= 0) {
+      setCartFeedback({
+        state: "error",
+        message: "Vui lòng chọn màu & size còn hàng.",
+      });
+      setTimeout(() => {
+        setCartFeedback({ state: "idle", message: "" });
+      }, 2500);
+      return;
+    }
     setCartFeedback({ state: "loading", message: "Đang thêm vào giỏ..." });
     try {
       const response = await fetch("/cart/add", {
@@ -1170,17 +1246,13 @@ const ProductDetailModal = ({ product, onClose, onSelectProduct }) => {
         <div className="product-modal__body">
           <section className="product-modal__gallery">
             <img
-              src={
-                activeImage ||
-                product.thumbnailUrl ||
-                "https://images.unsplash.com/photo-1504593811423-6dd665756598?auto=format&fit=crop&w=900&q=80"
-              }
+              src={activeImage || fallbackImage}
               alt={product.name}
               className="product-modal__image"
             />
-            {product.images && product.images.length > 1 && (
+            {displayedImages.length > 1 && (
               <div className="product-modal__thumbs">
-                {product.images.map((img, index) => (
+                {displayedImages.map((img, index) => (
                   <div
                     key={`${img}-${index}`}
                     className={`product-modal__thumb ${
@@ -1206,53 +1278,84 @@ const ProductDetailModal = ({ product, onClose, onSelectProduct }) => {
               <p className="text-muted mt-2">{product.description}</p>
             )}
 
-            {product.attributes?.colors?.length > 0 && (
+            {colorOptions.length > 0 && (
               <div className="mt-3">
                 <p className="text-uppercase text-muted mb-2" style={{ letterSpacing: "0.3em" }}>
                   Color
                 </p>
                 <div className="swatch-row">
-                  {product.attributes.colors.map((color) => (
+                  {colorOptions.map((color) => {
+                    const disabled = !isColorEnabled(color.id);
+                    return (
                     <button
                       key={color.id}
                       type="button"
                       className={`swatch-pill ${
                         selectedColor === color.id ? "active" : ""
-                      }`}
-                      style={{ background: getSwatchHex(color.label) }}
-                      onClick={() => setSelectedColor(color.id)}
+                      } ${disabled ? "disabled" : ""}`}
+                        style={{ background: color.code || getSwatchHex(color.label) }}
+                        onClick={() => handleColorSelect(color.id)}
+                        disabled={disabled}
+                        title={color.label}
+                        aria-label={color.label}
                     />
-                  ))}
+                  );
+                  })}
                 </div>
               </div>
             )}
 
-            {product.attributes?.sizes?.length > 0 && (
+            {sizeOptions.length > 0 && (
               <div className="mt-4">
                 <p className="text-uppercase text-muted mb-2" style={{ letterSpacing: "0.3em" }}>
                   Size
                 </p>
                 <div className="pill-row">
-                  {product.attributes.sizes.map((size) => (
+                  {sizeOptions.map((size) => {
+                    const disabled = !isSizeEnabled(size.id);
+                    return (
                     <button
                       key={size.id}
                       type="button"
                       className={selectedSize === size.id ? "active" : ""}
-                      onClick={() => setSelectedSize(size.id)}
+                      disabled={disabled}
+                      onClick={() => handleSizeSelect(size.id)}
                     >
                       {size.label}
                     </button>
-                  ))}
+                  );
+                  })}
                 </div>
               </div>
             )}
+            <div className="mt-3">
+              {selectedSku ? (
+                <small
+                  className={
+                    selectedSku.stockQuantity > 0 ? "text-success" : "text-danger"
+                  }
+                >
+                  {selectedSku.stockQuantity > 0
+                    ? `Còn ${selectedSku.stockQuantity} sản phẩm`
+                    : "Hết hàng"}
+                </small>
+              ) : (
+                <small className="text-muted">
+                  Vui lòng chọn màu và size để xem tồn kho.
+                </small>
+              )}
+            </div>
 
             <div className="product-modal__actions">
               <button
                 type="button"
                 className="btn btn-dark text-uppercase"
                 onClick={handleAddToCart}
-                disabled={!selectedSku}
+                disabled={
+                  !selectedSku ||
+                  Number(selectedSku.stockQuantity || 0) <= 0 ||
+                  cartFeedback.state === "loading"
+                }
               >
                 Add to Bag
               </button>

@@ -21,6 +21,16 @@ const ProductSKU = sequelize.define(
       unique: true,
       field: "SkuCode",
     },
+    colorValueId: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      field: "ColorValueId",
+    },
+    sizeValueId: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      field: "SizeValueId",
+    },
     price: {
       type: DataTypes.DECIMAL(18, 2),
       allowNull: false,
@@ -30,11 +40,6 @@ const ProductSKU = sequelize.define(
       type: DataTypes.INTEGER,
       defaultValue: 0,
       field: "StockQuantity",
-    },
-    imageUrl: {
-      type: DataTypes.STRING(255),
-      allowNull: true,
-      field: "ImageUrl",
     },
   },
   {

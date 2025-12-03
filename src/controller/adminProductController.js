@@ -1,5 +1,16 @@
-import { Category, Product } from "../models";
+import {
+  Category,
+  Product,
+  ProductGallery,
+  ProductColorImage,
+  ProductSKU,
+  AttributeValue,
+} from "../models";
+import sequelize from "../configs/database";
 import cloudinaryService from "../service/cloudinaryService";
+
+const COLOR_ATTRIBUTE_ID = Number(process.env.COLOR_ATTRIBUTE_ID || 1);
+const SIZE_ATTRIBUTE_ID = Number(process.env.SIZE_ATTRIBUTE_ID || 2);
 
 const ensureAdmin = (req, res) => {
   const isAdmin =
@@ -29,8 +40,30 @@ const getCategories = () =>
     raw: true,
   });
 
+const getAttributeOptions = async () => {
+  const [colors, sizes] = await Promise.all([
+    AttributeValue.findAll({
+      where: { attributeId: COLOR_ATTRIBUTE_ID },
+      order: [
+        ["value", "ASC"],
+        ["id", "ASC"],
+      ],
+      raw: true,
+    }),
+    AttributeValue.findAll({
+      where: { attributeId: SIZE_ATTRIBUTE_ID },
+      order: [
+        ["value", "ASC"],
+        ["id", "ASC"],
+      ],
+      raw: true,
+    }),
+  ]);
+  return { colors, sizes };
+};
+
 const renderView = async (req, res, options = {}) => {
-  const [products, categories] = await Promise.all([
+  const [products, categories, attributeOptions] = await Promise.all([
     Product.findAll({
       include: [
         {
@@ -42,6 +75,7 @@ const renderView = async (req, res, options = {}) => {
       order: [["createdAt", "DESC"]],
     }),
     getCategories(),
+    getAttributeOptions(),
   ]);
 
   return res.render("admin/products.ejs", {
@@ -51,7 +85,192 @@ const renderView = async (req, res, options = {}) => {
     errorMessage: options.errorMessage || null,
     formData: options.formData || null,
     successMessage: options.successMessage || null,
+    colorOptions: attributeOptions.colors,
+    sizeOptions: attributeOptions.sizes,
+    inventorySnapshot: options.inventorySnapshot || null,
   });
+};
+
+const uploadImageFromFile = async (file) => {
+  if (!file || !file.buffer) return null;
+  const uploadResult = await cloudinaryService.uploadBuffer(file.buffer, {
+    folder: "moda-studio/products",
+  });
+  return uploadResult?.secure_url || null;
+};
+
+const syncProductGalleries = async (
+  productId,
+  galleryFiles = [],
+  transaction
+) => {
+  if (!galleryFiles.length) return;
+  await ProductGallery.destroy({ where: { productId }, transaction });
+  const payload = [];
+  for (let index = 0; index < galleryFiles.length; index += 1) {
+    const file = galleryFiles[index];
+    const imageUrl = await uploadImageFromFile(file);
+    if (imageUrl) {
+      payload.push({
+        productId,
+        imageUrl,
+        displayOrder: index + 1,
+      });
+    }
+  }
+  if (payload.length) {
+    await ProductGallery.bulkCreate(payload, { transaction });
+  }
+};
+
+const syncProductColorImages = async (
+  productId,
+  colorIds = [],
+  colorFiles = [],
+  transaction
+) => {
+  if (!colorIds.length || !colorFiles.length) return;
+  for (let index = 0; index < colorIds.length; index += 1) {
+    const colorId = Number(colorIds[index]);
+    const file = colorFiles[index];
+    if (!file || Number.isNaN(colorId)) {
+      continue;
+    }
+    const imageUrl = await uploadImageFromFile(file);
+    if (!imageUrl) continue;
+    await ProductColorImage.destroy({
+      where: { productId, colorValueId: colorId },
+      transaction,
+    });
+    await ProductColorImage.create(
+      { productId, colorValueId: colorId, imageUrl },
+      { transaction }
+    );
+  }
+};
+
+const buildSkuKey = (colorValueId, sizeValueId) =>
+  `${colorValueId}-${sizeValueId}`;
+
+const parseInventoryPayload = (rawInventory, basePrice) => {
+  if (!rawInventory || typeof rawInventory !== "object") return [];
+  const entries = [];
+  Object.entries(rawInventory).forEach(([colorKey, sizePayload]) => {
+    const colorValueId = Number(colorKey);
+    if (Number.isNaN(colorValueId) || typeof sizePayload !== "object") {
+      return;
+    }
+    Object.entries(sizePayload).forEach(([sizeKey, cell]) => {
+      const sizeValueId = Number(sizeKey);
+      if (Number.isNaN(sizeValueId) || typeof cell !== "object") {
+        return;
+      }
+      const stockRaw = cell.stock;
+      const priceRaw = cell.price;
+      const stockQuantity = Number(stockRaw);
+      const priceValue =
+        priceRaw === undefined || priceRaw === ""
+          ? Number(basePrice) || 0
+          : Number(priceRaw);
+      if (Number.isNaN(stockQuantity) && Number.isNaN(priceValue)) {
+        return;
+      }
+      entries.push({
+        colorValueId,
+        sizeValueId,
+        stockQuantity: Number.isNaN(stockQuantity)
+          ? 0
+          : Math.max(0, Math.floor(stockQuantity)),
+        price: Number.isNaN(priceValue) ? Number(basePrice) || 0 : priceValue,
+      });
+    });
+  });
+  return entries;
+};
+
+const syncInventoryMatrix = async (
+  productId,
+  inventoryEntries,
+  basePrice,
+  transaction
+) => {
+  if (!Array.isArray(inventoryEntries)) return;
+  const existingSkus = await ProductSKU.findAll({
+    where: { productId },
+    transaction,
+  });
+  const existingMap = new Map();
+  existingSkus.forEach((sku) => {
+    const key = buildSkuKey(sku.colorValueId, sku.sizeValueId);
+    existingMap.set(key, sku);
+  });
+
+  const desiredKeys = new Set();
+  for (const entry of inventoryEntries) {
+    if (
+      Number.isNaN(entry.colorValueId) ||
+      Number.isNaN(entry.sizeValueId)
+    ) {
+      continue;
+    }
+    const key = buildSkuKey(entry.colorValueId, entry.sizeValueId);
+    desiredKeys.add(key);
+    const nextPrice =
+      Number(entry.price) && Number(entry.price) > 0
+        ? Number(entry.price)
+        : Number(basePrice) || 0;
+    const nextStock =
+      Number(entry.stockQuantity) && Number(entry.stockQuantity) > 0
+        ? Math.floor(Number(entry.stockQuantity))
+        : 0;
+    if (existingMap.has(key)) {
+      await ProductSKU.update(
+        { price: nextPrice, stockQuantity: nextStock },
+        { where: { id: existingMap.get(key).id }, transaction }
+      );
+    } else if (nextStock > 0) {
+      await ProductSKU.create(
+        {
+          productId,
+          skuCode: `SP${productId}-${entry.colorValueId}-${entry.sizeValueId}`,
+          colorValueId: entry.colorValueId,
+          sizeValueId: entry.sizeValueId,
+          price: nextPrice,
+          stockQuantity: nextStock,
+        },
+        { transaction }
+      );
+    }
+  }
+
+  const removableIds = [];
+  existingMap.forEach((sku, key) => {
+    if (!desiredKeys.has(key)) {
+      removableIds.push(sku.id);
+    }
+  });
+  if (removableIds.length) {
+    await ProductSKU.destroy({ where: { id: removableIds }, transaction });
+  }
+};
+
+const buildInventorySnapshot = async (productId) => {
+  const snapshot = {};
+  const skuRows = await ProductSKU.findAll({
+    where: { productId },
+    raw: true,
+  });
+  skuRows.forEach((sku) => {
+    const colorKey = String(sku.colorValueId);
+    if (!snapshot[colorKey]) {
+      snapshot[colorKey] = {};
+    }
+    snapshot[colorKey][String(sku.sizeValueId)] = {
+      price: Number(sku.price) || 0,
+      stock: Number(sku.stockQuantity) || 0,
+    };
+  });
+  return snapshot;
 };
 
 const parseCategoryIds = (input) => {
@@ -82,6 +301,25 @@ const renderEditProduct = async (req, res) => {
         attributes: ["id"],
         through: { attributes: [] },
       },
+      {
+        model: ProductGallery,
+        attributes: ["id", "imageUrl", "displayOrder"],
+      },
+      {
+        model: ProductColorImage,
+        attributes: ["id", "colorValueId", "imageUrl"],
+      },
+      {
+        model: ProductSKU,
+        attributes: [
+          "id",
+          "skuCode",
+          "price",
+          "stockQuantity",
+          "colorValueId",
+          "sizeValueId",
+        ],
+      },
     ],
   });
 
@@ -93,8 +331,26 @@ const renderEditProduct = async (req, res) => {
   editingProduct.categoryIds = (editingProduct.Categories || []).map(
     (category) => String(category.id)
   );
+  editingProduct.galleries =
+    editingProduct.ProductGalleries?.map((gallery) => ({
+      id: gallery.id,
+      imageUrl: gallery.imageUrl,
+      displayOrder: gallery.displayOrder,
+    })) || [];
+  editingProduct.colorImages =
+    editingProduct.ProductColorImages?.map((image) => ({
+      id: image.id,
+      colorValueId: image.colorValueId,
+      imageUrl: image.imageUrl,
+    })) || [];
+  delete editingProduct.ProductGalleries;
+  delete editingProduct.ProductColorImages;
+  delete editingProduct.ProductSKUs;
+  delete editingProduct.Categories;
 
-  return renderView(req, res, { editingProduct });
+  const inventorySnapshot = await buildInventorySnapshot(product.id);
+
+  return renderView(req, res, { editingProduct, inventorySnapshot });
 };
 
 const createProduct = async (req, res) => {
@@ -106,9 +362,20 @@ const createProduct = async (req, res) => {
     basePrice,
     isActive,
     categoryIds: categoryPayload,
+    inventory = null,
+    colorImageColorIds = [],
   } = req.body;
 
   const parsedCategories = parseCategoryIds(categoryPayload);
+
+  const thumbnailFile = req.files?.thumbnail?.[0] || null;
+  const galleryFiles = req.files?.galleryImages || [];
+  const colorImageFiles = req.files?.colorImageFiles || [];
+  const normalizedColorImageIds = Array.isArray(colorImageColorIds)
+    ? colorImageColorIds
+    : colorImageColorIds
+    ? [colorImageColorIds]
+    : [];
 
   if (!name || !name.trim()) {
     return renderView(req, res, {
@@ -120,27 +387,64 @@ const createProduct = async (req, res) => {
     });
   }
 
-  try {
-    let thumbnailUrl = null;
-    if (req.file && req.file.buffer) {
-      const upload = await cloudinaryService.uploadBuffer(req.file.buffer, {
-        folder: "moda-studio/products",
-      });
-      thumbnailUrl = upload?.secure_url || null;
-    }
-
-    const product = await Product.create({
-      name: name.trim(),
-      slug: slug && slug.trim() ? slug.trim() : normalizeSlug(name),
-      description: description || null,
-      basePrice: Number(basePrice) || 0,
-      isActive: isActive === "on",
-      thumbnailUrl,
+  if (galleryFiles.length !== 3) {
+    return renderView(req, res, {
+      errorMessage: "Vui lòng tải đủ 3 ảnh cho bộ sưu tập demo.",
+      formData: {
+        ...req.body,
+        categoryIds: parsedCategories.map(String),
+      },
     });
+  }
 
-    if (parsedCategories.length) {
-      await product.setCategories(parsedCategories);
-    }
+  const hasInventoryPayload =
+    inventory && typeof inventory === "object" && Object.keys(inventory).length;
+  const inventoryEntries = hasInventoryPayload
+    ? parseInventoryPayload(inventory, basePrice)
+    : [];
+
+  try {
+    await sequelize.transaction(async (transaction) => {
+      const thumbnailUrl = await uploadImageFromFile(thumbnailFile);
+
+      const product = await Product.create(
+        {
+          name: name.trim(),
+          slug: slug && slug.trim() ? slug.trim() : normalizeSlug(name),
+          description: description || null,
+          basePrice: Number(basePrice) || 0,
+          isActive: isActive === "on",
+          thumbnailUrl,
+        },
+        { transaction }
+      );
+
+      if (parsedCategories.length) {
+        await product.setCategories(parsedCategories, { transaction });
+      }
+
+      if (galleryFiles.length) {
+        await syncProductGalleries(product.id, galleryFiles, transaction);
+      }
+
+      if (colorImageFiles.length && normalizedColorImageIds.length) {
+        await syncProductColorImages(
+          product.id,
+          normalizedColorImageIds,
+          colorImageFiles,
+          transaction
+        );
+      }
+
+      if (hasInventoryPayload) {
+        await syncInventoryMatrix(
+          product.id,
+          inventoryEntries,
+          Number(basePrice) || 0,
+          transaction
+        );
+      }
+    });
 
     return res.redirect("/admin/products?status=created");
   } catch (error) {
@@ -171,39 +475,101 @@ const updateProduct = async (req, res) => {
     basePrice,
     isActive,
     categoryIds: categoryPayload,
+    inventory = null,
+    colorImageColorIds = [],
   } = req.body;
 
   const parsedCategories = parseCategoryIds(categoryPayload);
+  const thumbnailFile = req.files?.thumbnail?.[0] || null;
+  const galleryFiles = req.files?.galleryImages || [];
+  const colorImageFiles = req.files?.colorImageFiles || [];
+  const normalizedColorImageIds = Array.isArray(colorImageColorIds)
+    ? colorImageColorIds
+    : colorImageColorIds
+    ? [colorImageColorIds]
+    : [];
 
-  try {
-    let thumbnailUrl = product.thumbnailUrl;
-    if (req.file && req.file.buffer) {
-      const upload = await cloudinaryService.uploadBuffer(req.file.buffer, {
-        folder: "moda-studio/products",
-      });
-      thumbnailUrl = upload?.secure_url || thumbnailUrl;
-    }
+  if (galleryFiles.length && galleryFiles.length !== 3) {
+    const inventorySnapshot = await buildInventorySnapshot(product.id);
+    return renderView(req, res, {
+      errorMessage: "Vui lòng tải đủ 3 ảnh cho bộ sưu tập demo.",
+      editingProduct: {
+        id,
+        name,
+        slug,
+        description,
+        basePrice,
+        isActive,
+        thumbnailUrl: product.thumbnailUrl,
+        categoryIds: parsedCategories.map(String),
+      },
+      inventorySnapshot,
+    });
+  }
 
-    await product.update({
-      name: name && name.trim() ? name.trim() : product.name,
-      slug:
-        slug && slug.trim()
-          ? slug.trim()
-          : product.slug || normalizeSlug(name || product.name),
-      description: description ?? product.description,
-      basePrice:
+  const hasInventoryPayload =
+    inventory && typeof inventory === "object" && Object.keys(inventory).length;
+  const inventoryEntries = hasInventoryPayload
+    ? parseInventoryPayload(
+        inventory,
         basePrice && !Number.isNaN(Number(basePrice))
           ? Number(basePrice)
-          : product.basePrice,
-      isActive: isActive === "on",
-      thumbnailUrl,
-    });
+          : product.basePrice
+      )
+    : [];
 
-    await product.setCategories(parsedCategories);
+  try {
+    await sequelize.transaction(async (transaction) => {
+      const uploadedThumbnail = await uploadImageFromFile(thumbnailFile);
+      const nextBasePrice =
+        basePrice && !Number.isNaN(Number(basePrice))
+          ? Number(basePrice)
+          : product.basePrice;
+
+      await product.update(
+        {
+          name: name && name.trim() ? name.trim() : product.name,
+          slug:
+            slug && slug.trim()
+              ? slug.trim()
+              : product.slug || normalizeSlug(name || product.name),
+          description: description ?? product.description,
+          basePrice: nextBasePrice,
+          isActive: isActive === "on",
+          thumbnailUrl: uploadedThumbnail || product.thumbnailUrl,
+        },
+        { transaction }
+      );
+
+      await product.setCategories(parsedCategories, { transaction });
+
+      if (galleryFiles.length) {
+        await syncProductGalleries(product.id, galleryFiles, transaction);
+      }
+
+      if (colorImageFiles.length && normalizedColorImageIds.length) {
+        await syncProductColorImages(
+          product.id,
+          normalizedColorImageIds,
+          colorImageFiles,
+          transaction
+        );
+      }
+
+      if (hasInventoryPayload) {
+        await syncInventoryMatrix(
+          product.id,
+          inventoryEntries,
+          nextBasePrice,
+          transaction
+        );
+      }
+    });
 
     return res.redirect("/admin/products?status=updated");
   } catch (error) {
     console.log("updateProduct error:", error);
+    const inventorySnapshot = await buildInventorySnapshot(product.id);
     return renderView(req, res, {
       editingProduct: {
         id,
@@ -216,6 +582,7 @@ const updateProduct = async (req, res) => {
         categoryIds: parsedCategories.map(String),
       },
       errorMessage: "Không thể cập nhật sản phẩm.",
+      inventorySnapshot,
     });
   }
 };

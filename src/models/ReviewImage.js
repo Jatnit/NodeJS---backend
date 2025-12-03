@@ -1,8 +1,8 @@
 import { DataTypes } from "sequelize";
 import sequelize from "../configs/database";
 
-const AttributeValue = sequelize.define(
-  "AttributeValue",
+const ReviewImage = sequelize.define(
+  "ReviewImage",
   {
     id: {
       type: DataTypes.INTEGER,
@@ -10,27 +10,23 @@ const AttributeValue = sequelize.define(
       primaryKey: true,
       field: "Id",
     },
-    attributeId: {
+    reviewId: {
       type: DataTypes.INTEGER,
       allowNull: false,
-      field: "AttributeId",
+      field: "ReviewId",
     },
-    value: {
-      type: DataTypes.STRING(50),
+    imageUrl: {
+      type: DataTypes.STRING(255),
       allowNull: false,
-      field: "Value",
-    },
-    code: {
-      type: DataTypes.STRING(50),
-      allowNull: true,
-      field: "Code",
+      field: "ImageUrl",
     },
   },
   {
-    tableName: "AttributeValues",
+    tableName: "ReviewImages",
     timestamps: false,
   }
 );
 
-export default AttributeValue;
+export default ReviewImage;
+
 

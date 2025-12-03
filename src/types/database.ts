@@ -45,6 +45,7 @@ export interface Product {
   basePrice: number;
   thumbnailUrl?: string | null;
   isActive: boolean;
+  totalSold?: number;
   createdAt?: Date | null;
 }
 
@@ -57,20 +58,31 @@ export interface AttributeValue {
   id: number;
   attributeId: number;
   value: string;
+  code?: string | null;
 }
 
 export interface ProductSKU {
   id: number;
   productId: number;
   skuCode: string;
+  colorValueId: number;
+  sizeValueId: number;
   price: number;
   stockQuantity: number;
-  imageUrl?: string | null;
 }
 
-export interface SKUAttributeValue {
-  productSkuId: number;
-  attributeValueId: number;
+export interface ProductGallery {
+  id: number;
+  productId: number;
+  imageUrl: string;
+  displayOrder?: number;
+}
+
+export interface ProductColorImage {
+  id: number;
+  productId: number;
+  colorValueId: number;
+  imageUrl: string;
 }
 
 export interface ProductCategory {
@@ -97,16 +109,26 @@ export interface OrderDetail {
   orderId: number;
   productSkuId?: number | null;
   productName?: string | null;
+  color?: string | null;
+  size?: string | null;
   quantity: number;
   unitPrice: number;
+  totalPrice?: number | null;
 }
 
 export interface Review {
   id: number;
   userId: number;
   productId: number;
+  orderId: number;
   rating: number;
   comment?: string | null;
   createdAt?: Date | null;
+}
+
+export interface ReviewImage {
+  id: number;
+  reviewId: number;
+  imageUrl: string;
 }
 

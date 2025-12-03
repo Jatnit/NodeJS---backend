@@ -25,6 +25,16 @@ const OrderDetail = sequelize.define(
       allowNull: true,
       field: "ProductName",
     },
+    color: {
+      type: DataTypes.STRING(50),
+      allowNull: true,
+      field: "Color",
+    },
+    size: {
+      type: DataTypes.STRING(50),
+      allowNull: true,
+      field: "Size",
+    },
     quantity: {
       type: DataTypes.INTEGER,
       allowNull: false,
@@ -34,6 +44,11 @@ const OrderDetail = sequelize.define(
       type: DataTypes.DECIMAL(18, 2),
       allowNull: false,
       field: "UnitPrice",
+    },
+    totalPrice: {
+      type: DataTypes.DECIMAL(18, 2),
+      allowNull: true,
+      field: "TotalPrice",
     },
   },
   {

@@ -10,6 +10,12 @@ const Product = sequelize.define(
       primaryKey: true,
       field: "Id",
     },
+    totalSold: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 0,
+      field: "TotalSold",
+    },
     name: {
       type: DataTypes.STRING(255),
       allowNull: false,

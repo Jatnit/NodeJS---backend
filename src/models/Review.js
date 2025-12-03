@@ -20,6 +20,11 @@ const Review = sequelize.define(
       allowNull: false,
       field: "ProductId",
     },
+    orderId: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      field: "OrderId",
+    },
     rating: {
       type: DataTypes.TINYINT,
       allowNull: false,

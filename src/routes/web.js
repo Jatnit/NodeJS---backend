@@ -5,6 +5,12 @@ import adminProductController from "../controller/adminProductController";
 import upload from "../middleware/upload";
 const router = express.Router();
 
+const productUpload = upload.fields([
+  { name: "thumbnail", maxCount: 1 },
+  { name: "galleryImages", maxCount: 3 },
+  { name: "colorImageFiles", maxCount: 20 },
+]);
+
 /**
  * @param {*} app  - express app
  */
@@ -63,12 +69,12 @@ const initWebRoutes = (app) => {
   );
   router.post(
     "/admin/products",
-    upload.single("thumbnail"),
+    productUpload,
     adminProductController.createProduct
   );
   router.post(
     "/admin/products/:id",
-    upload.single("thumbnail"),
+    productUpload,
     adminProductController.updateProduct
   );
   router.post(
