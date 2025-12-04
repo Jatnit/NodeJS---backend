@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -6,171 +7,634 @@
     <title>Moda Studio | Fashion Forward</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="/css/main.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <style>
+        /* ===== PREMIUM TYPOGRAPHY ===== */
         body {
-            font-family: "Helvetica Neue", Arial, sans-serif;
+            font-family: 'Inter', "Helvetica Neue", Arial, sans-serif;
             background-color: var(--app-bg);
             color: var(--app-text);
+            overflow-x: hidden;
         }
 
+        /* ===== ANIMATIONS ===== */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes gradientShift {
+
+            0%,
+            100% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+        }
+
+        @keyframes float {
+
+            0%,
+            100% {
+                transform: translateY(0px);
+            }
+
+            50% {
+                transform: translateY(-10px);
+            }
+        }
+
+        @keyframes shimmer {
+            0% {
+                background-position: -1000px 0;
+            }
+
+            100% {
+                background-position: 1000px 0;
+            }
+        }
+
+        .animate-on-scroll {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.8s ease, transform 0.8s ease;
+        }
+
+        .animate-on-scroll.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* ===== HERO SECTION ===== */
         .hero {
-            background: linear-gradient(135deg, rgba(17, 17, 17, 0.85), rgba(0, 0, 0, 0.4)),
-                url("https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=1600&q=80") center / cover;
-            color: #fff;
-            min-height: 70vh;
+            position: relative;
+            min-height: 85vh;
             display: flex;
             align-items: center;
             text-align: left;
-            padding: 80px 0;
+            padding: 100px 0;
+            overflow: hidden;
+            background: linear-gradient(135deg,
+                    rgba(99, 102, 241, 0.9),
+                    rgba(139, 92, 246, 0.85),
+                    rgba(236, 72, 153, 0.9)),
+                url("https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=1600&q=80") center / cover;
+            background-size: 400% 400%;
+            animation: gradientShift 15s ease infinite;
+            color: #fff;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at 20% 50%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(255, 255, 255, 0.1) 0%, transparent 50%);
+            animation: float 8s ease-in-out infinite;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 2;
+            animation: fadeInUp 1s ease;
         }
 
         .hero h1 {
-            font-size: 3.5rem;
-            letter-spacing: 2px;
+            font-size: 4rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            line-height: 1.1;
+            margin-bottom: 1.5rem;
+            text-shadow: 0 2px 20px rgba(0, 0, 0, 0.3);
         }
 
-        .section-title {
-            letter-spacing: 0.2em;
-            font-weight: 600;
-            color: #b48b57;
-        }
-
-        .collection-card {
-            border: none;
-            border-radius: 0;
-            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
-            overflow: hidden;
-        }
-
-        .collection-card img {
-            height: 280px;
-            object-fit: cover;
+        .hero .lead {
+            font-size: 1.25rem;
+            font-weight: 300;
+            line-height: 1.6;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
         }
 
         .pill {
+            display: inline-block;
             text-transform: uppercase;
-            letter-spacing: 0.4em;
+            letter-spacing: 0.3em;
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.9);
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            padding: 0.5rem 1.5rem;
+            border-radius: 50px;
+            margin-bottom: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .hero .btn {
+            margin-top: 1rem;
+            padding: 1rem 2.5rem;
+            font-weight: 600;
+            border-radius: 50px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .hero .btn-light {
+            background: rgba(255, 255, 255, 0.95);
+            color: #6366f1;
+            border-color: transparent;
+        }
+
+        .hero .btn-light:hover {
+            background: #fff;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .hero .btn-outline-light:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: #fff;
+            transform: translateY(-2px);
+        }
+
+        /* ===== SECTION STYLING ===== */
+        .section-title {
+            display: inline-block;
+            letter-spacing: 0.25em;
+            font-weight: 700;
             font-size: 0.75rem;
-            color: #6c757d;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6, #ec4899);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 1rem;
+            position: relative;
+            padding-bottom: 0.5rem;
         }
 
-        .cta-banner {
-            background: #000;
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, #6366f1, #8b5cf6);
+            border-radius: 2px;
+        }
+
+        /* ===== COLLECTION CARDS ===== */
+        .collection-card {
+            border: none;
+            border-radius: 20px;
+            overflow: hidden;
+            background: var(--card-bg);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .collection-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(236, 72, 153, 0.1));
+            opacity: 0;
+            transition: opacity 0.4s ease;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        .collection-card:hover::before {
+            opacity: 1;
+        }
+
+        .collection-card:hover {
+            transform: translateY(-12px) scale(1.02);
+            box-shadow: 0 20px 60px rgba(99, 102, 241, 0.3);
+        }
+
+        .collection-card-image-wrapper {
+            position: relative;
+            overflow: hidden;
+            border-radius: 20px 20px 0 0;
+        }
+
+        .collection-card img {
+            height: 320px;
+            object-fit: cover;
+            width: 100%;
+            transition: transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .collection-card:hover img {
+            transform: scale(1.1);
+        }
+
+        .collection-card-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to top, rgba(0, 0, 0, 0.7) 0%, transparent 60%);
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+
+        .collection-card:hover .collection-card-overlay {
+            opacity: 1;
+        }
+
+        .collection-card .card-body {
+            padding: 2rem;
+            position: relative;
+            z-index: 2;
+        }
+
+        .collection-card .card-title {
+            font-weight: 700;
+            font-size: 1.35rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, var(--app-text), #6366f1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .collection-card .btn {
+            border-radius: 50px;
+            padding: 0.75rem 2rem;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .collection-card .btn-outline-dark {
+            border: 2px solid var(--app-text);
+            color: var(--app-text);
+        }
+
+        .collection-card .btn-outline-dark::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            transform: translateX(-100%);
+            transition: transform 0.3s ease;
+        }
+
+        .collection-card .btn-outline-dark span {
+            position: relative;
+            z-index: 1;
+        }
+
+        .collection-card .btn-outline-dark:hover {
             color: #fff;
-            padding: 70px 40px;
+            border-color: #6366f1;
         }
 
+        .collection-card .btn-outline-dark:hover::before {
+            transform: translateX(0);
+        }
+
+        /* ===== STORIES SECTION ===== */
+        #stories {
+            position: relative;
+            padding: 100px 0;
+        }
+
+        #stories .story-image {
+            border-radius: 24px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+            transition: transform 0.5s ease;
+        }
+
+        #stories .story-image:hover {
+            transform: scale(1.03);
+        }
+
+        #stories h3 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            line-height: 1.2;
+            margin-bottom: 1.5rem;
+        }
+
+        #stories ul li {
+            padding: 0.5rem 0;
+            font-size: 1.05rem;
+            position: relative;
+            padding-left: 1.5rem;
+        }
+
+        #stories ul li::before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            color: #6366f1;
+            font-weight: 700;
+        }
+
+        /* ===== CTA BANNER ===== */
+        .cta-banner {
+            position: relative;
+            padding: 100px 40px;
+            background: linear-gradient(135deg, #1e1b4b, #312e81, #4c1d95, #701a75);
+            background-size: 400% 400%;
+            animation: gradientShift 15s ease infinite;
+            color: #fff;
+            overflow: hidden;
+        }
+
+        .cta-banner::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at 30% 50%, rgba(139, 92, 246, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 70% 80%, rgba(236, 72, 153, 0.3) 0%, transparent 50%);
+            animation: float 10s ease-in-out infinite;
+        }
+
+        .cta-banner .container {
+            position: relative;
+            z-index: 2;
+        }
+
+        .cta-banner h2 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+            line-height: 1.2;
+        }
+
+        .cta-banner .btn-light {
+            background: #fff;
+            color: #6366f1;
+            border: none;
+            padding: 1.25rem 3rem;
+            font-weight: 700;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .cta-banner .btn-light:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(255, 255, 255, 0.3);
+            background: linear-gradient(135deg, #fff, #f0f0f0);
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 991.98px) {
+            .hero {
+                min-height: 70vh;
+                padding: 60px 0;
+            }
+
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+
+            #stories h3 {
+                font-size: 2rem;
+            }
+
+            .cta-banner h2 {
+                font-size: 2rem;
+            }
+        }
+
+        @media (max-width: 767.98px) {
+            .hero h1 {
+                font-size: 2rem;
+            }
+
+            .hero .lead {
+                font-size: 1rem;
+            }
+
+            .collection-card img {
+                height: 250px;
+            }
+
+            .cta-banner {
+                padding: 60px 20px;
+            }
+        }
+
+        /* ===== STAGGER ANIMATION ===== */
+        .stagger-item {
+            animation: fadeInUp 0.8s ease backwards;
+        }
+
+        .stagger-item:nth-child(1) {
+            animation-delay: 0.1s;
+        }
+
+        .stagger-item:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .stagger-item:nth-child(3) {
+            animation-delay: 0.3s;
+        }
     </style>
 </head>
 
 <body class="<%= theme === 'dark' ? 'theme-dark' : 'theme-light' %>">
     <%- include('partials/header') %>
-    <main class="site-main">
-        <header class="hero">
-        <div class="container">
-            <p class="pill">/ SPRING 2025</p>
-            <h1>Elevated essentials for a bold new season.</h1>
-            <p class="lead mt-3 col-lg-6">Discover limited-run capsules inspired by Parisian street style and Japanese
-                minimalism. Tailored silhouettes, sustainable fabrics, unmistakable presence.</p>
-            <div class="mt-4">
-                <a href="#collections" class="btn btn-light btn-lg px-5 me-3">Explore Lookbook</a>
-                <a href="#shop" class="btn btn-outline-light btn-lg px-5">Shop Now</a>
-            </div>
-        </div>
-        </header>
+        <main class="site-main">
+            <!-- Hero Section -->
+            <header class="hero">
+                <div class="container hero-content">
+                    <div class="pill">✦ SPRING 2025 COLLECTION</div>
+                    <h1>Elevated essentials<br>for a bold new season.</h1>
+                    <p class="lead mt-3 col-lg-8">Discover limited-run capsules inspired by Parisian street style and
+                        Japanese
+                        minimalism. Tailored silhouettes, sustainable fabrics, unmistakable presence.</p>
+                    <div class="mt-5">
+                        <a href="#collections" class="btn btn-light btn-lg px-5 me-3">Explore Lookbook</a>
+                        <a href="/products" class="btn btn-outline-light btn-lg px-5">Shop Now</a>
+                    </div>
+                </div>
+            </header>
 
-        <section id="collections" class="py-5">
-        <div class="container">
-            <div class="text-center mb-5">
-                <p class="section-title">COLLECTIONS</p>
-                <h2 class="fw-bold">Curated drops every month</h2>
-                <p class="text-muted">Hand-picked silhouettes for work, weekend, and every memorable moment.</p>
-            </div>
-            <div class="row g-4">
-                <div class="col-md-4">
-                    <div class="card collection-card">
-                        <img src="https://images.unsplash.com/photo-1504593811423-6dd665756598?auto=format&fit=crop&w=900&q=80"
-                            class="card-img-top" alt="Modern Tailoring">
-                        <div class="card-body">
-                            <h5 class="card-title">Modern Tailoring</h5>
-                            <p class="card-text text-muted">Architectural lines softened with silk-wool blends. From
-                                boardroom to rooftop.</p>
-                            <a href="#shop" class="btn btn-outline-dark">Shop Capsule</a>
+            <!-- Collections Section -->
+            <section id="collections" class="py-5 my-5">
+                <div class="container">
+                    <div class="text-center mb-5 animate-on-scroll">
+                        <p class="section-title">COLLECTIONS</p>
+                        <h2 class="fw-bold display-5">Curated drops every month</h2>
+                        <p class="text-muted col-lg-6 mx-auto mt-3">Hand-picked silhouettes for work, weekend, and every
+                            memorable moment.</p>
+                    </div>
+                    <div class="row g-4">
+                        <div class="col-md-4 stagger-item">
+                            <div class="card collection-card">
+                                <div class="collection-card-image-wrapper">
+                                    <img src="https://images.unsplash.com/photo-1504593811423-6dd665756598?auto=format&fit=crop&w=900&q=80"
+                                        class="card-img-top" alt="Modern Tailoring">
+                                    <div class="collection-card-overlay"></div>
+                                </div>
+                                <div class="card-body">
+                                    <h5 class="card-title">Modern Tailoring</h5>
+                                    <p class="card-text text-muted">Architectural lines softened with silk-wool blends.
+                                        From
+                                        boardroom to rooftop.</p>
+                                    <a href="/products" class="btn btn-outline-dark mt-3"><span>Shop Capsule</span></a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 stagger-item">
+                            <div class="card collection-card">
+                                <div class="collection-card-image-wrapper">
+                                    <img src="https://images.unsplash.com/photo-1509631179647-0177331693ae?auto=format&fit=crop&w=900&q=80"
+                                        class="card-img-top" alt="Street Luxe">
+                                    <div class="collection-card-overlay"></div>
+                                </div>
+                                <div class="card-body">
+                                    <h5 class="card-title">Street Luxe</h5>
+                                    <p class="card-text text-muted">Metallic finishes, oversized fits, effortless
+                                        swagger.
+                                        Limited to 300 pieces.</p>
+                                    <a href="/products" class="btn btn-outline-dark mt-3"><span>Discover Drop</span></a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 stagger-item">
+                            <div class="card collection-card">
+                                <div class="collection-card-image-wrapper">
+                                    <img src="https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=900&q=80"
+                                        class="card-img-top" alt="Resort Escape">
+                                    <div class="collection-card-overlay"></div>
+                                </div>
+                                <div class="card-body">
+                                    <h5 class="card-title">Resort Escape</h5>
+                                    <p class="card-text text-muted">Light linens, coastal palettes, ultra-relaxed layers
+                                        for
+                                        faraway afternoons.</p>
+                                    <a href="/products" class="btn btn-outline-dark mt-3"><span>Preview
+                                            Styles</span></a>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
-                <div class="col-md-4">
-                    <div class="card collection-card">
-                        <img src="https://images.unsplash.com/photo-1509631179647-0177331693ae?auto=format&fit=crop&w=900&q=80"
-                            class="card-img-top" alt="Street Luxe">
-                        <div class="card-body">
-                            <h5 class="card-title">Street Luxe</h5>
-                            <p class="card-text text-muted">Metallic finishes, oversized fits, effortless swagger.
-                                Limited to 300 pieces.</p>
-                            <a href="#shop" class="btn btn-outline-dark">Discover Drop</a>
+            </section>
+
+            <!-- Stories Section -->
+            <section id="stories" class="py-5 bg-white">
+                <div class="container">
+                    <div class="row align-items-center g-5">
+                        <div class="col-lg-6 animate-on-scroll">
+                            <img class="img-fluid story-image"
+                                src="https://images.unsplash.com/photo-1514996937319-344454492b37?auto=format&fit=crop&w=1200&q=80"
+                                alt="Designer at work">
+                        </div>
+                        <div class="col-lg-6 animate-on-scroll">
+                            <p class="section-title">STUDIO STORIES</p>
+                            <h3 class="fw-bold">Craftsmanship that respects the planet.</h3>
+                            <p class="text-muted mt-4">Every garment is cut-to-order in our Saigon atelier using
+                                recycled dyes and
+                                certified organic fibers. We partner with independent artisans to ensure each piece is
+                                sewn with
+                                care and fair-wage practices.</p>
+                            <ul class="list-unstyled text-muted mt-4">
+                                <li>92% of the line uses certified sustainable materials</li>
+                                <li>Carbon-neutral shipping across Vietnam & Southeast Asia</li>
+                                <li>Complimentary tailoring for Members+</li>
+                            </ul>
+                            <a href="/products" class="btn btn-dark mt-4 px-5 py-3"
+                                style="border-radius: 50px; font-weight: 600;">Meet the Makers</a>
                         </div>
                     </div>
                 </div>
-                <div class="col-md-4">
-                    <div class="card collection-card">
-                        <img src="https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=900&q=80"
-                            class="card-img-top" alt="Resort Escape">
-                        <div class="card-body">
-                            <h5 class="card-title">Resort Escape</h5>
-                            <p class="card-text text-muted">Light linens, coastal palettes, ultra-relaxed layers for
-                                faraway afternoons.</p>
-                            <a href="#shop" class="btn btn-outline-dark">Preview Styles</a>
+            </section>
+
+            <!-- CTA Banner -->
+            <section id="shop" class="cta-banner text-center text-lg-start">
+                <div class="container">
+                    <div class="row align-items-center">
+                        <div class="col-lg-8">
+                            <p class="section-title text-white mb-3"
+                                style="-webkit-text-fill-color: rgba(255, 255, 255, 0.9);">EXCLUSIVE ACCESS</p>
+                            <h2 class="fw-bold">Join the Moda Circle for early drops & private fittings.</h2>
+                            <p class="text-white-50 mt-3 fs-5">Members-only experiences, priority invites to runway
+                                previews, and curated
+                                styling sessions in Ho Chi Minh City.</p>
+                        </div>
+                        <div class="col-lg-4 text-lg-end mt-4 mt-lg-0">
+                            <a href="/signup" class="btn btn-light btn-lg px-5">Become a Member</a>
                         </div>
                     </div>
                 </div>
-            </div>
-        </div>
-        </section>
+            </section>
+        </main>
+        <%- include('partials/footer') %>
 
-        <section id="stories" class="py-5 bg-white">
-        <div class="container">
-            <div class="row align-items-center g-4">
-                <div class="col-lg-6">
-                    <img class="img-fluid rounded shadow"
-                        src="https://images.unsplash.com/photo-1514996937319-344454492b37?auto=format&fit=crop&w=1200&q=80"
-                        alt="Designer at work">
-                </div>
-                <div class="col-lg-6">
-                    <p class="section-title">STUDIO STORIES</p>
-                    <h3 class="fw-bold">Craftsmanship that respects the planet.</h3>
-                    <p class="text-muted">Every garment is cut-to-order in our Saigon atelier using recycled dyes and
-                        certified organic fibers. We partner with independent artisans to ensure each piece is sewn with
-                        care and fair-wage practices.</p>
-                    <ul class="list-unstyled text-muted">
-                        <li>• 92% of the line uses certified sustainable materials</li>
-                        <li>• Carbon-neutral shipping across Vietnam & Southeast Asia</li>
-                        <li>• Complimentary tailoring for Members+</li>
-                    </ul>
-                    <a href="#shop" class="btn btn-dark mt-2">Meet the Makers</a>
-                </div>
-            </div>
-        </div>
-        </section>
+            <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+            <script>
+                // Scroll Animation Observer
+                document.addEventListener('DOMContentLoaded', function () {
+                    const observerOptions = {
+                        threshold: 0.1,
+                        rootMargin: '0px 0px -50px 0px'
+                    };
 
-        <section id="shop" class="cta-banner text-center text-lg-start">
-        <div class="container">
-            <div class="row align-items-center">
-                <div class="col-lg-8">
-                    <p class="section-title text-white mb-2">EXCLUSIVE ACCESS</p>
-                    <h2 class="fw-bold">Join the Moda Circle for early drops & private fittings.</h2>
-                    <p class="text-white-50">Members-only experiences, priority invites to runway previews, and curated
-                        styling sessions in Ho Chi Minh City.</p>
-                </div>
-                <div class="col-lg-4 text-lg-end">
-                    <a href="/signup" class="btn btn-light btn-lg px-5">Become a Member</a>
-                </div>
-            </div>
-        </div>
-        </section>
-    </main>
-    <%- include('partials/footer') %>
+                    const observer = new IntersectionObserver(function (entries) {
+                        entries.forEach(entry => {
+                            if (entry.isIntersecting) {
+                                entry.target.classList.add('visible');
+                            }
+                        });
+                    }, observerOptions);
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+                    document.querySelectorAll('.animate-on-scroll').forEach(el => {
+                        observer.observe(el);
+                    });
+
+                    // Smooth scroll for anchor links
+                    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                        anchor.addEventListener('click', function (e) {
+                            e.preventDefault();
+                            const target = document.querySelector(this.getAttribute('href'));
+                            if (target) {
+                                target.scrollIntoView({
+                                    behavior: 'smooth',
+                                    block: 'start'
+                                });
+                            }
+                        });
+                    });
+                });
+            </script>
 </body>
 
 </html>
