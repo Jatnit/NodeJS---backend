@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 
 <head>
     <meta charset="UTF-8">
@@ -9,13 +9,23 @@
     <link rel="stylesheet" href="/css/main.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <style>
-        /* ===== PREMIUM TYPOGRAPHY ===== */
+        :root {
+            --color-slate: #6c737e;
+            --color-steel: #7393a7;
+            --color-mist: #b5cfd8;
+            --color-cloud: #e8ecf1;
+            --color-cream: #f8f9fa;
+            --font-display: 'Cormorant Garamond', Georgia, serif;
+            --font-body: 'Inter', sans-serif;
+        }
+
         body {
-            font-family: 'Inter', "Helvetica Neue", Arial, sans-serif;
+            font-family: var(--font-body);
             background-color: var(--app-bg);
             color: var(--app-text);
             overflow-x: hidden;
@@ -25,7 +35,7 @@
         @keyframes fadeInUp {
             from {
                 opacity: 0;
-                transform: translateY(30px);
+                transform: translateY(40px);
             }
 
             to {
@@ -44,44 +54,70 @@
             }
         }
 
-        @keyframes gradientShift {
-
-            0%,
-            100% {
-                background-position: 0% 50%;
-            }
-
-            50% {
-                background-position: 100% 50%;
-            }
-        }
-
         @keyframes float {
 
             0%,
             100% {
-                transform: translateY(0px);
+                transform: translateY(0) rotate(0deg);
             }
 
             50% {
-                transform: translateY(-10px);
+                transform: translateY(-15px) rotate(2deg);
             }
         }
 
-        @keyframes shimmer {
-            0% {
-                background-position: -1000px 0;
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 0.4;
             }
 
-            100% {
-                background-position: 1000px 0;
+            50% {
+                opacity: 0.8;
+            }
+        }
+
+        @keyframes slideInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-60px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(60px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes scaleIn {
+            from {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1);
             }
         }
 
         .animate-on-scroll {
             opacity: 0;
-            transform: translateY(30px);
-            transition: opacity 0.8s ease, transform 0.8s ease;
+            transform: translateY(40px);
+            transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .animate-on-scroll.visible {
@@ -92,364 +128,817 @@
         /* ===== HERO SECTION ===== */
         .hero {
             position: relative;
-            min-height: 85vh;
+            min-height: 100vh;
             display: flex;
             align-items: center;
-            text-align: left;
-            padding: 100px 0;
             overflow: hidden;
-            background: linear-gradient(135deg,
-                    rgba(99, 102, 241, 0.9),
-                    rgba(139, 92, 246, 0.85),
-                    rgba(236, 72, 153, 0.9)),
-                url("https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=1600&q=80") center / cover;
-            background-size: 400% 400%;
-            animation: gradientShift 15s ease infinite;
-            color: #fff;
+            background: linear-gradient(135deg, var(--color-cloud) 0%, var(--color-mist) 50%, var(--color-steel) 100%);
         }
 
         .hero::before {
             content: '';
             position: absolute;
-            inset: 0;
-            background: radial-gradient(circle at 20% 50%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
-                radial-gradient(circle at 80% 80%, rgba(255, 255, 255, 0.1) 0%, transparent 50%);
-            animation: float 8s ease-in-out infinite;
+            top: -50%;
+            right: -20%;
+            width: 80%;
+            height: 150%;
+            background: radial-gradient(ellipse, rgba(181, 207, 216, 0.6) 0%, transparent 70%);
+            animation: pulse 8s ease-in-out infinite;
+        }
+
+        .hero::after {
+            content: '';
+            position: absolute;
+            bottom: -30%;
+            left: -10%;
+            width: 60%;
+            height: 100%;
+            background: radial-gradient(ellipse, rgba(115, 147, 167, 0.4) 0%, transparent 70%);
+            animation: pulse 10s ease-in-out infinite reverse;
+        }
+
+        .hero-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+            align-items: center;
+            position: relative;
+            z-index: 2;
         }
 
         .hero-content {
+            animation: slideInLeft 1s ease;
+        }
+
+        .hero-visual {
             position: relative;
-            z-index: 2;
-            animation: fadeInUp 1s ease;
+            animation: slideInRight 1s ease 0.2s backwards;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(10px);
+            padding: 0.6rem 1.2rem;
+            border-radius: 50px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: var(--color-slate);
+            margin-bottom: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.5);
+        }
+
+        .hero-badge i {
+            color: var(--color-steel);
         }
 
         .hero h1 {
-            font-size: 4rem;
-            font-weight: 800;
-            letter-spacing: -0.02em;
+            font-family: var(--font-display);
+            font-size: 4.5rem;
+            font-weight: 500;
             line-height: 1.1;
+            color: var(--color-slate);
             margin-bottom: 1.5rem;
-            text-shadow: 0 2px 20px rgba(0, 0, 0, 0.3);
+            letter-spacing: -0.02em;
+        }
+
+        .hero h1 span {
+            color: var(--color-steel);
+            font-style: italic;
         }
 
         .hero .lead {
-            font-size: 1.25rem;
-            font-weight: 300;
-            line-height: 1.6;
-            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+            font-size: 1.15rem;
+            font-weight: 400;
+            line-height: 1.8;
+            color: var(--color-slate);
+            opacity: 0.8;
+            max-width: 480px;
         }
 
-        .pill {
-            display: inline-block;
-            text-transform: uppercase;
-            letter-spacing: 0.3em;
-            font-size: 0.7rem;
-            font-weight: 600;
-            color: rgba(255, 255, 255, 0.9);
-            background: rgba(255, 255, 255, 0.15);
-            backdrop-filter: blur(10px);
-            padding: 0.5rem 1.5rem;
-            border-radius: 50px;
-            margin-bottom: 2rem;
-            border: 1px solid rgba(255, 255, 255, 0.2);
+        .hero-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2.5rem;
         }
 
-        .hero .btn {
-            margin-top: 1rem;
+        .btn-primary-custom {
+            background: var(--color-slate);
+            color: #fff;
             padding: 1rem 2.5rem;
-            font-weight: 600;
             border-radius: 50px;
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            transition: all 0.3s ease;
-            backdrop-filter: blur(10px);
+            font-weight: 600;
+            font-size: 0.9rem;
+            border: none;
+            transition: all 0.4s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
         }
 
-        .hero .btn-light {
+        .btn-primary-custom:hover {
+            background: var(--color-steel);
+            color: #fff;
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(108, 115, 126, 0.3);
+        }
+
+        .btn-secondary-custom {
+            background: transparent;
+            color: var(--color-slate);
+            padding: 1rem 2rem;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            border: 2px solid var(--color-slate);
+            transition: all 0.4s ease;
+            text-decoration: none;
+        }
+
+        .btn-secondary-custom:hover {
+            background: var(--color-slate);
+            color: #fff;
+            transform: translateY(-3px);
+        }
+
+        .hero-image-main {
+            position: relative;
+            border-radius: 300px 300px 40px 40px;
+            overflow: hidden;
+            box-shadow: 0 40px 80px rgba(108, 115, 126, 0.25);
+            animation: float 6s ease-in-out infinite;
+        }
+
+        .hero-image-main img {
+            width: 100%;
+            height: 600px;
+            object-fit: cover;
+        }
+
+        .hero-floating-card {
+            position: absolute;
+            bottom: 60px;
+            left: -60px;
             background: rgba(255, 255, 255, 0.95);
-            color: #6366f1;
-            border-color: transparent;
+            backdrop-filter: blur(20px);
+            padding: 1.5rem;
+            border-radius: 20px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.1);
+            animation: fadeIn 1s ease 0.5s backwards;
         }
 
-        .hero .btn-light:hover {
-            background: #fff;
-            transform: translateY(-2px);
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        .hero-floating-card p {
+            margin: 0;
+            font-size: 0.85rem;
+            color: var(--color-slate);
         }
 
-        .hero .btn-outline-light:hover {
-            background: rgba(255, 255, 255, 0.2);
-            border-color: #fff;
-            transform: translateY(-2px);
+        .hero-floating-card .number {
+            font-family: var(--font-display);
+            font-size: 2.5rem;
+            font-weight: 600;
+            color: var(--color-steel);
+            display: block;
         }
 
-        /* ===== SECTION STYLING ===== */
-        .section-title {
+        /* ===== FEATURED PRODUCTS ===== */
+        .featured-section {
+            padding: 120px 0;
+            background: var(--color-cream);
+            position: relative;
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 4rem;
+        }
+
+        .section-label {
             display: inline-block;
-            letter-spacing: 0.25em;
-            font-weight: 700;
             font-size: 0.75rem;
-            background: linear-gradient(135deg, #6366f1, #8b5cf6, #ec4899);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+            font-weight: 600;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: var(--color-steel);
             margin-bottom: 1rem;
             position: relative;
-            padding-bottom: 0.5rem;
+            padding: 0 2rem;
         }
 
-        .section-title::after {
+        .section-label::before,
+        .section-label::after {
             content: '';
             position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 60px;
-            height: 3px;
-            background: linear-gradient(90deg, #6366f1, #8b5cf6);
-            border-radius: 2px;
+            top: 50%;
+            width: 40px;
+            height: 1px;
+            background: var(--color-mist);
         }
 
-        /* ===== COLLECTION CARDS ===== */
-        .collection-card {
-            border: none;
-            border-radius: 20px;
+        .section-label::before {
+            left: -20px;
+        }
+
+        .section-label::after {
+            right: -20px;
+        }
+
+        .section-title {
+            font-family: var(--font-display);
+            font-size: 3rem;
+            font-weight: 500;
+            color: var(--color-slate);
+            margin-bottom: 1rem;
+        }
+
+        .section-subtitle {
+            color: var(--color-slate);
+            opacity: 0.7;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 2rem;
+        }
+
+        .product-card {
+            background: #fff;
+            border-radius: 24px;
             overflow: hidden;
-            background: var(--card-bg);
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
             position: relative;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.05);
         }
 
-        .collection-card::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(236, 72, 153, 0.1));
-            opacity: 0;
-            transition: opacity 0.4s ease;
-            z-index: 1;
-            pointer-events: none;
+        .product-card:hover {
+            transform: translateY(-12px);
+            box-shadow: 0 30px 60px rgba(108, 115, 126, 0.2);
         }
 
-        .collection-card:hover::before {
-            opacity: 1;
-        }
-
-        .collection-card:hover {
-            transform: translateY(-12px) scale(1.02);
-            box-shadow: 0 20px 60px rgba(99, 102, 241, 0.3);
-        }
-
-        .collection-card-image-wrapper {
+        .product-image {
             position: relative;
             overflow: hidden;
-            border-radius: 20px 20px 0 0;
+            aspect-ratio: 3/4;
         }
 
-        .collection-card img {
-            height: 320px;
-            object-fit: cover;
+        .product-image img {
             width: 100%;
-            transition: transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.6s ease;
         }
 
-        .collection-card:hover img {
+        .product-card:hover .product-image img {
+            transform: scale(1.08);
+        }
+
+        .product-badge {
+            position: absolute;
+            top: 1rem;
+            left: 1rem;
+            background: var(--color-steel);
+            color: #fff;
+            padding: 0.4rem 0.8rem;
+            border-radius: 50px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            letter-spacing: 0.1em;
+        }
+
+        .product-actions {
+            position: absolute;
+            bottom: 1rem;
+            left: 50%;
+            transform: translateX(-50%) translateY(20px);
+            opacity: 0;
+            transition: all 0.4s ease;
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .product-card:hover .product-actions {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .product-action-btn {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.95);
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--color-slate);
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .product-action-btn:hover {
+            background: var(--color-slate);
+            color: #fff;
             transform: scale(1.1);
         }
 
-        .collection-card-overlay {
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(to top, rgba(0, 0, 0, 0.7) 0%, transparent 60%);
-            opacity: 0;
-            transition: opacity 0.4s ease;
+        .product-info {
+            padding: 1.5rem;
+            text-align: center;
         }
 
-        .collection-card:hover .collection-card-overlay {
-            opacity: 1;
+        .product-category {
+            font-size: 0.75rem;
+            color: var(--color-steel);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 0.5rem;
         }
 
-        .collection-card .card-body {
-            padding: 2rem;
-            position: relative;
-            z-index: 2;
+        .product-name {
+            font-family: var(--font-display);
+            font-size: 1.25rem;
+            font-weight: 500;
+            color: var(--color-slate);
+            margin-bottom: 0.5rem;
         }
 
-        .collection-card .card-title {
-            font-weight: 700;
-            font-size: 1.35rem;
-            margin-bottom: 1rem;
-            background: linear-gradient(135deg, var(--app-text), #6366f1);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        .collection-card .btn {
-            border-radius: 50px;
-            padding: 0.75rem 2rem;
+        .product-price {
             font-weight: 600;
-            font-size: 0.9rem;
-            transition: all 0.3s ease;
+            color: var(--color-slate);
+        }
+
+        /* ===== CATEGORIES SHOWCASE ===== */
+        .categories-section {
+            padding: 120px 0;
+            background: #fff;
+        }
+
+        .category-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+        }
+
+        .category-card {
             position: relative;
+            height: 450px;
+            border-radius: 30px;
             overflow: hidden;
+            cursor: pointer;
         }
 
-        .collection-card .btn-outline-dark {
-            border: 2px solid var(--app-text);
-            color: var(--app-text);
+        .category-card img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.8s ease;
         }
 
-        .collection-card .btn-outline-dark::before {
-            content: '';
+        .category-card:hover img {
+            transform: scale(1.1);
+        }
+
+        .category-overlay {
             position: absolute;
             inset: 0;
-            background: linear-gradient(135deg, #6366f1, #8b5cf6);
-            transform: translateX(-100%);
-            transition: transform 0.3s ease;
+            background: linear-gradient(to top, rgba(108, 115, 126, 0.9) 0%, transparent 60%);
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            padding: 2.5rem;
+            transition: background 0.5s ease;
         }
 
-        .collection-card .btn-outline-dark span {
-            position: relative;
-            z-index: 1;
+        .category-card:hover .category-overlay {
+            background: linear-gradient(to top, rgba(108, 115, 126, 0.95) 0%, rgba(108, 115, 126, 0.3) 100%);
         }
 
-        .collection-card .btn-outline-dark:hover {
+        .category-title {
+            font-family: var(--font-display);
+            font-size: 2rem;
+            font-weight: 500;
             color: #fff;
-            border-color: #6366f1;
+            margin-bottom: 0.5rem;
         }
 
-        .collection-card .btn-outline-dark:hover::before {
+        .category-count {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.9rem;
+        }
+
+        .category-link {
+            position: absolute;
+            bottom: 2.5rem;
+            right: 2.5rem;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 1.2rem;
+            transition: all 0.4s ease;
+            transform: translateX(20px);
+            opacity: 0;
+        }
+
+        .category-card:hover .category-link {
             transform: translateX(0);
+            opacity: 1;
+            background: #fff;
+            color: var(--color-slate);
         }
 
-        /* ===== STORIES SECTION ===== */
-        #stories {
-            position: relative;
-            padding: 100px 0;
+        /* ===== LOOKBOOK SECTION ===== */
+        .lookbook-section {
+            padding: 120px 0;
+            background: linear-gradient(180deg, var(--color-cloud) 0%, #fff 100%);
         }
 
-        #stories .story-image {
+        .lookbook-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+            align-items: center;
+        }
+
+        .lookbook-images {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+        }
+
+        .lookbook-img {
             border-radius: 24px;
             overflow: hidden;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
-            transition: transform 0.5s ease;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.1);
+            transition: all 0.5s ease;
         }
 
-        #stories .story-image:hover {
-            transform: scale(1.03);
+        .lookbook-img:nth-child(2) {
+            margin-top: 3rem;
         }
 
-        #stories h3 {
-            font-size: 2.5rem;
-            font-weight: 800;
+        .lookbook-img:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 30px 60px rgba(108, 115, 126, 0.25);
+        }
+
+        .lookbook-img img {
+            width: 100%;
+            height: 300px;
+            object-fit: cover;
+        }
+
+        .lookbook-content h2 {
+            font-family: var(--font-display);
+            font-size: 3rem;
+            font-weight: 500;
+            color: var(--color-slate);
             line-height: 1.2;
             margin-bottom: 1.5rem;
         }
 
-        #stories ul li {
-            padding: 0.5rem 0;
-            font-size: 1.05rem;
-            position: relative;
-            padding-left: 1.5rem;
+        .lookbook-content p {
+            color: var(--color-slate);
+            opacity: 0.8;
+            line-height: 1.8;
+            margin-bottom: 2rem;
         }
 
-        #stories ul li::before {
-            content: '✓';
-            position: absolute;
-            left: 0;
-            color: #6366f1;
-            font-weight: 700;
+        .feature-list {
+            list-style: none;
+            padding: 0;
+            margin: 2rem 0;
         }
 
-        /* ===== CTA BANNER ===== */
-        .cta-banner {
+        .feature-list li {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 0.8rem 0;
+            color: var(--color-slate);
+            border-bottom: 1px solid var(--color-cloud);
+        }
+
+        .feature-list li i {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--color-mist);
+            color: var(--color-slate);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+        }
+
+        /* ===== TESTIMONIALS ===== */
+        .testimonials-section {
+            padding: 120px 0;
+            background: var(--color-slate);
             position: relative;
-            padding: 100px 40px;
-            background: linear-gradient(135deg, #1e1b4b, #312e81, #4c1d95, #701a75);
-            background-size: 400% 400%;
-            animation: gradientShift 15s ease infinite;
-            color: #fff;
             overflow: hidden;
         }
 
-        .cta-banner::before {
-            content: '';
+        .testimonials-section::before {
+            content: '"';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-family: var(--font-display);
+            font-size: 40rem;
+            color: rgba(255, 255, 255, 0.03);
+            pointer-events: none;
+        }
+
+        .testimonials-section .section-label {
+            color: var(--color-mist);
+        }
+
+        .testimonials-section .section-label::before,
+        .testimonials-section .section-label::after {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .testimonials-section .section-title {
+            color: #fff;
+        }
+
+        .testimonial-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 24px;
+            padding: 2.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            height: 100%;
+        }
+
+        .testimonial-rating {
+            color: #fbbf24;
+            margin-bottom: 1.5rem;
+            font-size: 0.9rem;
+        }
+
+        .testimonial-text {
+            font-family: var(--font-display);
+            font-size: 1.35rem;
+            font-style: italic;
+            color: #fff;
+            line-height: 1.6;
+            margin-bottom: 2rem;
+        }
+
+        .testimonial-author {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .testimonial-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .testimonial-name {
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 0.2rem;
+        }
+
+        .testimonial-role {
+            font-size: 0.85rem;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        /* ===== INSTAGRAM FEED ===== */
+        .instagram-section {
+            padding: 100px 0;
+            background: #fff;
+        }
+
+        .instagram-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 0.5rem;
+        }
+
+        .instagram-item {
+            aspect-ratio: 1;
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+        }
+
+        .instagram-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s ease;
+        }
+
+        .instagram-item:hover img {
+            transform: scale(1.1);
+        }
+
+        .instagram-overlay {
             position: absolute;
             inset: 0;
-            background: radial-gradient(circle at 30% 50%, rgba(139, 92, 246, 0.3) 0%, transparent 50%),
-                radial-gradient(circle at 70% 80%, rgba(236, 72, 153, 0.3) 0%, transparent 50%);
-            animation: float 10s ease-in-out infinite;
+            background: rgba(108, 115, 126, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.4s ease;
         }
 
-        .cta-banner .container {
+        .instagram-item:hover .instagram-overlay {
+            opacity: 1;
+        }
+
+        .instagram-overlay i {
+            color: #fff;
+            font-size: 1.5rem;
+        }
+
+        /* ===== NEWSLETTER ===== */
+        .newsletter-section {
+            padding: 100px 0;
+            background: linear-gradient(135deg, var(--color-mist) 0%, var(--color-steel) 100%);
             position: relative;
-            z-index: 2;
         }
 
-        .cta-banner h2 {
+        .newsletter-content {
+            text-align: center;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .newsletter-content h2 {
+            font-family: var(--font-display);
             font-size: 2.5rem;
-            font-weight: 800;
+            font-weight: 500;
+            color: #fff;
             margin-bottom: 1rem;
-            line-height: 1.2;
         }
 
-        .cta-banner .btn-light {
-            background: #fff;
-            color: #6366f1;
+        .newsletter-content p {
+            color: rgba(255, 255, 255, 0.9);
+            margin-bottom: 2rem;
+        }
+
+        .newsletter-form {
+            display: flex;
+            gap: 1rem;
+            max-width: 480px;
+            margin: 0 auto;
+        }
+
+        .newsletter-input {
+            flex: 1;
+            padding: 1rem 1.5rem;
             border: none;
-            padding: 1.25rem 3rem;
-            font-weight: 700;
             border-radius: 50px;
-            font-size: 1.1rem;
-            transition: all 0.3s ease;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            font-size: 0.95rem;
+            background: rgba(255, 255, 255, 0.95);
+            color: var(--color-slate);
         }
 
-        .cta-banner .btn-light:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 15px 40px rgba(255, 255, 255, 0.3);
-            background: linear-gradient(135deg, #fff, #f0f0f0);
+        .newsletter-input:focus {
+            outline: none;
+            box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.3);
+        }
+
+        .newsletter-btn {
+            background: var(--color-slate);
+            color: #fff;
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 50px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .newsletter-btn:hover {
+            background: #4a5159;
+            transform: translateY(-2px);
         }
 
         /* ===== RESPONSIVE ===== */
+        @media (max-width: 1199.98px) {
+            .hero h1 {
+                font-size: 3.5rem;
+            }
+
+            .product-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
         @media (max-width: 991.98px) {
             .hero {
-                min-height: 70vh;
-                padding: 60px 0;
+                min-height: auto;
+                padding: 100px 0;
+            }
+
+            .hero-grid {
+                grid-template-columns: 1fr;
+                gap: 3rem;
             }
 
             .hero h1 {
-                font-size: 2.5rem;
+                font-size: 3rem;
             }
 
-            #stories h3 {
-                font-size: 2rem;
+            .hero-visual {
+                order: -1;
             }
 
-            .cta-banner h2 {
-                font-size: 2rem;
+            .hero-floating-card {
+                left: auto;
+                right: -20px;
+            }
+
+            .product-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .category-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .category-card {
+                height: 350px;
+            }
+
+            .lookbook-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .lookbook-images {
+                order: -1;
+            }
+
+            .instagram-grid {
+                grid-template-columns: repeat(3, 1fr);
             }
         }
 
         @media (max-width: 767.98px) {
             .hero h1 {
+                font-size: 2.5rem;
+            }
+
+            .section-title {
                 font-size: 2rem;
             }
 
-            .hero .lead {
-                font-size: 1rem;
+            .hero-buttons {
+                flex-direction: column;
             }
 
-            .collection-card img {
-                height: 250px;
+            .hero-image-main img {
+                height: 400px;
             }
 
-            .cta-banner {
-                padding: 60px 20px;
+            .product-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .lookbook-images {
+                grid-template-columns: 1fr;
+            }
+
+            .lookbook-img:nth-child(2) {
+                margin-top: 0;
+            }
+
+            .newsletter-form {
+                flex-direction: column;
+            }
+
+            .instagram-grid {
+                grid-template-columns: repeat(2, 1fr);
             }
         }
 
-        /* ===== STAGGER ANIMATION ===== */
+        /* ===== STAGGER ANIMATIONS ===== */
         .stagger-item {
             animation: fadeInUp 0.8s ease backwards;
         }
@@ -465,6 +954,10 @@
         .stagger-item:nth-child(3) {
             animation-delay: 0.3s;
         }
+
+        .stagger-item:nth-child(4) {
+            animation-delay: 0.4s;
+        }
     </style>
 </head>
 
@@ -472,76 +965,288 @@
     <%- include('partials/header') %>
         <main class="site-main">
             <!-- Hero Section -->
-            <header class="hero">
-                <div class="container hero-content">
-                    <div class="pill">✦ SPRING 2025 COLLECTION</div>
-                    <h1>Elevated essentials<br>for a bold new season.</h1>
-                    <p class="lead mt-3 col-lg-8">Discover limited-run capsules inspired by Parisian street style and
-                        Japanese
-                        minimalism. Tailored silhouettes, sustainable fabrics, unmistakable presence.</p>
-                    <div class="mt-5">
-                        <a href="#collections" class="btn btn-light btn-lg px-5 me-3">Explore Lookbook</a>
-                        <a href="/products" class="btn btn-outline-light btn-lg px-5">Shop Now</a>
+            <section class="hero">
+                <div class="container">
+                    <div class="hero-grid">
+                        <div class="hero-content">
+                            <div class="hero-badge">
+                                <i class="bi bi-stars"></i>
+                                Bộ sưu tập mới 2025
+                            </div>
+                            <h1>Phong cách<br><span>tinh tế</span><br>cho mọi khoảnh khắc</h1>
+                            <p class="lead">Khám phá những thiết kế độc đáo, được tuyển chọn kỹ lưỡng từ chất liệu cao
+                                cấp. Mang đến vẻ đẹp dịu dàng và sang trọng cho bạn.</p>
+                            <div class="hero-buttons">
+                                <a href="/products" class="btn-primary-custom">
+                                    Khám phá ngay
+                                    <i class="bi bi-arrow-right"></i>
+                                </a>
+                                <a href="#collections" class="btn-secondary-custom">Xem Lookbook</a>
+                            </div>
+                        </div>
+                        <div class="hero-visual">
+                            <div class="hero-image-main">
+                                <img src="https://images.unsplash.com/photo-1469334031218-e382a71b716b?auto=format&fit=crop&w=800&q=80"
+                                    alt="Fashion Model">
+                            </div>
+                            <div class="hero-floating-card">
+                                <span class="number">500+</span>
+                                <p>Sản phẩm cao cấp</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </header>
+            </section>
 
-            <!-- Collections Section -->
-            <section id="collections" class="py-5 my-5">
+            <!-- Featured Products -->
+            <section class="featured-section">
                 <div class="container">
-                    <div class="text-center mb-5 animate-on-scroll">
-                        <p class="section-title">COLLECTIONS</p>
-                        <h2 class="fw-bold display-5">Curated drops every month</h2>
-                        <p class="text-muted col-lg-6 mx-auto mt-3">Hand-picked silhouettes for work, weekend, and every
-                            memorable moment.</p>
+                    <div class="section-header animate-on-scroll">
+                        <span class="section-label">Sản phẩm nổi bật</span>
+                        <h2 class="section-title">Được yêu thích nhất</h2>
+                        <p class="section-subtitle">Những thiết kế được khách hàng lựa chọn nhiều nhất trong tuần</p>
+                    </div>
+                    <div class="product-grid">
+                        <div class="product-card stagger-item animate-on-scroll">
+                            <div class="product-image">
+                                <img src="https://images.unsplash.com/photo-1594938298603-c8148c4dae35?auto=format&fit=crop&w=600&q=80"
+                                    alt="Áo sơ mi lụa">
+                                <span class="product-badge">Mới</span>
+                                <div class="product-actions">
+                                    <button class="product-action-btn"><i class="bi bi-heart"></i></button>
+                                    <button class="product-action-btn"><i class="bi bi-bag-plus"></i></button>
+                                    <button class="product-action-btn"><i class="bi bi-eye"></i></button>
+                                </div>
+                            </div>
+                            <div class="product-info">
+                                <p class="product-category">Áo nữ</p>
+                                <h3 class="product-name">Áo Sơ Mi Lụa Cao Cấp</h3>
+                                <p class="product-price">1,290,000₫</p>
+                            </div>
+                        </div>
+                        <div class="product-card stagger-item animate-on-scroll">
+                            <div class="product-image">
+                                <img src="https://images.unsplash.com/photo-1551028719-00167b16eac5?auto=format&fit=crop&w=600&q=80"
+                                    alt="Blazer">
+                                <span class="product-badge">Hot</span>
+                                <div class="product-actions">
+                                    <button class="product-action-btn"><i class="bi bi-heart"></i></button>
+                                    <button class="product-action-btn"><i class="bi bi-bag-plus"></i></button>
+                                    <button class="product-action-btn"><i class="bi bi-eye"></i></button>
+                                </div>
+                            </div>
+                            <div class="product-info">
+                                <p class="product-category">Áo khoác</p>
+                                <h3 class="product-name">Blazer Modern Fit</h3>
+                                <p class="product-price">2,590,000₫</p>
+                            </div>
+                        </div>
+                        <div class="product-card stagger-item animate-on-scroll">
+                            <div class="product-image">
+                                <img src="https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=600&q=80"
+                                    alt="Váy">
+                                <div class="product-actions">
+                                    <button class="product-action-btn"><i class="bi bi-heart"></i></button>
+                                    <button class="product-action-btn"><i class="bi bi-bag-plus"></i></button>
+                                    <button class="product-action-btn"><i class="bi bi-eye"></i></button>
+                                </div>
+                            </div>
+                            <div class="product-info">
+                                <p class="product-category">Đầm</p>
+                                <h3 class="product-name">Đầm Dạ Hội Elegance</h3>
+                                <p class="product-price">3,890,000₫</p>
+                            </div>
+                        </div>
+                        <div class="product-card stagger-item animate-on-scroll">
+                            <div class="product-image">
+                                <img src="https://images.unsplash.com/photo-1591047139829-d91aecb6caea?auto=format&fit=crop&w=600&q=80"
+                                    alt="Áo khoác">
+                                <span class="product-badge">-20%</span>
+                                <div class="product-actions">
+                                    <button class="product-action-btn"><i class="bi bi-heart"></i></button>
+                                    <button class="product-action-btn"><i class="bi bi-bag-plus"></i></button>
+                                    <button class="product-action-btn"><i class="bi bi-eye"></i></button>
+                                </div>
+                            </div>
+                            <div class="product-info">
+                                <p class="product-category">Áo khoác</p>
+                                <h3 class="product-name">Trench Coat Premium</h3>
+                                <p class="product-price">4,190,000₫</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="text-center mt-5">
+                        <a href="/products" class="btn-primary-custom">
+                            Xem tất cả sản phẩm
+                            <i class="bi bi-arrow-right"></i>
+                        </a>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Categories Showcase -->
+            <section id="collections" class="categories-section">
+                <div class="container">
+                    <div class="section-header animate-on-scroll">
+                        <span class="section-label">Danh mục</span>
+                        <h2 class="section-title">Khám phá bộ sưu tập</h2>
+                        <p class="section-subtitle">Đa dạng phong cách cho mọi dịp</p>
+                    </div>
+                    <div class="category-grid">
+                        <a href="/products" class="category-card animate-on-scroll">
+                            <img src="https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=800&q=80"
+                                alt="Thời trang nữ">
+                            <div class="category-overlay">
+                                <h3 class="category-title">Thời trang nữ</h3>
+                                <p class="category-count">120+ sản phẩm</p>
+                            </div>
+                            <span class="category-link"><i class="bi bi-arrow-right"></i></span>
+                        </a>
+                        <a href="/products" class="category-card animate-on-scroll">
+                            <img src="https://images.unsplash.com/photo-1507680434567-5739c80be1ac?auto=format&fit=crop&w=800&q=80"
+                                alt="Thời trang nam">
+                            <div class="category-overlay">
+                                <h3 class="category-title">Thời trang nam</h3>
+                                <p class="category-count">95+ sản phẩm</p>
+                            </div>
+                            <span class="category-link"><i class="bi bi-arrow-right"></i></span>
+                        </a>
+                        <a href="/products" class="category-card animate-on-scroll">
+                            <img src="https://images.unsplash.com/photo-1492707892479-7bc8d5a4ee93?auto=format&fit=crop&w=800&q=80"
+                                alt="Phụ kiện">
+                            <div class="category-overlay">
+                                <h3 class="category-title">Phụ kiện</h3>
+                                <p class="category-count">50+ sản phẩm</p>
+                            </div>
+                            <span class="category-link"><i class="bi bi-arrow-right"></i></span>
+                        </a>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Lookbook Section -->
+            <section class="lookbook-section">
+                <div class="container">
+                    <div class="lookbook-grid">
+                        <div class="lookbook-images animate-on-scroll">
+                            <div class="lookbook-img">
+                                <img src="https://images.unsplash.com/photo-1509631179647-0177331693ae?auto=format&fit=crop&w=600&q=80"
+                                    alt="Lookbook 1">
+                            </div>
+                            <div class="lookbook-img">
+                                <img src="https://images.unsplash.com/photo-1496747611176-843222e1e57c?auto=format&fit=crop&w=600&q=80"
+                                    alt="Lookbook 2">
+                            </div>
+                            <div class="lookbook-img">
+                                <img src="https://images.unsplash.com/photo-1485968579169-a6f2b98ef4f4?auto=format&fit=crop&w=600&q=80"
+                                    alt="Lookbook 3">
+                            </div>
+                            <div class="lookbook-img">
+                                <img src="https://images.unsplash.com/photo-1475180098004-ca77a66827be?auto=format&fit=crop&w=600&q=80"
+                                    alt="Lookbook 4">
+                            </div>
+                        </div>
+                        <div class="lookbook-content animate-on-scroll">
+                            <span class="section-label">Câu chuyện thương hiệu</span>
+                            <h2>Chất lượng vượt thời gian</h2>
+                            <p>Mỗi sản phẩm của Moda Studio đều được chế tác tỉ mỉ từ những chất liệu cao cấp nhất.
+                                Chúng tôi tin rằng thời trang không chỉ là vẻ đẹp bên ngoài mà còn là sự thoải mái và tự
+                                tin bên trong.</p>
+                            <ul class="feature-list">
+                                <li>
+                                    <i class="bi bi-check2"></i>
+                                    <span>Chất liệu 100% organic, thân thiện môi trường</span>
+                                </li>
+                                <li>
+                                    <i class="bi bi-check2"></i>
+                                    <span>Thiết kế độc quyền, giới hạn số lượng</span>
+                                </li>
+                                <li>
+                                    <i class="bi bi-check2"></i>
+                                    <span>Miễn phí ship toàn quốc cho đơn từ 1 triệu</span>
+                                </li>
+                                <li>
+                                    <i class="bi bi-check2"></i>
+                                    <span>Đổi trả dễ dàng trong 30 ngày</span>
+                                </li>
+                            </ul>
+                            <a href="/products" class="btn-primary-custom mt-3">
+                                Xem thêm về chúng tôi
+                                <i class="bi bi-arrow-right"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Testimonials -->
+            <section class="testimonials-section">
+                <div class="container">
+                    <div class="section-header mb-5">
+                        <span class="section-label">Đánh giá</span>
+                        <h2 class="section-title">Khách hàng nói gì về chúng tôi</h2>
                     </div>
                     <div class="row g-4">
-                        <div class="col-md-4 stagger-item">
-                            <div class="card collection-card">
-                                <div class="collection-card-image-wrapper">
-                                    <img src="https://images.unsplash.com/photo-1504593811423-6dd665756598?auto=format&fit=crop&w=900&q=80"
-                                        class="card-img-top" alt="Modern Tailoring">
-                                    <div class="collection-card-overlay"></div>
+                        <div class="col-md-4 animate-on-scroll">
+                            <div class="testimonial-card">
+                                <div class="testimonial-rating">
+                                    <i class="bi bi-star-fill"></i>
+                                    <i class="bi bi-star-fill"></i>
+                                    <i class="bi bi-star-fill"></i>
+                                    <i class="bi bi-star-fill"></i>
+                                    <i class="bi bi-star-fill"></i>
                                 </div>
-                                <div class="card-body">
-                                    <h5 class="card-title">Modern Tailoring</h5>
-                                    <p class="card-text text-muted">Architectural lines softened with silk-wool blends.
-                                        From
-                                        boardroom to rooftop.</p>
-                                    <a href="/products" class="btn btn-outline-dark mt-3"><span>Shop Capsule</span></a>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-4 stagger-item">
-                            <div class="card collection-card">
-                                <div class="collection-card-image-wrapper">
-                                    <img src="https://images.unsplash.com/photo-1509631179647-0177331693ae?auto=format&fit=crop&w=900&q=80"
-                                        class="card-img-top" alt="Street Luxe">
-                                    <div class="collection-card-overlay"></div>
-                                </div>
-                                <div class="card-body">
-                                    <h5 class="card-title">Street Luxe</h5>
-                                    <p class="card-text text-muted">Metallic finishes, oversized fits, effortless
-                                        swagger.
-                                        Limited to 300 pieces.</p>
-                                    <a href="/products" class="btn btn-outline-dark mt-3"><span>Discover Drop</span></a>
+                                <p class="testimonial-text">"Chất lượng vải tuyệt vời, đường may tỉ mỉ. Tôi rất hài lòng
+                                    với chiếc áo blazer mua ở đây."</p>
+                                <div class="testimonial-author">
+                                    <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=100&q=80"
+                                        alt="Customer" class="testimonial-avatar">
+                                    <div>
+                                        <p class="testimonial-name">Ngọc Trâm</p>
+                                        <p class="testimonial-role">Khách hàng VIP</p>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                        <div class="col-md-4 stagger-item">
-                            <div class="card collection-card">
-                                <div class="collection-card-image-wrapper">
-                                    <img src="https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=900&q=80"
-                                        class="card-img-top" alt="Resort Escape">
-                                    <div class="collection-card-overlay"></div>
+                        <div class="col-md-4 animate-on-scroll">
+                            <div class="testimonial-card">
+                                <div class="testimonial-rating">
+                                    <i class="bi bi-star-fill"></i>
+                                    <i class="bi bi-star-fill"></i>
+                                    <i class="bi bi-star-fill"></i>
+                                    <i class="bi bi-star-fill"></i>
+                                    <i class="bi bi-star-fill"></i>
                                 </div>
-                                <div class="card-body">
-                                    <h5 class="card-title">Resort Escape</h5>
-                                    <p class="card-text text-muted">Light linens, coastal palettes, ultra-relaxed layers
-                                        for
-                                        faraway afternoons.</p>
-                                    <a href="/products" class="btn btn-outline-dark mt-3"><span>Preview
-                                            Styles</span></a>
+                                <p class="testimonial-text">"Dịch vụ tư vấn chuyên nghiệp, giao hàng nhanh chóng. Đây là
+                                    địa chỉ mua sắm yêu thích của tôi."</p>
+                                <div class="testimonial-author">
+                                    <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=100&q=80"
+                                        alt="Customer" class="testimonial-avatar">
+                                    <div>
+                                        <p class="testimonial-name">Minh Tuấn</p>
+                                        <p class="testimonial-role">Khách hàng thân thiết</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 animate-on-scroll">
+                            <div class="testimonial-card">
+                                <div class="testimonial-rating">
+                                    <i class="bi bi-star-fill"></i>
+                                    <i class="bi bi-star-fill"></i>
+                                    <i class="bi bi-star-fill"></i>
+                                    <i class="bi bi-star-fill"></i>
+                                    <i class="bi bi-star-fill"></i>
+                                </div>
+                                <p class="testimonial-text">"Thiết kế độc đáo, không đụng hàng. Mỗi lần mặc đồ từ Moda
+                                    đều nhận được nhiều lời khen."</p>
+                                <div class="testimonial-author">
+                                    <img src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=100&q=80"
+                                        alt="Customer" class="testimonial-avatar">
+                                    <div>
+                                        <p class="testimonial-name">Thanh Hà</p>
+                                        <p class="testimonial-role">Fashion Blogger</p>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -549,54 +1254,63 @@
                 </div>
             </section>
 
-            <!-- Stories Section -->
-            <section id="stories" class="py-5 bg-white">
+            <!-- Instagram Feed -->
+            <section class="instagram-section">
                 <div class="container">
-                    <div class="row align-items-center g-5">
-                        <div class="col-lg-6 animate-on-scroll">
-                            <img class="img-fluid story-image"
-                                src="https://images.unsplash.com/photo-1514996937319-344454492b37?auto=format&fit=crop&w=1200&q=80"
-                                alt="Designer at work">
-                        </div>
-                        <div class="col-lg-6 animate-on-scroll">
-                            <p class="section-title">STUDIO STORIES</p>
-                            <h3 class="fw-bold">Craftsmanship that respects the planet.</h3>
-                            <p class="text-muted mt-4">Every garment is cut-to-order in our Saigon atelier using
-                                recycled dyes and
-                                certified organic fibers. We partner with independent artisans to ensure each piece is
-                                sewn with
-                                care and fair-wage practices.</p>
-                            <ul class="list-unstyled text-muted mt-4">
-                                <li>92% of the line uses certified sustainable materials</li>
-                                <li>Carbon-neutral shipping across Vietnam & Southeast Asia</li>
-                                <li>Complimentary tailoring for Members+</li>
-                            </ul>
-                            <a href="/products" class="btn btn-dark mt-4 px-5 py-3"
-                                style="border-radius: 50px; font-weight: 600;">Meet the Makers</a>
-                        </div>
+                    <div class="section-header mb-5 animate-on-scroll">
+                        <span class="section-label">@moda.studio</span>
+                        <h2 class="section-title">Theo dõi chúng tôi trên Instagram</h2>
+                    </div>
+                </div>
+                <div class="instagram-grid">
+                    <div class="instagram-item">
+                        <img src="https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=400&q=80"
+                            alt="Instagram">
+                        <div class="instagram-overlay"><i class="bi bi-instagram"></i></div>
+                    </div>
+                    <div class="instagram-item">
+                        <img src="https://images.unsplash.com/photo-1509631179647-0177331693ae?auto=format&fit=crop&w=400&q=80"
+                            alt="Instagram">
+                        <div class="instagram-overlay"><i class="bi bi-instagram"></i></div>
+                    </div>
+                    <div class="instagram-item">
+                        <img src="https://images.unsplash.com/photo-1496747611176-843222e1e57c?auto=format&fit=crop&w=400&q=80"
+                            alt="Instagram">
+                        <div class="instagram-overlay"><i class="bi bi-instagram"></i></div>
+                    </div>
+                    <div class="instagram-item">
+                        <img src="https://images.unsplash.com/photo-1469334031218-e382a71b716b?auto=format&fit=crop&w=400&q=80"
+                            alt="Instagram">
+                        <div class="instagram-overlay"><i class="bi bi-instagram"></i></div>
+                    </div>
+                    <div class="instagram-item">
+                        <img src="https://images.unsplash.com/photo-1485968579169-a6f2b98ef4f4?auto=format&fit=crop&w=400&q=80"
+                            alt="Instagram">
+                        <div class="instagram-overlay"><i class="bi bi-instagram"></i></div>
+                    </div>
+                    <div class="instagram-item">
+                        <img src="https://images.unsplash.com/photo-1475180098004-ca77a66827be?auto=format&fit=crop&w=400&q=80"
+                            alt="Instagram">
+                        <div class="instagram-overlay"><i class="bi bi-instagram"></i></div>
                     </div>
                 </div>
             </section>
 
-            <!-- CTA Banner -->
-            <section id="shop" class="cta-banner text-center text-lg-start">
+            <!-- Newsletter -->
+            <section class="newsletter-section">
                 <div class="container">
-                    <div class="row align-items-center">
-                        <div class="col-lg-8">
-                            <p class="section-title text-white mb-3"
-                                style="-webkit-text-fill-color: rgba(255, 255, 255, 0.9);">EXCLUSIVE ACCESS</p>
-                            <h2 class="fw-bold">Join the Moda Circle for early drops & private fittings.</h2>
-                            <p class="text-white-50 mt-3 fs-5">Members-only experiences, priority invites to runway
-                                previews, and curated
-                                styling sessions in Ho Chi Minh City.</p>
-                        </div>
-                        <div class="col-lg-4 text-lg-end mt-4 mt-lg-0">
-                            <a href="/signup" class="btn btn-light btn-lg px-5">Become a Member</a>
-                        </div>
+                    <div class="newsletter-content animate-on-scroll">
+                        <h2>Đăng ký nhận ưu đãi</h2>
+                        <p>Nhận ngay voucher giảm 10% cho đơn hàng đầu tiên và cập nhật những bộ sưu tập mới nhất</p>
+                        <form class="newsletter-form">
+                            <input type="email" class="newsletter-input" placeholder="Nhập email của bạn...">
+                            <button type="submit" class="newsletter-btn">Đăng ký</button>
+                        </form>
                     </div>
                 </div>
             </section>
         </main>
+
         <%- include('partials/footer') %>
 
             <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>

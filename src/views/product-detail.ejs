@@ -1,17 +1,35 @@
-<html lang="en">
+<html lang="vi">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Moda Studio | <%= product ? product.name : "Product Detail" %>
+    <title>Moda Studio | <%= product ? product.name : "Chi tiết sản phẩm" %>
     </title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="/css/main.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <style>
+        :root {
+            --color-slate: #6c737e;
+            --color-steel: #7393a7;
+            --color-mist: #b5cfd8;
+            --color-cloud: #e8ecf1;
+            --font-display: 'Cormorant Garamond', Georgia, serif;
+            --font-body: 'Inter', sans-serif;
+        }
+
         body {
-            background-color: #f5f5f5;
-            color: #000;
+            font-family: var(--font-body);
+            background-color: var(--color-cloud);
+        }
+
+        body.theme-dark {
+            background-color: var(--app-bg);
         }
 
         .detail-layout {
@@ -35,10 +53,10 @@
 
         .gallery-card {
             height: 100%;
-            border-radius: 6px;
+            border-radius: 24px;
             overflow: hidden;
             background: #fff;
-            box-shadow: 0 45px 90px rgba(0, 0, 0, 0.16);
+            box-shadow: 0 30px 70px rgba(108, 115, 126, 0.15);
         }
 
         .gallery-card img {
@@ -55,18 +73,22 @@
         }
 
         .gallery-thumbs button {
-            border: 1px solid #e0e0e0;
-            border-radius: 6px;
+            border: 2px solid var(--color-cloud);
+            border-radius: 12px;
             padding: 0;
             width: 78px;
             height: 78px;
             overflow: hidden;
             background: #fff;
-            transition: border-color 0.2s ease;
+            transition: all 0.3s ease;
         }
 
         .gallery-thumbs button.active {
-            border-color: #111;
+            border-color: var(--color-steel);
+        }
+
+        .gallery-thumbs button:hover {
+            border-color: var(--color-mist);
         }
 
         .gallery-thumbs img {
@@ -75,20 +97,68 @@
             object-fit: cover;
         }
 
+        .info-column {
+            padding: 1rem 0;
+        }
+
+        .brand-label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: var(--color-steel);
+            margin-bottom: 0.5rem;
+        }
+
+        .product-title {
+            font-family: var(--font-display);
+            font-size: 2.75rem;
+            font-weight: 500;
+            color: var(--color-slate);
+            letter-spacing: 0.02em;
+            line-height: 1.2;
+            margin-bottom: 1rem;
+        }
+
+        .price-label {
+            font-family: var(--font-display);
+            font-size: 2rem;
+            font-weight: 600;
+            color: var(--color-slate);
+            margin-bottom: 2rem;
+        }
+
+        .option-label {
+            font-size: 0.8rem;
+            font-weight: 600;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--color-steel);
+            margin-bottom: 0.75rem;
+        }
+
         .pill-group {
             display: flex;
             flex-wrap: wrap;
             gap: 0.75rem;
+            margin-bottom: 1.5rem;
         }
 
         .pill {
-            border-radius: 4px;
-            border: 1px solid #d0d0d0;
-            padding: 0.55rem 1.75rem;
-            font-size: 0.95rem;
+            border-radius: 12px;
+            border: 2px solid var(--color-cloud);
+            padding: 0.65rem 1.5rem;
+            font-size: 0.9rem;
+            font-weight: 500;
             cursor: pointer;
-            transition: all 0.3s ease-in-out;
+            transition: all 0.3s ease;
             background: #fff;
+            color: var(--color-slate);
+        }
+
+        body.theme-dark .pill {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(255, 255, 255, 0.1);
         }
 
         .color-pill {
@@ -96,10 +166,14 @@
             text-transform: capitalize;
         }
 
+        .pill:hover:not(.disabled) {
+            border-color: var(--color-steel);
+        }
+
         .pill.selected {
-            background: #111;
+            background: var(--color-slate);
             color: #fff;
-            border-color: #111;
+            border-color: var(--color-slate);
         }
 
         .pill.disabled {
@@ -108,26 +182,41 @@
             text-decoration: line-through;
         }
 
-        .price-label {
-            font-family: "Helvetica Neue", Arial, sans-serif;
-            font-size: 1.8rem;
-            color: #000;
+        .stock-status {
+            font-size: 0.9rem;
+            color: var(--color-steel);
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
         }
 
-        .product-title {
-            font-family: "Playfair Display", "Times New Roman", serif;
-            font-size: 2.7rem;
-            letter-spacing: 0.08em;
+        .stock-status i {
+            color: #10b981;
         }
 
-        .btn-edgy {
-            border-radius: 4px;
-            transition: all 0.3s ease-in-out;
+        .btn-add-cart {
+            width: 100%;
+            padding: 1.1rem;
+            font-size: 1rem;
+            font-weight: 600;
+            border-radius: 14px;
+            border: none;
+            background: var(--color-slate);
+            color: #fff;
+            transition: all 0.4s ease;
+            margin-top: 0.5rem;
         }
 
-        .btn-edgy:hover {
+        .btn-add-cart:hover:not(:disabled) {
+            background: var(--color-steel);
             transform: translateY(-2px);
-            filter: brightness(0.92);
+            box-shadow: 0 12px 35px rgba(108, 115, 126, 0.3);
+        }
+
+        .btn-add-cart:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
         }
 
         .mobile-cart-bar {
@@ -135,23 +224,38 @@
             bottom: 0;
             left: 0;
             right: 0;
-            background: #000;
+            background: var(--color-slate);
             color: #fff;
             padding: 1rem 1.5rem;
             display: flex;
             justify-content: space-between;
             gap: 1rem;
             z-index: 1040;
+            border-radius: 20px 20px 0 0;
         }
 
         .mobile-cart-bar button {
             flex: 1;
+            background: #fff;
+            color: var(--color-slate);
+            border: none;
+            border-radius: 12px;
+            padding: 0.85rem;
+            font-weight: 600;
+        }
+
+        .mobile-cart-bar button:disabled {
+            opacity: 0.5;
         }
 
         @media (min-width: 992px) {
             .mobile-cart-bar {
                 display: none;
             }
+        }
+
+        .toast {
+            background: var(--color-slate);
         }
     </style>
 </head>
@@ -188,20 +292,18 @@
                                     </div>
                                 </div>
                                 <div class="info-column">
-                                    <p class="text-uppercase text-muted mb-1">Moda Studio</p>
-                                    <h1 class="product-title mb-3">
+                                    <p class="brand-label">Moda Studio</p>
+                                    <h1 class="product-title">
                                         <%= product.name %>
                                     </h1>
-                                    <p class="price-label mb-4" id="skuPrice">
+                                    <p class="price-label" id="skuPrice">
                                         <%= new Intl.NumberFormat('vi-VN', { style: 'currency' , currency: 'VND'
                                             }).format(product.basePrice || 0) %>
                                     </p>
 
                                     <% if (colorOptions && colorOptions.length) { %>
                                         <div class="mb-4">
-                                            <p class="text-uppercase text-muted small mb-2">
-                                                Màu sắc
-                                            </p>
+                                            <p class="option-label">Màu sắc</p>
                                             <div class="pill-group" id="colorOptions">
                                                 <% colorOptions.forEach(function(color) { %>
                                                     <button type="button" class="pill color-pill"
@@ -218,9 +320,7 @@
 
                                             <% if (sizeOptions && sizeOptions.length) { %>
                                                 <div class="mb-4">
-                                                    <p class="text-uppercase text-muted small mb-2">
-                                                        Size
-                                                    </p>
+                                                    <p class="option-label">Size</p>
                                                     <div class="pill-group" id="sizeOptions">
                                                         <% sizeOptions.forEach(function(size) { %>
                                                             <button type="button" class="pill"
@@ -233,19 +333,19 @@
                                                 <% } %>
 
                                                     <input type="hidden" id="selectedSkuId">
-                                                    <p id="stockStatus" class="text-muted mb-4">Chọn màu và size để xem
-                                                        tồn kho.
+                                                    <p id="stockStatus" class="stock-status">
+                                                        <i class="bi bi-info-circle"></i>
+                                                        Chọn màu và size để xem tồn kho
                                                     </p>
 
-                                                    <button class="btn btn-dark btn-edgy w-100 mt-4"
-                                                        id="addToCartBtnDesktop" disabled>Thêm
-                                                        vào giỏ</button>
+                                                    <button class="btn-add-cart" id="addToCartBtnDesktop" disabled>
+                                                        <i class="bi bi-bag-plus me-2"></i>Thêm vào giỏ
+                                                    </button>
+
                                                     <div class="toast align-items-center text-bg-dark border-0 position-fixed bottom-0 end-0 m-3"
                                                         role="alert" id="selectionToast">
                                                         <div class="d-flex">
-                                                            <div class="toast-body">
-                                                                Please select options
-                                                            </div>
+                                                            <div class="toast-body">Vui lòng chọn màu và size</div>
                                                             <button type="button"
                                                                 class="btn-close btn-close-white me-2 m-auto"
                                                                 data-bs-dismiss="toast"></button>
@@ -260,42 +360,38 @@
         <% if (product) { %>
             <div class="mobile-cart-bar">
                 <div>
-                    <p class="mb-0 text-uppercase" style="letter-spacing: 0.25em; font-size: 0.7rem;">Subtotal</p>
+                    <p class="mb-0 text-uppercase" style="letter-spacing: 0.2em; font-size: 0.7rem; opacity: 0.8;">Tổng
+                        tiền</p>
                     <p class="mb-0 fw-semibold" id="mobileSubtotal">
                         <%= new Intl.NumberFormat('vi-VN', { style: 'currency' , currency: 'VND'
                             }).format(product.basePrice || 0) %>
                     </p>
                 </div>
-                <button class="btn btn-light btn-edgy" id="addToCartBtnMobile" disabled>Thêm vào giỏ</button>
+                <button id="addToCartBtnMobile" disabled>
+                    <i class="bi bi-bag-plus me-2"></i>Thêm vào giỏ
+                </button>
             </div>
             <% } %>
 
                 <%- include('partials/footer') %>
 
                     <% if (product) { %>
-                        <script id="product-galleries" type="application/json">
-                    <%- JSON.stringify(galleries || []) %>
-                </script>
-                        <script id="product-color-images" type="application/json">
-                    <%- JSON.stringify(colorImages || []) %>
-                </script>
-                        <script id="product-skus" type="application/json">
-                    <%- JSON.stringify(skuOptions || []) %>
-                </script>
-                        <script id="product-colors" type="application/json">
-                    <%- JSON.stringify(colorOptions || []) %>
-                </script>
-                        <script id="product-sizes" type="application/json">
-                    <%- JSON.stringify(sizeOptions || []) %>
-                </script>
+                        <script id="product-galleries"
+                            type="application/json"><%- JSON.stringify(galleries || []) %></script>
+                        <script id="product-color-images"
+                            type="application/json"><%- JSON.stringify(colorImages || []) %></script>
+                        <script id="product-skus"
+                            type="application/json"><%- JSON.stringify(skuOptions || []) %></script>
+                        <script id="product-colors"
+                            type="application/json"><%- JSON.stringify(colorOptions || []) %></script>
+                        <script id="product-sizes"
+                            type="application/json"><%- JSON.stringify(sizeOptions || []) %></script>
                         <% } %>
 
                             <script>
                                 const parseJsonData = (id, fallback) => {
                                     const node = document.getElementById(id);
-                                    if (!node) {
-                                        return fallback;
-                                    }
+                                    if (!node) return fallback;
                                     try {
                                         const parsed = JSON.parse(node.textContent || "null");
                                         return parsed ?? fallback;
@@ -314,9 +410,7 @@
                                     const colorOptions = parseJsonData("product-colors", []);
                                     const sizeOptions = parseJsonData("product-sizes", []);
 
-                                    const colorImageMap = new Map(
-                                        colorImages.map((item) => [Number(item.colorValueId), item.imageUrl])
-                                    );
+                                    const colorImageMap = new Map(colorImages.map((item) => [Number(item.colorValueId), item.imageUrl]));
 
                                     const mainImageEl = document.getElementById("mainProductImage");
                                     const thumbsContainer = document.getElementById("galleryThumbs");
@@ -332,48 +426,30 @@
                                     const toastEl = document.getElementById("selectionToast");
                                     const toastInstance = toastEl ? new bootstrap.Toast(toastEl) : null;
 
-                                    const currencyFormatter = new Intl.NumberFormat("vi-VN", {
-                                        style: "currency",
-                                        currency: "VND",
-                                    });
+                                    const currencyFormatter = new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" });
 
-                                    const baseImages =
-                                        galleries.length > 0
-                                            ? galleries.slice()
-                                            : mainImageEl && mainImageEl.src
-                                                ? [mainImageEl.src]
-                                                : [];
+                                    const baseImages = galleries.length > 0 ? galleries.slice() : mainImageEl && mainImageEl.src ? [mainImageEl.src] : [];
 
-                                    const state = {
-                                        selectedColor: null,
-                                        selectedSize: null,
-                                        selectedSku: null,
-                                    };
+                                    const state = { selectedColor: null, selectedSize: null, selectedSku: null };
 
                                     const setCartButtonsState = (enabled, text) => {
                                         cartButtons.forEach((btn) => {
                                             btn.disabled = !enabled;
-                                            btn.textContent = text;
+                                            btn.innerHTML = '<i class="bi bi-bag-plus me-2"></i>' + text;
                                         });
                                     };
 
                                     const renderThumbs = (images) => {
                                         if (!thumbsContainer) return;
                                         thumbsContainer.innerHTML = "";
-                                        if (!images || images.length <= 1) {
-                                            return;
-                                        }
+                                        if (!images || images.length <= 1) return;
                                         images.forEach((image, index) => {
                                             const button = document.createElement("button");
                                             button.type = "button";
                                             button.dataset.thumbSrc = image;
-                                            if (index === 0) {
-                                                button.classList.add("active");
-                                            }
+                                            if (index === 0) button.classList.add("active");
                                             button.addEventListener("click", () => {
-                                                if (mainImageEl) {
-                                                    mainImageEl.src = image;
-                                                }
+                                                if (mainImageEl) mainImageEl.src = image;
                                                 Array.from(thumbsContainer.querySelectorAll("button")).forEach((node) =>
                                                     node.classList.toggle("active", node === button)
                                                 );
@@ -387,14 +463,10 @@
                                     };
 
                                     const updateGallery = () => {
-                                        const overrideImage =
-                                            state.selectedColor && colorImageMap.has(state.selectedColor)
-                                                ? colorImageMap.get(state.selectedColor)
-                                                : null;
+                                        const overrideImage = state.selectedColor && colorImageMap.has(state.selectedColor)
+                                            ? colorImageMap.get(state.selectedColor) : null;
                                         const imagesToShow = overrideImage ? [overrideImage] : baseImages;
-                                        if (mainImageEl && imagesToShow.length) {
-                                            mainImageEl.src = imagesToShow[0];
-                                        }
+                                        if (mainImageEl && imagesToShow.length) mainImageEl.src = imagesToShow[0];
                                         renderThumbs(imagesToShow);
                                     };
 
@@ -402,11 +474,7 @@
                                         if (!colorButtons.length) return;
                                         colorButtons.forEach((btn) => {
                                             const colorId = Number(btn.dataset.colorId);
-                                            const available = skuOptions.some(
-                                                (sku) =>
-                                                    sku.colorValueId === colorId &&
-                                                    Number(sku.stockQuantity || 0) > 0
-                                            );
+                                            const available = skuOptions.some((sku) => sku.colorValueId === colorId && Number(sku.stockQuantity || 0) > 0);
                                             btn.disabled = !available;
                                             btn.classList.toggle("disabled", !available);
                                             btn.classList.toggle("selected", state.selectedColor === colorId);
@@ -417,16 +485,11 @@
                                         if (!sizeButtons.length) return;
                                         sizeButtons.forEach((btn) => {
                                             const sizeId = Number(btn.dataset.sizeId);
-                                            const available = skuOptions.some(
-                                                (sku) =>
-                                                    sku.sizeValueId === sizeId &&
-                                                    (!state.selectedColor || sku.colorValueId === state.selectedColor) &&
-                                                    Number(sku.stockQuantity || 0) > 0
+                                            const available = skuOptions.some((sku) =>
+                                                sku.sizeValueId === sizeId && (!state.selectedColor || sku.colorValueId === state.selectedColor) && Number(sku.stockQuantity || 0) > 0
                                             );
                                             const isSelected = state.selectedSize === sizeId && available;
-                                            if (!available && state.selectedSize === sizeId) {
-                                                state.selectedSize = null;
-                                            }
+                                            if (!available && state.selectedSize === sizeId) state.selectedSize = null;
                                             btn.disabled = !available;
                                             btn.classList.toggle("disabled", !available);
                                             btn.classList.toggle("selected", isSelected);
@@ -434,14 +497,8 @@
                                     };
 
                                     const findMatchingSku = () => {
-                                        if (!state.selectedColor || !state.selectedSize) {
-                                            return null;
-                                        }
-                                        return skuOptions.find(
-                                            (sku) =>
-                                                sku.colorValueId === state.selectedColor &&
-                                                sku.sizeValueId === state.selectedSize
-                                        );
+                                        if (!state.selectedColor || !state.selectedSize) return null;
+                                        return skuOptions.find((sku) => sku.colorValueId === state.selectedColor && sku.sizeValueId === state.selectedSize);
                                     };
 
                                     const updateSummary = () => {
@@ -449,42 +506,32 @@
                                         state.selectedSku = matchedSku || null;
                                         if (matchedSku) {
                                             hiddenSkuInput.value = matchedSku.id;
-                                            const formattedPrice = currencyFormatter.format(
-                                                Number(matchedSku.price) || basePrice
-                                            );
+                                            const formattedPrice = currencyFormatter.format(Number(matchedSku.price) || basePrice);
                                             skuPriceEl.textContent = formattedPrice;
-                                            if (mobileSubtotal) {
-                                                mobileSubtotal.textContent = formattedPrice;
-                                            }
+                                            if (mobileSubtotal) mobileSubtotal.textContent = formattedPrice;
                                             if (matchedSku.stockQuantity > 0) {
-                                                stockStatusEl.textContent = `Còn ${matchedSku.stockQuantity} sản phẩm`;
+                                                stockStatusEl.innerHTML = `<i class="bi bi-check-circle" style="color:#10b981"></i> Còn ${matchedSku.stockQuantity} sản phẩm`;
                                                 setCartButtonsState(true, "Thêm vào giỏ");
                                             } else {
-                                                stockStatusEl.textContent = "Hết hàng";
+                                                stockStatusEl.innerHTML = `<i class="bi bi-x-circle" style="color:#ef4444"></i> Hết hàng`;
                                                 setCartButtonsState(false, "Hết hàng");
                                             }
                                         } else {
                                             hiddenSkuInput.value = "";
                                             skuPriceEl.textContent = currencyFormatter.format(basePrice);
-                                            if (mobileSubtotal) {
-                                                mobileSubtotal.textContent = currencyFormatter.format(basePrice);
-                                            }
-                                            stockStatusEl.textContent =
-                                                colorOptions.length && sizeOptions.length
-                                                    ? "Chọn màu và size để xem tồn kho."
-                                                    : "Chưa có biến thể để lựa chọn.";
+                                            if (mobileSubtotal) mobileSubtotal.textContent = currencyFormatter.format(basePrice);
+                                            stockStatusEl.innerHTML = colorOptions.length && sizeOptions.length
+                                                ? `<i class="bi bi-info-circle"></i> Chọn màu và size để xem tồn kho`
+                                                : `<i class="bi bi-info-circle"></i> Chưa có biến thể`;
                                             setCartButtonsState(false, "Thêm vào giỏ");
                                         }
                                     };
 
                                     const handleColorClick = (event) => {
                                         const button = event.currentTarget;
-                                        if (button.classList.contains("disabled")) {
-                                            return;
-                                        }
+                                        if (button.classList.contains("disabled")) return;
                                         const colorId = Number(button.dataset.colorId);
-                                        state.selectedColor =
-                                            state.selectedColor === colorId ? null : colorId;
+                                        state.selectedColor = state.selectedColor === colorId ? null : colorId;
                                         state.selectedSize = null;
                                         refreshColorButtons();
                                         refreshSizeButtons();
@@ -494,22 +541,15 @@
 
                                     const handleSizeClick = (event) => {
                                         const button = event.currentTarget;
-                                        if (button.classList.contains("disabled")) {
-                                            return;
-                                        }
+                                        if (button.classList.contains("disabled")) return;
                                         const sizeId = Number(button.dataset.sizeId);
-                                        state.selectedSize =
-                                            state.selectedSize === sizeId ? null : sizeId;
+                                        state.selectedSize = state.selectedSize === sizeId ? null : sizeId;
                                         refreshSizeButtons();
                                         updateSummary();
                                     };
 
-                                    colorButtons.forEach((btn) =>
-                                        btn.addEventListener("click", handleColorClick)
-                                    );
-                                    sizeButtons.forEach((btn) =>
-                                        btn.addEventListener("click", handleSizeClick)
-                                    );
+                                    colorButtons.forEach((btn) => btn.addEventListener("click", handleColorClick));
+                                    sizeButtons.forEach((btn) => btn.addEventListener("click", handleSizeClick));
 
                                     const handleAddToCart = async () => {
                                         const skuId = hiddenSkuInput.value;
@@ -523,37 +563,28 @@
                                                 headers: { "Content-Type": "application/json" },
                                                 body: JSON.stringify({ skuId }),
                                             });
-                                            if (!response.ok) {
-                                                throw new Error("Network error");
-                                            }
+                                            if (!response.ok) throw new Error("Network error");
                                             const data = await response.json();
                                             if (!data.success) {
-                                                alert(data.message || "Unable to add to cart.");
+                                                alert(data.message || "Không thể thêm vào giỏ.");
                                                 return;
                                             }
                                             if (data.cart) {
-                                                if (
-                                                    window.__CART_DRAWER__ &&
-                                                    typeof window.__CART_DRAWER__.update === "function"
-                                                ) {
+                                                if (window.__CART_DRAWER__ && typeof window.__CART_DRAWER__.update === "function") {
                                                     window.__CART_DRAWER__.update(data.cart);
                                                 }
                                                 if (typeof window.dispatchEvent === "function") {
-                                                    window.dispatchEvent(
-                                                        new CustomEvent("cart:updated", { detail: data.cart })
-                                                    );
+                                                    window.dispatchEvent(new CustomEvent("cart:updated", { detail: data.cart }));
                                                     window.dispatchEvent(new CustomEvent("cart:open"));
                                                 }
                                             }
                                         } catch (error) {
                                             console.error(error);
-                                            alert("Unable to add to cart.");
+                                            alert("Không thể thêm vào giỏ.");
                                         }
                                     };
 
-                                    cartButtons.forEach((btn) =>
-                                        btn.addEventListener("click", handleAddToCart)
-                                    );
+                                    cartButtons.forEach((btn) => btn.addEventListener("click", handleAddToCart));
 
                                     refreshColorButtons();
                                     refreshSizeButtons();
