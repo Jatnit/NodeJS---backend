@@ -1,0 +1,24 @@
+# Bỏ qua thư viện (QUAN TRỌNG NHẤT)
+node_modules/
+
+# Bỏ qua file build/dist (Code đã biên dịch, AI không cần đọc)
+dist/
+build/
+.next/
+out/
+
+# Bỏ qua file quản lý version package (Tiết kiệm rất nhiều token)
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Bỏ qua file môi trường (Bảo mật)
+.env
+.env.local
+.env.*
+
+# Bỏ qua các thư mục của IDE/Git
+.git/
+.vscode/
+.idea/
+.DS_Store
