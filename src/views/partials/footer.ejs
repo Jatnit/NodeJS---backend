@@ -1,4 +1,4 @@
-<footer class="footer-global">
+<footer class="footer-global site-footer">
     <div class="container">
         <div class="footer-main">
             <div class="row g-4">
@@ -23,7 +23,7 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <!-- Quick Links -->
                 <div class="col-lg-2 col-md-6 col-6">
                     <div class="footer-links">
@@ -36,7 +36,7 @@
                         </ul>
                     </div>
                 </div>
-                
+
                 <!-- Support Links -->
                 <div class="col-lg-2 col-md-6 col-6">
                     <div class="footer-links">
@@ -49,7 +49,7 @@
                         </ul>
                     </div>
                 </div>
-                
+
                 <!-- Contact -->
                 <div class="col-lg-4 col-md-6">
                     <div class="footer-contact">
@@ -70,11 +70,12 @@
                 </div>
             </div>
         </div>
-        
+
         <div class="footer-bottom">
             <div class="row align-items-center">
                 <div class="col-md-6 text-center text-md-start">
-                    <p class="copyright">© <%= new Date().getFullYear() %> Moda Studio. Crafted with <i class="bi bi-heart-fill text-danger"></i> in Vietnam.</p>
+                    <p class="copyright">© <%= new Date().getFullYear() %> Moda Studio. Crafted with <i
+                                class="bi bi-heart-fill text-danger"></i> in Vietnam.</p>
                 </div>
                 <div class="col-md-6 text-center text-md-end">
                     <div class="footer-badges">
@@ -92,152 +93,152 @@
 </footer>
 
 <style>
-.footer-global {
-    background: var(--card-bg, #fff);
-    border-top: 1px solid var(--border-color, rgba(0, 0, 0, 0.08));
-    margin-top: auto;
-}
+    .footer-global {
+        background: var(--card-bg, #fff);
+        border-top: 1px solid var(--border-color, rgba(0, 0, 0, 0.08));
+        margin-top: auto;
+    }
 
-.footer-main {
-    padding: 3rem 0 2rem;
-}
-
-.footer-brand .brand-name {
-    font-size: 1.25rem;
-    font-weight: 700;
-    letter-spacing: 0.1em;
-    margin-bottom: 0.5rem;
-    color: var(--app-text);
-}
-
-.footer-brand .brand-tagline {
-    color: var(--muted-text);
-    font-size: 0.9rem;
-    margin-bottom: 1.25rem;
-}
-
-.social-links {
-    display: flex;
-    gap: 0.75rem;
-}
-
-.social-link {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    background: var(--border-color);
-    color: var(--app-text);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1rem;
-    transition: all 0.2s ease;
-    text-decoration: none;
-}
-
-.social-link:hover {
-    background: var(--app-text);
-    color: var(--app-bg);
-    transform: translateY(-2px);
-}
-
-.footer-title {
-    font-size: 0.85rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    margin-bottom: 1rem;
-    color: var(--app-text);
-}
-
-.footer-menu {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-}
-
-.footer-menu li {
-    margin-bottom: 0.6rem;
-}
-
-.footer-menu a {
-    color: var(--muted-text);
-    text-decoration: none;
-    font-size: 0.9rem;
-    transition: color 0.2s ease;
-}
-
-.footer-menu a:hover {
-    color: var(--app-text);
-}
-
-.contact-item {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    margin-bottom: 0.75rem;
-    color: var(--muted-text);
-    font-size: 0.9rem;
-}
-
-.contact-item i {
-    color: var(--app-text);
-    font-size: 1rem;
-    width: 20px;
-}
-
-.footer-bottom {
-    border-top: 1px solid var(--border-color);
-    padding: 1.25rem 0;
-}
-
-.copyright {
-    color: var(--muted-text);
-    font-size: 0.85rem;
-    margin: 0;
-}
-
-.footer-badges {
-    display: flex;
-    gap: 1.5rem;
-    justify-content: flex-end;
-    flex-wrap: wrap;
-}
-
-.badge-item {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    color: var(--muted-text);
-    font-size: 0.8rem;
-}
-
-.badge-item i {
-    color: #10b981;
-}
-
-/* Responsive */
-@media (max-width: 767.98px) {
     .footer-main {
-        padding: 2rem 0 1.5rem;
+        padding: 3rem 0 2rem;
     }
-    
-    .footer-brand {
-        text-align: center;
-        margin-bottom: 1rem;
+
+    .footer-brand .brand-name {
+        font-size: 1.25rem;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        margin-bottom: 0.5rem;
+        color: var(--app-text);
     }
-    
+
+    .footer-brand .brand-tagline {
+        color: var(--muted-text);
+        font-size: 0.9rem;
+        margin-bottom: 1.25rem;
+    }
+
     .social-links {
-        justify-content: center;
+        display: flex;
+        gap: 0.75rem;
     }
-    
-    .footer-badges {
+
+    .social-link {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: var(--border-color);
+        color: var(--app-text);
+        display: flex;
+        align-items: center;
         justify-content: center;
-        margin-top: 0.5rem;
+        font-size: 1rem;
+        transition: all 0.2s ease;
+        text-decoration: none;
     }
-    
+
+    .social-link:hover {
+        background: var(--app-text);
+        color: var(--app-bg);
+        transform: translateY(-2px);
+    }
+
     .footer-title {
-        margin-top: 0.5rem;
+        font-size: 0.85rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        margin-bottom: 1rem;
+        color: var(--app-text);
     }
-}
+
+    .footer-menu {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .footer-menu li {
+        margin-bottom: 0.6rem;
+    }
+
+    .footer-menu a {
+        color: var(--muted-text);
+        text-decoration: none;
+        font-size: 0.9rem;
+        transition: color 0.2s ease;
+    }
+
+    .footer-menu a:hover {
+        color: var(--app-text);
+    }
+
+    .contact-item {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 0.75rem;
+        color: var(--muted-text);
+        font-size: 0.9rem;
+    }
+
+    .contact-item i {
+        color: var(--app-text);
+        font-size: 1rem;
+        width: 20px;
+    }
+
+    .footer-bottom {
+        border-top: 1px solid var(--border-color);
+        padding: 1.25rem 0;
+    }
+
+    .copyright {
+        color: var(--muted-text);
+        font-size: 0.85rem;
+        margin: 0;
+    }
+
+    .footer-badges {
+        display: flex;
+        gap: 1.5rem;
+        justify-content: flex-end;
+        flex-wrap: wrap;
+    }
+
+    .badge-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: var(--muted-text);
+        font-size: 0.8rem;
+    }
+
+    .badge-item i {
+        color: #10b981;
+    }
+
+    /* Responsive */
+    @media (max-width: 767.98px) {
+        .footer-main {
+            padding: 2rem 0 1.5rem;
+        }
+
+        .footer-brand {
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+
+        .social-links {
+            justify-content: center;
+        }
+
+        .footer-badges {
+            justify-content: center;
+            margin-top: 0.5rem;
+        }
+
+        .footer-title {
+            margin-top: 0.5rem;
+        }
+    }
 </style>

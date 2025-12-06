@@ -1,15 +1,16 @@
 /**
  * Admin Sidebar Component
  * Sidebar navigation cho trang quản trị
+ * - Có nút thu gọn/mở rộng
  * - Super Admin (roleId = 0): Có thể xem Audit Logs
  * - Admin/Manager/Staff: Không thể xem Audit Logs
  */
 
 const ROLE_LABELS = {
-  0: "superadmin",
-  1: "admin",
-  2: "manager",
-  3: "customer",
+  "0": "superadmin",
+  "1": "admin",
+  "2": "manager",
+  "3": "customer",
 };
 
 const NAV_ITEMS = [
@@ -67,46 +68,111 @@ const NAV_ITEMS = [
     label: "Audit Logs",
     href: "/admin/audit-logs",
     icon: "bi-shield-lock",
-    roles: ["superadmin"], // CHỈ Super Admin
+    roles: ["superadmin"],
   },
 ];
 
+const SIDEBAR_WIDTH = 240;
+const SIDEBAR_COLLAPSED_WIDTH = 70;
+
 const sidebarStyles = `
-  .admin-sidebar {
-    width: 240px;
-    background: linear-gradient(180deg, #6c737e 0%, #4a5159 100%);
-    color: white;
-    padding: 1.5rem 1rem;
-    position: fixed;
-    left: 0;
-    top: 70px;
-    height: calc(100vh - 70px);
-    overflow-y: auto;
-    z-index: 1000;
-    box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+  :root {
+    --sidebar-width: ${SIDEBAR_WIDTH}px;
+    --sidebar-collapsed-width: ${SIDEBAR_COLLAPSED_WIDTH}px;
+    --header-height: 80px;
   }
 
-  .admin-sidebar .sidebar-brand {
-    font-size: 1.1rem;
-    font-weight: 700;
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
-    margin-bottom: 1.5rem;
-    padding: 0 0.5rem 1rem;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+  .admin-sidebar {
+    width: var(--sidebar-width);
+    background: linear-gradient(180deg, #6c737e 0%, #4a5159 100%);
+    color: white;
+    position: fixed;
+    left: 0;
+    top: var(--header-height);
+    height: calc(100vh - var(--header-height));
+    overflow-y: auto;
+    overflow-x: hidden;
+    z-index: 1000;
+    box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+    transition: width 0.3s ease;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .admin-sidebar.collapsed {
+    width: var(--sidebar-collapsed-width);
+  }
+
+  .admin-sidebar .sidebar-header {
+    padding: 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     display: flex;
     align-items: center;
     justify-content: space-between;
+    min-height: 60px;
+    flex-shrink: 0;
+  }
+
+  .admin-sidebar .sidebar-brand {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    overflow: hidden;
+    white-space: nowrap;
+  }
+
+  .admin-sidebar .sidebar-brand-text {
+    font-size: 1rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    transition: opacity 0.2s ease;
+  }
+
+  .admin-sidebar.collapsed .sidebar-brand-text {
+    opacity: 0;
+    width: 0;
   }
 
   .admin-sidebar .super-badge {
     background: linear-gradient(135deg, #fbbf24, #f59e0b);
     color: #1f2937;
-    padding: 0.2rem 0.6rem;
+    padding: 0.15rem 0.5rem;
     border-radius: 50px;
-    font-size: 0.65rem;
+    font-size: 0.6rem;
     font-weight: 700;
     letter-spacing: 0.05em;
+    transition: opacity 0.2s ease;
+  }
+
+  .admin-sidebar.collapsed .super-badge {
+    opacity: 0;
+    width: 0;
+    padding: 0;
+  }
+
+  .admin-sidebar .toggle-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    border: none;
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+  }
+
+  .admin-sidebar .toggle-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+  }
+
+  .admin-sidebar .sidebar-nav {
+    flex: 1;
+    padding: 1rem 0.75rem;
+    overflow-y: auto;
   }
 
   .admin-sidebar .nav-section {
@@ -114,18 +180,28 @@ const sidebarStyles = `
   }
 
   .admin-sidebar .nav-section-title {
-    font-size: 0.65rem;
+    font-size: 0.6rem;
     font-weight: 600;
     letter-spacing: 0.15em;
     text-transform: uppercase;
-    color: rgba(255, 255, 255, 0.5);
+    color: rgba(255, 255, 255, 0.4);
     padding: 0 0.75rem;
     margin-bottom: 0.5rem;
+    white-space: nowrap;
+    overflow: hidden;
+    transition: opacity 0.2s ease;
+  }
+
+  .admin-sidebar.collapsed .nav-section-title {
+    opacity: 0;
+    height: 0;
+    margin: 0;
+    padding: 0;
   }
 
   .admin-sidebar .nav-link {
     color: rgba(255, 255, 255, 0.8);
-    padding: 0.75rem 1rem;
+    padding: 0.7rem 0.75rem;
     border-radius: 10px;
     margin-bottom: 0.25rem;
     transition: all 0.2s ease;
@@ -133,79 +209,192 @@ const sidebarStyles = `
     align-items: center;
     gap: 0.75rem;
     text-decoration: none;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
   }
 
   .admin-sidebar .nav-link:hover {
     background: rgba(255, 255, 255, 0.1);
     color: white;
-    transform: translateX(3px);
   }
 
   .admin-sidebar .nav-link.active {
     background: rgba(255, 255, 255, 0.2);
     color: white;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
   }
 
   .admin-sidebar .nav-link i {
     font-size: 1.1rem;
-    width: 22px;
+    min-width: 22px;
     text-align: center;
+    flex-shrink: 0;
+  }
+
+  .admin-sidebar .nav-link-text {
+    transition: opacity 0.2s ease;
+  }
+
+  .admin-sidebar.collapsed .nav-link-text {
+    opacity: 0;
+    width: 0;
+  }
+
+  .admin-sidebar.collapsed .nav-link {
+    justify-content: center;
+    padding: 0.7rem;
   }
 
   .admin-sidebar .sidebar-divider {
     border: 0;
     border-top: 1px solid rgba(255, 255, 255, 0.1);
-    margin: 1rem 0;
+    margin: 0.75rem 0;
   }
 
   .admin-sidebar .sidebar-footer {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    padding: 1rem;
-    background: rgba(0,0,0,0.1);
+    padding: 0.75rem;
+    background: rgba(0,0,0,0.15);
     border-top: 1px solid rgba(255, 255, 255, 0.1);
+    flex-shrink: 0;
   }
 
-  .admin-sidebar .sidebar-footer .user-info {
+  .admin-sidebar .user-info {
     display: flex;
     align-items: center;
     gap: 0.75rem;
+    overflow: hidden;
   }
 
-  .admin-sidebar .sidebar-footer .user-avatar {
+  .admin-sidebar .user-avatar {
     width: 36px;
     height: 36px;
+    min-width: 36px;
     border-radius: 50%;
     background: rgba(255, 255, 255, 0.2);
     display: flex;
     align-items: center;
     justify-content: center;
     font-weight: 600;
-    font-size: 0.9rem;
-  }
-
-  .admin-sidebar .sidebar-footer .user-name {
     font-size: 0.85rem;
+  }
+
+  .admin-sidebar .user-details {
+    overflow: hidden;
+    transition: opacity 0.2s ease, width 0.3s ease;
+  }
+
+  .admin-sidebar.collapsed .user-details {
+    opacity: 0;
+    width: 0;
+  }
+
+  .admin-sidebar .user-name {
+    font-size: 0.8rem;
     font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
-  .admin-sidebar .sidebar-footer .user-role {
-    font-size: 0.7rem;
+  .admin-sidebar .user-role {
+    font-size: 0.65rem;
     color: rgba(255, 255, 255, 0.6);
+    white-space: nowrap;
   }
 
+  /* Content wrapper */
   .admin-content-wrapper {
-    margin-left: 240px;
+    margin-left: var(--sidebar-width);
     padding: 1.5rem 2rem;
-    min-height: calc(100vh - 70px);
+    min-height: calc(100vh - var(--header-height));
+    transition: margin-left 0.3s ease;
+    background: #f8f9fa;
   }
 
-  .mobile-sidebar-toggle {
+  body.sidebar-collapsed .admin-content-wrapper {
+    margin-left: var(--sidebar-collapsed-width);
+  }
+
+  /* Footer adjustment */
+  body.has-admin-sidebar .site-footer {
+    margin-left: var(--sidebar-width);
+    transition: margin-left 0.3s ease;
+  }
+
+  body.has-admin-sidebar.sidebar-collapsed .site-footer {
+    margin-left: var(--sidebar-collapsed-width);
+  }
+
+  /* Tooltip for collapsed state */
+  .admin-sidebar.collapsed .nav-link {
+    position: relative;
+  }
+
+  .admin-sidebar.collapsed .nav-link::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    left: calc(100% + 10px);
+    top: 50%;
+    transform: translateY(-50%);
+    background: #333;
+    color: white;
+    padding: 0.4rem 0.75rem;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    white-space: nowrap;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.2s ease;
+    z-index: 1100;
+    pointer-events: none;
+  }
+
+  .admin-sidebar.collapsed .nav-link:hover::after {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  /* Mobile responsive */
+  @media (max-width: 991.98px) {
+    .admin-sidebar {
+      transform: translateX(-100%);
+      width: var(--sidebar-width) !important;
+    }
+
+    .admin-sidebar.mobile-open {
+      transform: translateX(0);
+    }
+
+    .admin-content-wrapper {
+      margin-left: 0 !important;
+    }
+
+    body.has-admin-sidebar .site-footer {
+      margin-left: 0 !important;
+    }
+
+    .mobile-menu-overlay {
+      display: none;
+      position: fixed;
+      top: var(--header-height);
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 999;
+    }
+
+    .mobile-menu-overlay.show {
+      display: block;
+    }
+
+    .mobile-toggle-btn {
+      display: flex !important;
+    }
+  }
+
+  .mobile-toggle-btn {
     display: none;
     position: fixed;
     bottom: 20px;
@@ -220,39 +409,42 @@ const sidebarStyles = `
     box-shadow: 0 4px 15px rgba(0,0,0,0.2);
     font-size: 1.25rem;
     cursor: pointer;
-  }
-
-  @media (max-width: 991.98px) {
-    .admin-sidebar {
-      transform: translateX(-100%);
-      transition: transform 0.3s ease;
-    }
-
-    .admin-sidebar.show {
-      transform: translateX(0);
-    }
-
-    .admin-content-wrapper {
-      margin-left: 0;
-    }
-
-    .mobile-sidebar-toggle {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
+    align-items: center;
+    justify-content: center;
   }
 `;
 
 const Sidebar = ({ role = "customer", currentPath, userName, userRoleId }) => {
-  const [isOpen, setIsOpen] = React.useState(false);
+  const [isCollapsed, setIsCollapsed] = React.useState(() => {
+    // Load from localStorage
+    const saved = localStorage.getItem("adminSidebarCollapsed");
+    return saved === "true";
+  });
+  const [isMobileOpen, setIsMobileOpen] = React.useState(false);
+
   const items = NAV_ITEMS.filter((item) => item.roles.includes(role));
+
+  React.useEffect(() => {
+    // Save to localStorage
+    localStorage.setItem("adminSidebarCollapsed", isCollapsed);
+    // Toggle body class
+    if (isCollapsed) {
+      document.body.classList.add("sidebar-collapsed");
+    } else {
+      document.body.classList.remove("sidebar-collapsed");
+    }
+    // Add marker class
+    document.body.classList.add("has-admin-sidebar");
+
+    return () => {
+      document.body.classList.remove("sidebar-collapsed", "has-admin-sidebar");
+    };
+  }, [isCollapsed]);
 
   if (!items.length) {
     return null;
   }
 
-  // Group items by section
   const overviewItems = items.filter((item) => item.section === "overview");
   const managementItems = items.filter((item) => item.section === "management");
   const securityItems = items.filter((item) => item.section === "security");
@@ -265,6 +457,18 @@ const Sidebar = ({ role = "customer", currentPath, userName, userRoleId }) => {
     return "Staff";
   };
 
+  const toggleCollapse = () => {
+    setIsCollapsed(!isCollapsed);
+  };
+
+  const toggleMobile = () => {
+    setIsMobileOpen(!isMobileOpen);
+  };
+
+  const closeMobile = () => {
+    setIsMobileOpen(false);
+  };
+
   const renderNavLink = (item) => {
     const isActive =
       currentPath === item.href ||
@@ -274,27 +478,40 @@ const Sidebar = ({ role = "customer", currentPath, userName, userRoleId }) => {
         key={item.id}
         href={item.href}
         className={`nav-link ${isActive ? "active" : ""}`}
+        data-tooltip={item.label}
+        onClick={closeMobile}
       >
         <i className={`bi ${item.icon}`}></i>
-        {item.label}
+        <span className="nav-link-text">{item.label}</span>
       </a>
     );
-  };
-
-  const toggleSidebar = () => {
-    setIsOpen(!isOpen);
   };
 
   return (
     <>
       <style>{sidebarStyles}</style>
-      <aside className={`admin-sidebar ${isOpen ? "show" : ""}`}>
-        <div className="sidebar-brand">
-          <span>ADMIN</span>
-          {Number(userRoleId) === 0 && <span className="super-badge">Super</span>}
+
+      {/* Mobile overlay */}
+      <div
+        className={`mobile-menu-overlay ${isMobileOpen ? "show" : ""}`}
+        onClick={closeMobile}
+      ></div>
+
+      <aside className={`admin-sidebar ${isCollapsed ? "collapsed" : ""} ${isMobileOpen ? "mobile-open" : ""}`}>
+        {/* Header */}
+        <div className="sidebar-header">
+          <div className="sidebar-brand">
+            <i className="bi bi-grid-1x2-fill" style={{ fontSize: "1.2rem" }}></i>
+            <span className="sidebar-brand-text">ADMIN</span>
+            {Number(userRoleId) === 0 && <span className="super-badge">Super</span>}
+          </div>
+          <button className="toggle-btn" onClick={toggleCollapse} title={isCollapsed ? "Mở rộng" : "Thu gọn"}>
+            <i className={`bi ${isCollapsed ? "bi-chevron-right" : "bi-chevron-left"}`}></i>
+          </button>
         </div>
 
-        <nav>
+        {/* Navigation */}
+        <nav className="sidebar-nav">
           {overviewItems.length > 0 && (
             <div className="nav-section">
               <div className="nav-section-title">Tổng quan</div>
@@ -320,12 +537,13 @@ const Sidebar = ({ role = "customer", currentPath, userName, userRoleId }) => {
           )}
         </nav>
 
+        {/* Footer */}
         <div className="sidebar-footer">
           <div className="user-info">
             <div className="user-avatar">
               {(userName || "A").charAt(0).toUpperCase()}
             </div>
-            <div>
+            <div className="user-details">
               <div className="user-name">{userName || "Admin"}</div>
               <div className="user-role">{getRoleLabel(userRoleId)}</div>
             </div>
@@ -333,8 +551,9 @@ const Sidebar = ({ role = "customer", currentPath, userName, userRoleId }) => {
         </div>
       </aside>
 
-      <button className="mobile-sidebar-toggle" onClick={toggleSidebar}>
-        <i className={`bi ${isOpen ? "bi-x-lg" : "bi-list"}`}></i>
+      {/* Mobile toggle */}
+      <button className="mobile-toggle-btn" onClick={toggleMobile}>
+        <i className={`bi ${isMobileOpen ? "bi-x-lg" : "bi-list"}`}></i>
       </button>
     </>
   );
@@ -347,21 +566,25 @@ const mountSidebar = () => {
   }
 
   const roleValue =
-    container.parentElement?.dataset?.role ||
     container.closest("[data-role]")?.dataset?.role ||
+    container.parentElement?.dataset?.role ||
     container.dataset?.role ||
     "3";
-    
+
   const userName =
-    container.parentElement?.dataset?.username ||
     container.closest("[data-username]")?.dataset?.username ||
+    container.parentElement?.dataset?.username ||
     container.dataset?.username ||
     "Admin";
 
-  const role = ROLE_LABELS[roleValue] || ROLE_LABELS[String(roleValue)] || "customer";
+  // Convert to string and lookup role
+  const roleKey = String(roleValue);
+  const role = ROLE_LABELS[roleKey] || "customer";
   const currentPath = window.location.pathname;
+  
+  console.log("[AdminSidebar] roleValue:", roleValue, "-> role:", role);
 
-  // Check access for non-super-admin and non-admin
+  // Check access
   if (
     role === "manager" &&
     !NAV_ITEMS.some(

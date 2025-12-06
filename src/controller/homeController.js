@@ -17,7 +17,9 @@ import { CheckoutError, createOrderTransaction } from "../service/orderService";
 
 const isAuthenticated = (req) => req.session && req.session.user;
 const isAdminSession = (req) =>
-  isAuthenticated(req) && String(req.session.user.roleId) === "1";
+  isAuthenticated(req) &&
+  (String(req.session.user.roleId) === "0" ||
+    String(req.session.user.roleId) === "1");
 const isManagerOrAdminSession = (req) =>
   isAuthenticated(req) &&
   (String(req.session.user.roleId) === "1" ||

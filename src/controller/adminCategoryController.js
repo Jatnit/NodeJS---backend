@@ -6,7 +6,9 @@ const ensureAdmin = (req, res) => {
     res.redirect("/signin");
     return true;
   }
-  if (String(req.session.user.roleId) !== "1") {
+  const roleId = String(req.session.user.roleId);
+  // Allow Super Admin (0) and Admin (1)
+  if (roleId !== "0" && roleId !== "1") {
     res.redirect("/admin/dashboard?status=forbidden");
     return true;
   }
@@ -36,6 +38,8 @@ const renderView = async (req, res, options = {}) => {
     errorMessage: options.errorMessage || null,
     formData: options.formData || null,
     successMessage: options.successMessage || null,
+    currentUser: req.session?.user || null,
+    theme: req.session?.theme || "light",
   });
 };
 

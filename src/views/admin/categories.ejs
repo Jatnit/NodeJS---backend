@@ -11,251 +11,264 @@
 </head>
 
 <body class="<%= theme === 'dark' ? 'theme-dark' : 'theme-light' %>">
-    <%- include('../partials/header') %>
+    <%- include('../partials/admin-layout-init') %>
+        <%- include('../partials/header') %>
 
-        <div class="admin-subnav" data-role="<%= currentUser ? currentUser.roleId : '' %>"
-            data-username="<%= currentUser ? (currentUser.username || currentUser.email) : '' %>">
-            <div id="admin-sidebar-root"></div>
-        </div>
-
-        <main class="admin-content-wrapper">
-            <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 mb-4">
-                <div>
-                    <p class="text-muted text-uppercase mb-1" style="letter-spacing: 0.3em; font-size: 0.75rem;">Admin
-                    </p>
-                    <h2 class="fw-bold mb-0">Quản lý danh mục</h2>
-                    <small class="text-muted">Tổ chức và phân loại sản phẩm theo danh mục.</small>
-                </div>
+            <div class="admin-subnav" data-role="<%= currentUser ? currentUser.roleId : '' %>"
+                data-username="<%= currentUser ? (currentUser.username || currentUser.email) : '' %>">
+                <div id="admin-sidebar-root"></div>
             </div>
 
-            <% if (successMessage) { %>
-                <div class="alert alert-success d-flex align-items-center gap-2" style="border-radius: 12px;">
-                    <i class="bi bi-check-circle"></i>
-                    <%= successMessage %>
+            <main class="admin-content-wrapper">
+                <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 mb-4">
+                    <div>
+                        <p class="text-muted text-uppercase mb-1" style="letter-spacing: 0.3em; font-size: 0.75rem;">
+                            Admin
+                        </p>
+                        <h2 class="fw-bold mb-0">Quản lý danh mục</h2>
+                        <small class="text-muted">Tổ chức và phân loại sản phẩm theo danh mục.</small>
+                    </div>
                 </div>
-                <% } %>
-                    <% if (errorMessage) { %>
-                        <div class="alert alert-danger d-flex align-items-center gap-2" style="border-radius: 12px;">
-                            <i class="bi bi-exclamation-triangle"></i>
-                            <%= errorMessage %>
-                        </div>
-                        <% } %>
 
-                            <div class="row g-4">
-                                <!-- Form Card -->
-                                <div class="col-lg-4">
-                                    <div class="card border-0 shadow-sm" style="border-radius: 16px;">
-                                        <div class="card-body p-4">
-                                            <div class="d-flex align-items-center gap-3 mb-4">
-                                                <div class="d-flex align-items-center justify-content-center"
-                                                    style="width: 48px; height: 48px; border-radius: 12px; background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);">
-                                                    <i class="bi bi-folder-plus text-white"
-                                                        style="font-size: 20px;"></i>
-                                                </div>
-                                                <div>
-                                                    <h5 class="fw-bold mb-0">
-                                                        <%= editingCategory ? "Chỉnh sửa danh mục" : "Thêm danh mục" %>
-                                                    </h5>
-                                                    <small class="text-muted">Điền thông tin bên dưới</small>
-                                                </div>
-                                            </div>
+                <% if (successMessage) { %>
+                    <div class="alert alert-success d-flex align-items-center gap-2" style="border-radius: 12px;">
+                        <i class="bi bi-check-circle"></i>
+                        <%= successMessage %>
+                    </div>
+                    <% } %>
+                        <% if (errorMessage) { %>
+                            <div class="alert alert-danger d-flex align-items-center gap-2"
+                                style="border-radius: 12px;">
+                                <i class="bi bi-exclamation-triangle"></i>
+                                <%= errorMessage %>
+                            </div>
+                            <% } %>
 
-                                            <form
-                                                action="<%= editingCategory ? `/admin/categories/${editingCategory.id}` : '/admin/categories' %>"
-                                                method="POST" enctype="multipart/form-data">
-                                                <div class="mb-3">
-                                                    <label class="form-label small fw-semibold text-muted">TÊN DANH
-                                                        MỤC</label>
-                                                    <input type="text" name="name" class="form-control"
-                                                        value="<%= editingCategory ? editingCategory.name : (formData && formData.name) || '' %>"
-                                                        required placeholder="VD: Áo khoác"
-                                                        style="border-radius: 10px; padding: 12px;">
+                                <div class="row g-4">
+                                    <!-- Form Card -->
+                                    <div class="col-lg-4">
+                                        <div class="card border-0 shadow-sm" style="border-radius: 16px;">
+                                            <div class="card-body p-4">
+                                                <div class="d-flex align-items-center gap-3 mb-4">
+                                                    <div class="d-flex align-items-center justify-content-center"
+                                                        style="width: 48px; height: 48px; border-radius: 12px; background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);">
+                                                        <i class="bi bi-folder-plus text-white"
+                                                            style="font-size: 20px;"></i>
+                                                    </div>
+                                                    <div>
+                                                        <h5 class="fw-bold mb-0">
+                                                            <%= editingCategory ? "Chỉnh sửa danh mục" : "Thêm danh mục"
+                                                                %>
+                                                        </h5>
+                                                        <small class="text-muted">Điền thông tin bên dưới</small>
+                                                    </div>
                                                 </div>
-                                                <div class="mb-3">
-                                                    <label class="form-label small fw-semibold text-muted">SLUG</label>
-                                                    <input type="text" name="slug" class="form-control"
-                                                        placeholder="Để trống để tự tạo"
-                                                        value="<%= editingCategory ? editingCategory.slug : (formData && formData.slug) || '' %>"
-                                                        style="border-radius: 10px; padding: 12px;">
-                                                </div>
-                                                <div class="mb-3">
-                                                    <label class="form-label small fw-semibold text-muted">DANH MỤC
-                                                        CHA</label>
-                                                    <select name="parentId" class="form-select"
-                                                        style="border-radius: 10px; padding: 12px;">
-                                                        <option value="">-- Không có --</option>
-                                                        <% categories.forEach(function(category) { %>
-                                                            <% if (!editingCategory || String(category.id)
-                                                                !==String(editingCategory.id)) { %>
-                                                                <option value="<%= category.id %>" <%=editingCategory &&
-                                                                    String(editingCategory.parentId)===String(category.id)
-                                                                    ? 'selected' : (formData &&
-                                                                    String(formData.parentId)===String(category.id)
-                                                                    ? 'selected' : '' ) %>>
-                                                                    <%= category.name %>
-                                                                </option>
-                                                                <% } %>
-                                                                    <% }) %>
-                                                    </select>
-                                                </div>
-                                                <div class="mb-4">
-                                                    <label class="form-label small fw-semibold text-muted">ẢNH DANH
-                                                        MỤC</label>
-                                                    <input type="file" name="image" class="form-control"
-                                                        accept="image/*" style="border-radius: 10px; padding: 10px;">
-                                                    <% if (editingCategory && editingCategory.imageUrl) { %>
-                                                        <div class="mt-3 p-3 bg-light rounded-3">
-                                                            <small class="text-muted d-block mb-2">Ảnh hiện tại:</small>
-                                                            <img src="<%= editingCategory.imageUrl %>"
-                                                                alt="<%= editingCategory.name %>" class="rounded"
-                                                                style="max-height: 100px;">
-                                                        </div>
-                                                        <% } %>
-                                                </div>
-                                                <div class="d-flex gap-2">
-                                                    <button type="submit" class="btn btn-dark flex-grow-1"
-                                                        style="border-radius: 10px; padding: 12px;">
-                                                        <i
-                                                            class="bi <%= editingCategory ? 'bi-check-lg' : 'bi-plus-lg' %> me-2"></i>
-                                                        <%= editingCategory ? "Cập nhật" : "Thêm mới" %>
-                                                    </button>
-                                                    <% if (editingCategory) { %>
-                                                        <a href="/admin/categories" class="btn btn-outline-secondary"
+
+                                                <form
+                                                    action="<%= editingCategory ? `/admin/categories/${editingCategory.id}` : '/admin/categories' %>"
+                                                    method="POST" enctype="multipart/form-data">
+                                                    <div class="mb-3">
+                                                        <label class="form-label small fw-semibold text-muted">TÊN DANH
+                                                            MỤC</label>
+                                                        <input type="text" name="name" class="form-control"
+                                                            value="<%= editingCategory ? editingCategory.name : (formData && formData.name) || '' %>"
+                                                            required placeholder="VD: Áo khoác"
                                                             style="border-radius: 10px; padding: 12px;">
-                                                            Huỷ
-                                                        </a>
-                                                        <% } %>
-                                                </div>
-                                            </form>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Table Card -->
-                                <div class="col-lg-8">
-                                    <div class="card border-0 shadow-sm" style="border-radius: 16px;">
-                                        <div class="card-body p-4">
-                                            <div class="d-flex align-items-center justify-content-between mb-4">
-                                                <div>
-                                                    <h5 class="fw-bold mb-1">Danh sách danh mục</h5>
-                                                    <p class="text-muted small mb-0">
-                                                        Tổng cộng <%= categories ? categories.length : 0 %> danh mục
-                                                    </p>
-                                                </div>
-                                                <div class="d-flex align-items-center gap-2 px-3 py-2 rounded-pill"
-                                                    style="background: #ecfdf5; color: #047857;">
-                                                    <i class="bi bi-folder"></i>
-                                                    <span class="small fw-semibold">
-                                                        <%= categories ? categories.length : 0 %>
-                                                    </span>
-                                                </div>
-                                            </div>
-
-                                            <div class="table-responsive">
-                                                <table class="table table-hover align-middle mb-0">
-                                                    <thead>
-                                                        <tr class="text-muted small text-uppercase"
-                                                            style="letter-spacing: 0.05em;">
-                                                            <th class="border-0 py-3">ID</th>
-                                                            <th class="border-0 py-3">Danh mục</th>
-                                                            <th class="border-0 py-3">Slug</th>
-                                                            <th class="border-0 py-3">Danh mục cha</th>
-                                                            <th class="border-0 py-3 text-end">Thao tác</th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody>
-                                                        <% if (categories && categories.length) { %>
+                                                    </div>
+                                                    <div class="mb-3">
+                                                        <label
+                                                            class="form-label small fw-semibold text-muted">SLUG</label>
+                                                        <input type="text" name="slug" class="form-control"
+                                                            placeholder="Để trống để tự tạo"
+                                                            value="<%= editingCategory ? editingCategory.slug : (formData && formData.slug) || '' %>"
+                                                            style="border-radius: 10px; padding: 12px;">
+                                                    </div>
+                                                    <div class="mb-3">
+                                                        <label class="form-label small fw-semibold text-muted">DANH MỤC
+                                                            CHA</label>
+                                                        <select name="parentId" class="form-select"
+                                                            style="border-radius: 10px; padding: 12px;">
+                                                            <option value="">-- Không có --</option>
                                                             <% categories.forEach(function(category) { %>
-                                                                <tr>
-                                                                    <td class="py-3">
-                                                                        <span class="fw-semibold">#<%= category.id %>
-                                                                                </span>
-                                                                    </td>
-                                                                    <td class="py-3">
-                                                                        <div class="d-flex align-items-center gap-3">
-                                                                            <% if (category.imageUrl) { %>
-                                                                                <img src="<%= category.imageUrl %>"
-                                                                                    alt="<%= category.name %>"
-                                                                                    class="rounded"
-                                                                                    style="width: 42px; height: 42px; object-fit: cover;">
-                                                                                <% } else { %>
-                                                                                    <div class="d-flex align-items-center justify-content-center rounded"
-                                                                                        style="width: 42px; height: 42px; background: #f3f4f6;">
-                                                                                        <i
-                                                                                            class="bi bi-image text-muted"></i>
-                                                                                    </div>
-                                                                                    <% } %>
-                                                                                        <span class="fw-semibold">
-                                                                                            <%= category.name %>
-                                                                                        </span>
-                                                                        </div>
-                                                                    </td>
-                                                                    <td class="py-3">
-                                                                        <code
-                                                                            class="small bg-light px-2 py-1 rounded"><%= category.slug %></code>
-                                                                    </td>
-                                                                    <td class="py-3">
-                                                                        <% const parent=categories.find((item)=>
-                                                                            String(item.id) ===
-                                                                            String(category.parentId)); %>
-                                                                            <% if (parent) { %>
-                                                                                <span class="badge"
-                                                                                    style="background: #e0f2fe; color: #0369a1; padding: 6px 12px; border-radius: 20px;">
-                                                                                    <%= parent.name %>
-                                                                                </span>
-                                                                                <% } else { %>
-                                                                                    <span class="text-muted">—</span>
-                                                                                    <% } %>
-                                                                    </td>
-                                                                    <td class="py-3 text-end">
-                                                                        <a class="btn btn-sm btn-outline-dark me-1"
-                                                                            style="border-radius: 8px;"
-                                                                            href="/admin/categories/<%= category.id %>/edit">
-                                                                            <i class="bi bi-pencil"></i>
-                                                                        </a>
-                                                                        <form class="d-inline" method="POST"
-                                                                            action="/admin/categories/<%= category.id %>/delete"
-                                                                            onsubmit="return confirm('Xác nhận xoá danh mục này?');">
-                                                                            <button
-                                                                                class="btn btn-sm btn-outline-danger"
-                                                                                type="submit"
-                                                                                style="border-radius: 8px;">
-                                                                                <i class="bi bi-trash"></i>
-                                                                            </button>
-                                                                        </form>
-                                                                    </td>
-                                                                </tr>
-                                                                <% }) %>
-                                                                    <% } else { %>
-                                                                        <tr>
-                                                                            <td colspan="5"
-                                                                                class="text-center py-5 text-muted">
-                                                                                <i class="bi bi-folder2-open"
-                                                                                    style="font-size: 48px;"></i>
-                                                                                <p class="mt-2 mb-0">Chưa có danh mục
-                                                                                    nào</p>
-                                                                            </td>
-                                                                        </tr>
-                                                                        <% } %>
-                                                    </tbody>
-                                                </table>
+                                                                <% if (!editingCategory || String(category.id)
+                                                                    !==String(editingCategory.id)) { %>
+                                                                    <option value="<%= category.id %>"
+                                                                        <%=editingCategory &&
+                                                                        String(editingCategory.parentId)===String(category.id)
+                                                                        ? 'selected' : (formData &&
+                                                                        String(formData.parentId)===String(category.id)
+                                                                        ? 'selected' : '' ) %>>
+                                                                        <%= category.name %>
+                                                                    </option>
+                                                                    <% } %>
+                                                                        <% }) %>
+                                                        </select>
+                                                    </div>
+                                                    <div class="mb-4">
+                                                        <label class="form-label small fw-semibold text-muted">ẢNH DANH
+                                                            MỤC</label>
+                                                        <input type="file" name="image" class="form-control"
+                                                            accept="image/*"
+                                                            style="border-radius: 10px; padding: 10px;">
+                                                        <% if (editingCategory && editingCategory.imageUrl) { %>
+                                                            <div class="mt-3 p-3 bg-light rounded-3">
+                                                                <small class="text-muted d-block mb-2">Ảnh hiện
+                                                                    tại:</small>
+                                                                <img src="<%= editingCategory.imageUrl %>"
+                                                                    alt="<%= editingCategory.name %>" class="rounded"
+                                                                    style="max-height: 100px;">
+                                                            </div>
+                                                            <% } %>
+                                                    </div>
+                                                    <div class="d-flex gap-2">
+                                                        <button type="submit" class="btn btn-dark flex-grow-1"
+                                                            style="border-radius: 10px; padding: 12px;">
+                                                            <i
+                                                                class="bi <%= editingCategory ? 'bi-check-lg' : 'bi-plus-lg' %> me-2"></i>
+                                                            <%= editingCategory ? "Cập nhật" : "Thêm mới" %>
+                                                        </button>
+                                                        <% if (editingCategory) { %>
+                                                            <a href="/admin/categories"
+                                                                class="btn btn-outline-secondary"
+                                                                style="border-radius: 10px; padding: 12px;">
+                                                                Huỷ
+                                                            </a>
+                                                            <% } %>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Table Card -->
+                                    <div class="col-lg-8">
+                                        <div class="card border-0 shadow-sm" style="border-radius: 16px;">
+                                            <div class="card-body p-4">
+                                                <div class="d-flex align-items-center justify-content-between mb-4">
+                                                    <div>
+                                                        <h5 class="fw-bold mb-1">Danh sách danh mục</h5>
+                                                        <p class="text-muted small mb-0">
+                                                            Tổng cộng <%= categories ? categories.length : 0 %> danh mục
+                                                        </p>
+                                                    </div>
+                                                    <div class="d-flex align-items-center gap-2 px-3 py-2 rounded-pill"
+                                                        style="background: #ecfdf5; color: #047857;">
+                                                        <i class="bi bi-folder"></i>
+                                                        <span class="small fw-semibold">
+                                                            <%= categories ? categories.length : 0 %>
+                                                        </span>
+                                                    </div>
+                                                </div>
+
+                                                <div class="table-responsive">
+                                                    <table class="table table-hover align-middle mb-0">
+                                                        <thead>
+                                                            <tr class="text-muted small text-uppercase"
+                                                                style="letter-spacing: 0.05em;">
+                                                                <th class="border-0 py-3">ID</th>
+                                                                <th class="border-0 py-3">Danh mục</th>
+                                                                <th class="border-0 py-3">Slug</th>
+                                                                <th class="border-0 py-3">Danh mục cha</th>
+                                                                <th class="border-0 py-3 text-end">Thao tác</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            <% if (categories && categories.length) { %>
+                                                                <% categories.forEach(function(category) { %>
+                                                                    <tr>
+                                                                        <td class="py-3">
+                                                                            <span class="fw-semibold">#<%= category.id
+                                                                                    %>
+                                                                            </span>
+                                                                        </td>
+                                                                        <td class="py-3">
+                                                                            <div
+                                                                                class="d-flex align-items-center gap-3">
+                                                                                <% if (category.imageUrl) { %>
+                                                                                    <img src="<%= category.imageUrl %>"
+                                                                                        alt="<%= category.name %>"
+                                                                                        class="rounded"
+                                                                                        style="width: 42px; height: 42px; object-fit: cover;">
+                                                                                    <% } else { %>
+                                                                                        <div class="d-flex align-items-center justify-content-center rounded"
+                                                                                            style="width: 42px; height: 42px; background: #f3f4f6;">
+                                                                                            <i
+                                                                                                class="bi bi-image text-muted"></i>
+                                                                                        </div>
+                                                                                        <% } %>
+                                                                                            <span class="fw-semibold">
+                                                                                                <%= category.name %>
+                                                                                            </span>
+                                                                            </div>
+                                                                        </td>
+                                                                        <td class="py-3">
+                                                                            <code
+                                                                                class="small bg-light px-2 py-1 rounded"><%= category.slug %></code>
+                                                                        </td>
+                                                                        <td class="py-3">
+                                                                            <% const parent=categories.find((item)=>
+                                                                                String(item.id) ===
+                                                                                String(category.parentId)); %>
+                                                                                <% if (parent) { %>
+                                                                                    <span class="badge"
+                                                                                        style="background: #e0f2fe; color: #0369a1; padding: 6px 12px; border-radius: 20px;">
+                                                                                        <%= parent.name %>
+                                                                                    </span>
+                                                                                    <% } else { %>
+                                                                                        <span
+                                                                                            class="text-muted">—</span>
+                                                                                        <% } %>
+                                                                        </td>
+                                                                        <td class="py-3 text-end">
+                                                                            <a class="btn btn-sm btn-outline-dark me-1"
+                                                                                style="border-radius: 8px;"
+                                                                                href="/admin/categories/<%= category.id %>/edit">
+                                                                                <i class="bi bi-pencil"></i>
+                                                                            </a>
+                                                                            <form class="d-inline" method="POST"
+                                                                                action="/admin/categories/<%= category.id %>/delete"
+                                                                                onsubmit="return confirm('Xác nhận xoá danh mục này?');">
+                                                                                <button
+                                                                                    class="btn btn-sm btn-outline-danger"
+                                                                                    type="submit"
+                                                                                    style="border-radius: 8px;">
+                                                                                    <i class="bi bi-trash"></i>
+                                                                                </button>
+                                                                            </form>
+                                                                        </td>
+                                                                    </tr>
+                                                                    <% }) %>
+                                                                        <% } else { %>
+                                                                            <tr>
+                                                                                <td colspan="5"
+                                                                                    class="text-center py-5 text-muted">
+                                                                                    <i class="bi bi-folder2-open"
+                                                                                        style="font-size: 48px;"></i>
+                                                                                    <p class="mt-2 mb-0">Chưa có danh
+                                                                                        mục
+                                                                                        nào</p>
+                                                                                </td>
+                                                                            </tr>
+                                                                            <% } %>
+                                                        </tbody>
+                                                    </table>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
-                            </div>
-        </main>
+                                </div>
+            </main>
 
-        <%- include('../partials/footer') %>
+            <%- include('../partials/footer') %>
 
-            <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-            <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
-            <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
-            <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-            <script type="text/babel" data-presets="env,react"
-                data-plugins="proposal-class-properties,proposal-object-rest-spread,proposal-optional-chaining,proposal-nullish-coalescing-operator"
-                src="/js/AdminSidebar.jsx"></script>
+                <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+                <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+                <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+                <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+                <script type="text/babel" data-presets="env,react"
+                    data-plugins="proposal-class-properties,proposal-object-rest-spread,proposal-optional-chaining,proposal-nullish-coalescing-operator"
+                    src="/js/AdminSidebar.jsx"></script>
 </body>
 
 </html>
