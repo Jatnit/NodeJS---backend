@@ -12,8 +12,15 @@ import {
   createOrderTransaction,
   restockOrderItems,
 } from "../service/orderService";
+import { logUpdate } from "../service/auditLogger";
 
-const ORDER_STATUSES = ["Mới", "Đang xử lý", "Đang giao", "Hoàn thành", "Đã hủy"];
+const ORDER_STATUSES = [
+  "Mới",
+  "Đang xử lý",
+  "Đang giao",
+  "Hoàn thành",
+  "Đã hủy",
+];
 
 const formatOrderSummary = (record) => ({
   id: record.id,
@@ -222,12 +229,17 @@ const updateOrderStatus = async (req, res) => {
       });
     }
 
+    const oldStatus = order.status;
+
     await sequelize.transaction(async (transaction) => {
       if (status === "Đã hủy" && order.status !== "Đã hủy") {
         await restockOrderItems(order.id, transaction);
       }
       await order.update({ status }, { transaction });
     });
+
+    // Log order status update
+    logUpdate(req, "orders", order.id, { status: oldStatus }, { status });
 
     return res.json({
       success: true,
@@ -252,5 +264,3 @@ export default {
   getOrderDetail,
   updateOrderStatus,
 };
-
-

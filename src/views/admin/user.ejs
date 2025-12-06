@@ -11,19 +11,23 @@
 </head>
 
 <body class="<%= theme === 'dark' ? 'theme-dark' : 'theme-light' %>">
-    <%- include('../partials/header') %>
+    <%- include('../partials/admin-layout-init') %>
+        <%- include('../partials/header') %>
 
-        <main class="site-main py-5">
-            <div class="container pt-5">
-                <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 mb-3">
+            <div class="admin-subnav" data-role="<%= currentUser ? currentUser.roleId : '' %>"
+                data-username="<%= currentUser ? (currentUser.username || currentUser.email) : '' %>">
+                <div id="admin-sidebar-root"></div>
+            </div>
+
+            <main class="admin-content-wrapper">
+                <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 mb-4">
                     <div>
-                        <p class="text-muted text-uppercase mb-1" style="letter-spacing: 0.3em;">Admin</p>
+                        <p class="text-muted text-uppercase mb-1" style="letter-spacing: 0.3em; font-size: 0.75rem;">
+                            Admin
+                        </p>
                         <h2 class="fw-bold mb-0">Quản lý người dùng</h2>
                         <small class="text-muted">Thêm, sửa, xoá tài khoản người dùng hệ thống.</small>
                     </div>
-                </div>
-                <div class="admin-subnav mb-4" data-role="<%= currentUser ? currentUser.roleId : '' %>">
-                    <div id="admin-sidebar-root"></div>
                 </div>
 
                 <div class="row g-4">
@@ -197,71 +201,71 @@
                         </div>
                     </div>
                 </div>
-            </div>
-        </main>
+                </div>
+            </main>
 
-        <%- include('../partials/footer') %>
+            <%- include('../partials/footer') %>
 
-            <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-            <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
-            <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
-            <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-            <script type="text/babel" data-presets="env,react"
-                data-plugins="proposal-class-properties,proposal-object-rest-spread,proposal-optional-chaining,proposal-nullish-coalescing-operator"
-                src="/js/AdminSidebar.jsx"></script>
-            <script>
-                document.addEventListener("DOMContentLoaded", () => {
-                    const form = document.getElementById("userForm");
-                    const formTitle = document.getElementById("formTitle");
-                    const idInput = document.getElementById("userId");
-                    const emailInput = document.getElementById("email");
-                    const usernameInput = document.getElementById("username");
-                    const passwordInput = document.getElementById("password");
-                    const roleSelect = document.getElementById("role");
-                    const submitBtn = document.getElementById("submitBtn");
-                    const cancelBtn = document.getElementById("cancelEdit");
+                <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+                <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+                <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+                <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+                <script type="text/babel" data-presets="env,react"
+                    data-plugins="proposal-class-properties,proposal-object-rest-spread,proposal-optional-chaining,proposal-nullish-coalescing-operator"
+                    src="/js/AdminSidebar.jsx"></script>
+                <script>
+                    document.addEventListener("DOMContentLoaded", () => {
+                        const form = document.getElementById("userForm");
+                        const formTitle = document.getElementById("formTitle");
+                        const idInput = document.getElementById("userId");
+                        const emailInput = document.getElementById("email");
+                        const usernameInput = document.getElementById("username");
+                        const passwordInput = document.getElementById("password");
+                        const roleSelect = document.getElementById("role");
+                        const submitBtn = document.getElementById("submitBtn");
+                        const cancelBtn = document.getElementById("cancelEdit");
 
-                    const resetForm = () => {
-                        form.reset();
-                        idInput.value = "";
-                        roleSelect.value = "3";
-                        form.action = "/admin/create-user";
-                        formTitle.textContent = "Thêm người dùng";
-                        submitBtn.innerHTML = '<i class="bi bi-plus-lg me-2"></i>Thêm mới';
-                        cancelBtn.classList.add("d-none");
-                        passwordInput.disabled = false;
-                        passwordInput.required = true;
-                    };
+                        const resetForm = () => {
+                            form.reset();
+                            idInput.value = "";
+                            roleSelect.value = "3";
+                            form.action = "/admin/create-user";
+                            formTitle.textContent = "Thêm người dùng";
+                            submitBtn.innerHTML = '<i class="bi bi-plus-lg me-2"></i>Thêm mới';
+                            cancelBtn.classList.add("d-none");
+                            passwordInput.disabled = false;
+                            passwordInput.required = true;
+                        };
 
-                    const enterEditMode = ({ id, email, username, role }) => {
-                        idInput.value = id;
-                        emailInput.value = email;
-                        usernameInput.value = username;
-                        roleSelect.value = role && role !== "" ? role : "3";
-                        form.action = "/admin/edit-user";
-                        formTitle.textContent = "Chỉnh sửa người dùng";
-                        submitBtn.innerHTML = '<i class="bi bi-check-lg me-2"></i>Cập nhật';
-                        cancelBtn.classList.remove("d-none");
-                        passwordInput.value = "";
-                        passwordInput.disabled = true;
-                        passwordInput.required = false;
-                    };
+                        const enterEditMode = ({ id, email, username, role }) => {
+                            idInput.value = id;
+                            emailInput.value = email;
+                            usernameInput.value = username;
+                            roleSelect.value = role && role !== "" ? role : "3";
+                            form.action = "/admin/edit-user";
+                            formTitle.textContent = "Chỉnh sửa người dùng";
+                            submitBtn.innerHTML = '<i class="bi bi-check-lg me-2"></i>Cập nhật';
+                            cancelBtn.classList.remove("d-none");
+                            passwordInput.value = "";
+                            passwordInput.disabled = true;
+                            passwordInput.required = false;
+                        };
 
-                    document.querySelectorAll(".btn-edit").forEach((btn) => {
-                        btn.addEventListener("click", () => {
-                            enterEditMode({
-                                id: btn.dataset.id,
-                                email: btn.dataset.email,
-                                username: btn.dataset.username,
-                                role: btn.dataset.role,
+                        document.querySelectorAll(".btn-edit").forEach((btn) => {
+                            btn.addEventListener("click", () => {
+                                enterEditMode({
+                                    id: btn.dataset.id,
+                                    email: btn.dataset.email,
+                                    username: btn.dataset.username,
+                                    role: btn.dataset.role,
+                                });
+                                window.scrollTo({ top: 0, behavior: 'smooth' });
                             });
-                            window.scrollTo({ top: 0, behavior: 'smooth' });
                         });
-                    });
 
-                    cancelBtn.addEventListener("click", resetForm);
-                });
-            </script>
+                        cancelBtn.addEventListener("click", resetForm);
+                    });
+                </script>
 </body>
 
 </html>

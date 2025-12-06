@@ -8,10 +8,10 @@ const hashUserPassWord = (userPassWord) => {
   return hashPassWord;
 };
 
-const registerUser = async (email, password, username, role = 2) => {
+const registerUser = async (email, password, username, role = 3) => {
   try {
     const hashPassWord = hashUserPassWord(password);
-    const normalizedRole = Number(role) || 2;
+    const normalizedRole = Number(role) || 3;
     const user = await User.create({
       email,
       password: hashPassWord,
@@ -27,8 +27,8 @@ const registerUser = async (email, password, username, role = 2) => {
 
 const getUserById = async (id) => {
   try {
-    const user = await User.findByPk(id, { raw: true });
-    return user;
+    const user = await User.findByPk(id);
+    return user ? user.toJSON() : null;
   } catch (error) {
     console.log("getUserById error:", error);
     throw error;

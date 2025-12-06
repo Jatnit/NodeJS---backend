@@ -8,6 +8,7 @@ import {
 } from "../models";
 import sequelize from "../configs/database";
 import cloudinaryService from "../service/cloudinaryService";
+import { logCreate, logUpdate, logDelete } from "../service/auditLogger";
 
 const COLOR_ATTRIBUTE_ID = Number(process.env.COLOR_ATTRIBUTE_ID || 1);
 const SIZE_ATTRIBUTE_ID = Number(process.env.SIZE_ATTRIBUTE_ID || 2);
@@ -17,7 +18,9 @@ const ensureAdmin = (req, res) => {
     res.redirect("/signin");
     return true;
   }
-  if (String(req.session.user.roleId) !== "1") {
+  const roleId = String(req.session.user.roleId);
+  // Allow Super Admin (0) and Admin (1)
+  if (roleId !== "0" && roleId !== "1") {
     res.redirect("/admin/dashboard?status=forbidden");
     return true;
   }
@@ -89,6 +92,8 @@ const renderView = async (req, res, options = {}) => {
     colorOptions: attributeOptions.colors,
     sizeOptions: attributeOptions.sizes,
     inventorySnapshot: options.inventorySnapshot || null,
+    currentUser: req.session?.user || null,
+    theme: req.session?.theme || "light",
   });
 };
 
@@ -208,10 +213,7 @@ const syncInventoryMatrix = async (
 
   const desiredKeys = new Set();
   for (const entry of inventoryEntries) {
-    if (
-      Number.isNaN(entry.colorValueId) ||
-      Number.isNaN(entry.sizeValueId)
-    ) {
+    if (Number.isNaN(entry.colorValueId) || Number.isNaN(entry.sizeValueId)) {
       continue;
     }
     const key = buildSkuKey(entry.colorValueId, entry.sizeValueId);
@@ -447,6 +449,9 @@ const createProduct = async (req, res) => {
       }
     });
 
+    // Log product creation
+    logCreate(req, "products", product.id, { name, slug, basePrice });
+
     return res.redirect("/admin/products?status=created");
   } catch (error) {
     console.log("createProduct error:", error);
@@ -567,6 +572,15 @@ const updateProduct = async (req, res) => {
       }
     });
 
+    // Log product update
+    logUpdate(
+      req,
+      "products",
+      id,
+      { name: product.name, slug: product.slug, basePrice: product.basePrice },
+      { name, slug, basePrice }
+    );
+
     return res.redirect("/admin/products?status=updated");
   } catch (error) {
     console.log("updateProduct error:", error);
@@ -592,7 +606,19 @@ const deleteProduct = async (req, res) => {
   if (ensureAdmin(req, res)) return;
   const { id } = req.params;
   try {
+    // Get product data before deletion for audit log
+    const product = await Product.findByPk(id, { raw: true });
+
     await Product.destroy({ where: { id } });
+
+    // Log product deletion
+    if (product) {
+      logDelete(req, "products", id, {
+        name: product.name,
+        slug: product.slug,
+      });
+    }
+
     return res.redirect("/admin/products?status=deleted");
   } catch (error) {
     console.log("deleteProduct error:", error);
@@ -607,4 +633,3 @@ export default {
   updateProduct,
   deleteProduct,
 };
-
