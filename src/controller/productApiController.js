@@ -355,7 +355,13 @@ const getProducts = async (req, res) => {
 
     const productSkusInclude = {
       model: ProductSKU,
-      attributes: ["id", "price", "stockQuantity", "colorValueId", "sizeValueId"],
+      attributes: [
+        "id",
+        "price",
+        "stockQuantity",
+        "colorValueId",
+        "sizeValueId",
+      ],
     };
 
     const products = await Product.findAndCountAll({
@@ -394,6 +400,53 @@ const getProducts = async (req, res) => {
 
 export default {
   getProducts,
+
+  /**
+   * Check if product name or slug already exists
+   * GET /api/products/check-duplicate?name=xxx&slug=xxx&excludeId=123
+   */
+  async checkProductDuplicate(req, res) {
+    try {
+      const { name, slug, excludeId } = req.query;
+      const result = { nameExists: false, slugExists: false };
+
+      if (name) {
+        const whereClause = { name: name.trim() };
+        if (excludeId) {
+          whereClause.id = { [Op.ne]: Number(excludeId) };
+        }
+        const existingByName = await Product.findOne({ where: whereClause });
+        result.nameExists = !!existingByName;
+      }
+
+      if (slug) {
+        const normalizedSlug = slug.trim().toLowerCase().replace(/\s+/g, "-");
+        const whereClause = { slug: normalizedSlug };
+        if (excludeId) {
+          whereClause.id = { [Op.ne]: Number(excludeId) };
+        }
+        const existingBySlug = await Product.findOne({ where: whereClause });
+        result.slugExists = !!existingBySlug;
+      }
+
+      return res.json({
+        success: true,
+        ...result,
+        message: result.nameExists
+          ? "Tên sản phẩm đã tồn tại"
+          : result.slugExists
+          ? "Slug đã tồn tại"
+          : null,
+      });
+    } catch (error) {
+      console.log("checkProductDuplicate error:", error);
+      return res.status(500).json({
+        success: false,
+        message: "Không thể kiểm tra trùng lặp.",
+      });
+    }
+  },
+
   async getProductDetail(req, res) {
     try {
       const { id } = req.params;
@@ -525,12 +578,7 @@ export default {
 
       const skuRecords = await ProductSKU.findAll({
         where: { productId: id },
-        attributes: [
-          "id",
-          "stockQuantity",
-          "colorValueId",
-          "sizeValueId",
-        ],
+        attributes: ["id", "stockQuantity", "colorValueId", "sizeValueId"],
         include: [
           {
             model: AttributeValue,

@@ -14,6 +14,10 @@ const router = express.Router();
 
 const initApiRoutes = (app) => {
   router.get("/products", productApiController.getProducts);
+  router.get(
+    "/products/check-duplicate",
+    productApiController.checkProductDuplicate
+  );
   router.get("/products/:id", productApiController.getProductDetail);
   router.get("/products/:id/stock-matrix", productApiController.getStockMatrix);
   router.put(

@@ -1,3 +1,5 @@
+require("dotenv").config();
+
 import express from "express";
 import configViewEngine from "./configs/viewEngine";
 import initWebRoutes from "./routes/web";
@@ -6,7 +8,6 @@ import bodyParser from "body-parser";
 import session from "express-session";
 import sequelize from "./configs/database";
 import { Role } from "./models";
-require("dotenv").config();
 
 const app = express();
 const PORT = process.env.PORT || 8000;

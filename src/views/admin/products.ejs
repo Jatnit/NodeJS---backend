@@ -77,18 +77,29 @@
                                                             <label class="form-label small fw-semibold text-muted">TÊN
                                                                 SẢN
                                                                 PHẨM</label>
-                                                            <input type="text" name="name" class="form-control"
+                                                            <input type="text" name="name" id="productName"
+                                                                class="form-control"
                                                                 value="<%= editingProduct ? editingProduct.name : (formData && formData.name) || '' %>"
                                                                 required placeholder="VD: Áo khoác denim"
                                                                 style="border-radius: 10px; padding: 12px;">
+                                                            <div id="nameError" class="text-danger small mt-1"
+                                                                style="display:none;">
+                                                                <i
+                                                                    class="bi bi-exclamation-circle me-1"></i><span></span>
+                                                            </div>
                                                         </div>
                                                         <div class="mb-3">
                                                             <label
                                                                 class="form-label small fw-semibold text-muted">SLUG</label>
-                                                            <input type="text" name="slug" class="form-control"
-                                                                placeholder="Để trống để tự tạo"
+                                                            <input type="text" name="slug" id="productSlug"
+                                                                class="form-control" placeholder="Để trống để tự tạo"
                                                                 value="<%= editingProduct ? editingProduct.slug : (formData && formData.slug) || '' %>"
                                                                 style="border-radius: 10px; padding: 12px;">
+                                                            <div id="slugError" class="text-danger small mt-1"
+                                                                style="display:none;">
+                                                                <i
+                                                                    class="bi bi-exclamation-circle me-1"></i><span></span>
+                                                            </div>
                                                         </div>
                                                         <div class="mb-3">
                                                             <label class="form-label small fw-semibold text-muted">GIÁ
@@ -195,7 +206,7 @@
                                                                             </option>
                                                                             <% }) %>
                                                                     </select>
-                                                                    <input type="file" name="colorImageFiles[]"
+                                                                    <input type="file" name="colorImageFiles"
                                                                         class="form-control form-control-sm"
                                                                         accept="image/*" style="border-radius: 8px;">
                                                                     <button type="button"
@@ -500,6 +511,119 @@
                         });
                     })();
                 </script>
+
+                <!-- Duplicate Check Script -->
+                <script>
+                    (function () {
+                        const nameInput = document.getElementById('productName');
+                        const slugInput = document.getElementById('productSlug');
+                        const nameError = document.getElementById('nameError');
+                        const slugError = document.getElementById('slugError');
+                        const form = nameInput?.closest('form');
+                        const editingProductId = '<%= editingProduct ? editingProduct.id : "" %>';
+
+                        let checkTimeout = null;
+                        let isNameValid = true;
+                        let isSlugValid = true;
+
+                        const showError = (errorDiv, message) => {
+                            if (errorDiv && message) {
+                                errorDiv.querySelector('span').textContent = message;
+                                errorDiv.style.display = 'block';
+                            }
+                        };
+
+                        const hideError = (errorDiv) => {
+                            if (errorDiv) {
+                                errorDiv.style.display = 'none';
+                            }
+                        };
+
+                        const setInputState = (input, isValid) => {
+                            if (input) {
+                                input.style.borderColor = isValid ? '' : '#dc3545';
+                                input.style.boxShadow = isValid ? '' : '0 0 0 0.2rem rgba(220, 53, 69, 0.25)';
+                            }
+                        };
+
+                        const checkDuplicate = async (field, value) => {
+                            if (!value || !value.trim()) {
+                                if (field === 'name') {
+                                    hideError(nameError);
+                                    setInputState(nameInput, true);
+                                    isNameValid = true;
+                                } else {
+                                    hideError(slugError);
+                                    setInputState(slugInput, true);
+                                    isSlugValid = true;
+                                }
+                                return;
+                            }
+
+                            try {
+                                const params = new URLSearchParams();
+                                params.set(field, value);
+                                if (editingProductId) {
+                                    params.set('excludeId', editingProductId);
+                                }
+
+                                const response = await fetch(`/api/products/check-duplicate?${params.toString()}`);
+                                const data = await response.json();
+
+                                if (field === 'name') {
+                                    if (data.nameExists) {
+                                        showError(nameError, 'Tên sản phẩm này đã tồn tại!');
+                                        setInputState(nameInput, false);
+                                        isNameValid = false;
+                                    } else {
+                                        hideError(nameError);
+                                        setInputState(nameInput, true);
+                                        isNameValid = true;
+                                    }
+                                } else if (field === 'slug') {
+                                    if (data.slugExists) {
+                                        showError(slugError, 'Slug này đã tồn tại! Vui lòng đổi slug khác.');
+                                        setInputState(slugInput, false);
+                                        isSlugValid = false;
+                                    } else {
+                                        hideError(slugError);
+                                        setInputState(slugInput, true);
+                                        isSlugValid = true;
+                                    }
+                                }
+                            } catch (error) {
+                                console.error('Duplicate check error:', error);
+                            }
+                        };
+
+                        const debounceCheck = (field, value) => {
+                            clearTimeout(checkTimeout);
+                            checkTimeout = setTimeout(() => checkDuplicate(field, value), 500);
+                        };
+
+                        if (nameInput) {
+                            nameInput.addEventListener('blur', () => checkDuplicate('name', nameInput.value));
+                            nameInput.addEventListener('input', () => debounceCheck('name', nameInput.value));
+                        }
+
+                        if (slugInput) {
+                            slugInput.addEventListener('blur', () => checkDuplicate('slug', slugInput.value));
+                            slugInput.addEventListener('input', () => debounceCheck('slug', slugInput.value));
+                        }
+
+                        // Prevent form submit if there are duplicates
+                        if (form) {
+                            form.addEventListener('submit', (e) => {
+                                if (!isNameValid || !isSlugValid) {
+                                    e.preventDefault();
+                                    alert('Vui lòng sửa các lỗi trùng lặp trước khi lưu sản phẩm.');
+                                    return false;
+                                }
+                            });
+                        }
+                    })();
+                </script>
+
                 <% if (editingProduct) { %>
                     <script type="text/babel" data-presets="env,react"
                         data-plugins="proposal-class-properties,proposal-object-rest-spread,proposal-optional-chaining,proposal-nullish-coalescing-operator"

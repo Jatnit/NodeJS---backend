@@ -357,6 +357,12 @@ const renderEditProduct = async (req, res) => {
 };
 
 const createProduct = async (req, res) => {
+  console.log(
+    "[createProduct] Session user:",
+    req.session?.user?.email,
+    "Role:",
+    req.session?.user?.roleId
+  );
   if (ensureAdmin(req, res)) return;
   const {
     name,
@@ -407,6 +413,8 @@ const createProduct = async (req, res) => {
     : [];
 
   try {
+    let createdProductId = null;
+
     await sequelize.transaction(async (transaction) => {
       const thumbnailUrl = await uploadImageFromFile(thumbnailFile);
 
@@ -421,6 +429,8 @@ const createProduct = async (req, res) => {
         },
         { transaction }
       );
+
+      createdProductId = product.id;
 
       if (parsedCategories.length) {
         await product.setCategories(parsedCategories, { transaction });
@@ -450,7 +460,9 @@ const createProduct = async (req, res) => {
     });
 
     // Log product creation
-    logCreate(req, "products", product.id, { name, slug, basePrice });
+    if (createdProductId) {
+      logCreate(req, "products", createdProductId, { name, slug, basePrice });
+    }
 
     return res.redirect("/admin/products?status=created");
   } catch (error) {
