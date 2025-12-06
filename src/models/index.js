@@ -13,6 +13,7 @@ import ProductCategory from "./ProductCategory";
 import ProductGallery from "./ProductGallery";
 import ProductColorImage from "./ProductColorImage";
 import ReviewImage from "./ReviewImage";
+import AuditLog from "./AuditLog";
 
 Role.hasMany(User, { foreignKey: "roleId" });
 User.belongsTo(Role, { foreignKey: "roleId" });
@@ -90,6 +91,10 @@ Review.belongsTo(Product, { foreignKey: "productId" });
 Review.hasMany(ReviewImage, { foreignKey: "reviewId" });
 ReviewImage.belongsTo(Review, { foreignKey: "reviewId" });
 
+// Audit Logs
+User.hasMany(AuditLog, { foreignKey: "userId" });
+AuditLog.belongsTo(User, { foreignKey: "userId" });
+
 export {
   Role,
   User,
@@ -106,4 +111,5 @@ export {
   ProductGallery,
   ProductColorImage,
   ReviewImage,
+  AuditLog,
 };

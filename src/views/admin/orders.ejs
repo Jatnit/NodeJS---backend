@@ -13,25 +13,26 @@
 <body class="<%= theme === 'dark' ? 'theme-dark' : 'theme-light' %>">
     <%- include('../partials/header') %>
 
-        <main class="site-main py-5">
-            <div class="container pt-5">
-                <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 mb-3">
-                    <div>
-                        <p class="text-muted text-uppercase mb-1" style="letter-spacing: 0.3em;">Admin</p>
-                        <h2 class="fw-bold mb-0">Quản lý đơn hàng</h2>
-                        <small class="text-muted">Theo dõi và cập nhật trạng thái đơn theo thời gian thực.</small>
-                    </div>
-                </div>
-                <div class="admin-subnav mb-4" data-role="<%= currentUser ? currentUser.roleId : '' %>">
-                    <div id="admin-sidebar-root"></div>
-                </div>
+        <div class="admin-subnav" data-role="<%= currentUser ? currentUser.roleId : '' %>"
+            data-username="<%= currentUser ? (currentUser.username || currentUser.email) : '' %>">
+            <div id="admin-sidebar-root"></div>
+        </div>
 
-                <div id="admin-orders-root">
-                    <div class="card border-0 shadow-sm" style="border-radius: 16px;">
-                        <div class="card-body text-center py-5 text-muted">
-                            <div class="spinner-border text-dark mb-3" role="status" aria-hidden="true"></div>
-                            <p class="mb-0">Đang tải dữ liệu đơn hàng...</p>
-                        </div>
+        <main class="admin-content-wrapper">
+            <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 mb-4">
+                <div>
+                    <p class="text-muted text-uppercase mb-1" style="letter-spacing: 0.3em; font-size: 0.75rem;">Admin
+                    </p>
+                    <h2 class="fw-bold mb-0">Quản lý đơn hàng</h2>
+                    <small class="text-muted">Theo dõi và cập nhật trạng thái đơn theo thời gian thực.</small>
+                </div>
+            </div>
+
+            <div id="admin-orders-root">
+                <div class="card border-0 shadow-sm" style="border-radius: 16px;">
+                    <div class="card-body text-center py-5 text-muted">
+                        <div class="spinner-border text-dark mb-3" role="status" aria-hidden="true"></div>
+                        <p class="mb-0">Đang tải dữ liệu đơn hàng...</p>
                     </div>
                 </div>
             </div>

@@ -13,17 +13,19 @@
 <body class="<%= theme === 'dark' ? 'theme-dark' : 'theme-light' %>">
     <%- include('../partials/header') %>
 
-    <main class="site-main py-5">
-        <div class="container pt-5">
-            <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 mb-3">
+        <div class="admin-subnav" data-role="<%= currentUser ? currentUser.roleId : '' %>"
+            data-username="<%= currentUser ? (currentUser.username || currentUser.email) : '' %>">
+            <div id="admin-sidebar-root"></div>
+        </div>
+
+        <main class="admin-content-wrapper">
+            <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 mb-4">
                 <div>
-                    <p class="text-muted text-uppercase mb-1" style="letter-spacing: 0.3em;">Admin</p>
+                    <p class="text-muted text-uppercase mb-1" style="letter-spacing: 0.3em; font-size: 0.75rem;">Admin
+                    </p>
                     <h2 class="fw-bold mb-0">Quản lý sản phẩm</h2>
                     <small class="text-muted">Thêm, sửa, xoá sản phẩm và quản lý tồn kho.</small>
                 </div>
-            </div>
-            <div class="admin-subnav mb-4" data-role="<%= currentUser ? currentUser.roleId : '' %>">
-                <div id="admin-sidebar-root"></div>
             </div>
 
             <% if (successMessage) { %>
@@ -31,374 +33,459 @@
                     <i class="bi bi-check-circle"></i>
                     <%= successMessage %>
                 </div>
-            <% } %>
-            <% if (errorMessage) { %>
-                <div class="alert alert-danger d-flex align-items-center gap-2" style="border-radius: 12px;">
-                    <i class="bi bi-exclamation-triangle"></i>
-                    <%= errorMessage %>
-                </div>
-            <% } %>
-
-            <div class="row g-4">
-                <!-- Form Card -->
-                <div class="col-lg-5">
-                    <div class="card border-0 shadow-sm" style="border-radius: 16px;">
-                        <div class="card-body p-4">
-                            <div class="d-flex align-items-center gap-3 mb-4">
-                                <div class="d-flex align-items-center justify-content-center"
-                                    style="width: 48px; height: 48px; border-radius: 12px; background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
-                                    <i class="bi bi-box-seam text-white" style="font-size: 20px;"></i>
-                                </div>
-                                <div>
-                                    <h5 class="fw-bold mb-0">
-                                        <%= editingProduct ? "Chỉnh sửa sản phẩm" : "Thêm sản phẩm" %>
-                                    </h5>
-                                    <small class="text-muted">Điền thông tin bên dưới</small>
-                                </div>
-                            </div>
-
-                            <form action="<%= editingProduct ? `/admin/products/${editingProduct.id}` : '/admin/products' %>"
-                                method="POST" enctype="multipart/form-data">
-
-                                <!-- Basic Info -->
-                                <div class="mb-4 p-3 bg-light rounded-3">
-                                    <h6 class="fw-semibold text-muted mb-3">
-                                        <i class="bi bi-info-circle me-2"></i>Thông tin cơ bản
-                                    </h6>
-                                    <div class="mb-3">
-                                        <label class="form-label small fw-semibold text-muted">TÊN SẢN PHẨM</label>
-                                        <input type="text" name="name" class="form-control"
-                                            value="<%= editingProduct ? editingProduct.name : (formData && formData.name) || '' %>"
-                                            required placeholder="VD: Áo khoác denim"
-                                            style="border-radius: 10px; padding: 12px;">
-                                    </div>
-                                    <div class="mb-3">
-                                        <label class="form-label small fw-semibold text-muted">SLUG</label>
-                                        <input type="text" name="slug" class="form-control"
-                                            placeholder="Để trống để tự tạo"
-                                            value="<%= editingProduct ? editingProduct.slug : (formData && formData.slug) || '' %>"
-                                            style="border-radius: 10px; padding: 12px;">
-                                    </div>
-                                    <div class="mb-3">
-                                        <label class="form-label small fw-semibold text-muted">GIÁ (VND)</label>
-                                        <input type="number" name="basePrice" min="0" class="form-control"
-                                            value="<%= editingProduct ? editingProduct.basePrice : (formData && formData.basePrice) || '' %>"
-                                            required placeholder="0"
-                                            style="border-radius: 10px; padding: 12px;">
-                                    </div>
-                                    <div class="mb-0">
-                                        <label class="form-label small fw-semibold text-muted">MÔ TẢ</label>
-                                        <textarea name="description" rows="3" class="form-control"
-                                            placeholder="Mô tả sản phẩm..."
-                                            style="border-radius: 10px; padding: 12px;"><%= editingProduct ? editingProduct.description || '' : (formData && formData.description) || '' %></textarea>
-                                    </div>
-                                </div>
-
-                                <!-- Category & Status -->
-                                <div class="mb-4 p-3 bg-light rounded-3">
-                                    <h6 class="fw-semibold text-muted mb-3">
-                                        <i class="bi bi-tag me-2"></i>Phân loại & Trạng thái
-                                    </h6>
-                                    <div class="mb-3">
-                                        <label class="form-label small fw-semibold text-muted">DANH MỤC</label>
-                                        <select name="categoryIds" class="form-select" multiple size="4"
-                                            style="border-radius: 10px; padding: 10px;">
-                                            <% const selectedCats = editingProduct ? editingProduct.categoryIds : (formData && formData.categoryIds); %>
-                                            <% categories.forEach(function(category) { %>
-                                                <option value="<%= category.id %>"
-                                                    <%= selectedCats && selectedCats.includes(String(category.id)) ? 'selected' : '' %>>
-                                                    <%= category.name %>
-                                                </option>
-                                            <% }) %>
-                                        </select>
-                                        <small class="text-muted">Giữ Ctrl/Cmd để chọn nhiều</small>
-                                    </div>
-                                    <div class="form-check form-switch">
-                                        <input class="form-check-input" type="checkbox" id="isActive" name="isActive"
-                                            <%= editingProduct ? (editingProduct.isActive ? 'checked' : '') : 'checked' %>>
-                                        <label class="form-check-label" for="isActive">Hiển thị sản phẩm</label>
-                                    </div>
-                                </div>
-
-                                <!-- Images -->
-                                <div class="mb-4 p-3 bg-light rounded-3">
-                                    <h6 class="fw-semibold text-muted mb-3">
-                                        <i class="bi bi-image me-2"></i>Hình ảnh
-                                    </h6>
-                                    <div class="mb-3">
-                                        <label class="form-label small fw-semibold text-muted">ẢNH THUMBNAIL</label>
-                                        <input type="file" name="thumbnail" class="form-control" accept="image/*"
-                                            style="border-radius: 10px; padding: 10px;">
-                                        <% if (editingProduct && editingProduct.thumbnailUrl) { %>
-                                            <img src="<%= editingProduct.thumbnailUrl %>" alt="<%= editingProduct.name %>"
-                                                class="rounded mt-2" style="max-height: 80px;">
-                                        <% } %>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label class="form-label small fw-semibold text-muted">BỘ SƯU TẬP (3 ảnh)</label>
-                                        <input type="file" name="galleryImages" class="form-control" accept="image/*" multiple
-                                            style="border-radius: 10px; padding: 10px;">
-                                        <% if (editingProduct && editingProduct.galleries && editingProduct.galleries.length) { %>
-                                            <div class="d-flex flex-wrap gap-2 mt-2">
-                                                <% editingProduct.galleries.forEach(function(gallery) { %>
-                                                    <img src="<%= gallery.imageUrl %>" alt="gallery" class="rounded"
-                                                        style="width: 60px; height: 60px; object-fit: cover;">
-                                                <% }) %>
-                                            </div>
-                                        <% } %>
-                                    </div>
-                                    <div class="mb-0">
-                                        <label class="form-label small fw-semibold text-muted">ẢNH THEO MÀU</label>
-                                        <div id="color-image-list" class="d-flex flex-column gap-2">
-                                            <div class="color-image-row d-flex gap-2 align-items-center">
-                                                <select name="colorImageColorIds[]" class="form-select form-select-sm" style="border-radius: 8px;">
-                                                    <option value="">Chọn màu</option>
-                                                    <% colorOptions.forEach(function(color) { %>
-                                                        <option value="<%= color.id %>"><%= color.value %></option>
-                                                    <% }) %>
-                                                </select>
-                                                <input type="file" name="colorImageFiles[]" class="form-control form-control-sm" accept="image/*" style="border-radius: 8px;">
-                                                <button type="button" class="btn btn-sm btn-outline-danger remove-color-image" style="border-radius: 8px;">
-                                                    <i class="bi bi-x"></i>
-                                                </button>
-                                            </div>
-                                        </div>
-                                        <button type="button" class="btn btn-outline-secondary btn-sm mt-2" id="addColorImageRow" style="border-radius: 8px;">
-                                            <i class="bi bi-plus me-1"></i>Thêm màu
-                                        </button>
-                                        <% if (editingProduct && editingProduct.colorImages && editingProduct.colorImages.length) { %>
-                                            <div class="d-flex flex-wrap gap-2 mt-2">
-                                                <% editingProduct.colorImages.forEach(function(img) { %>
-                                                    <div class="border rounded p-2 text-center" style="width: 80px;">
-                                                        <img src="<%= img.imageUrl %>" alt="color" class="rounded" style="height: 50px; object-fit: cover;">
-                                                    </div>
-                                                <% }) %>
-                                            </div>
-                                        <% } %>
-                                    </div>
-                                </div>
-
-                                <!-- Inventory Matrix -->
-                                <div class="mb-4 p-3 bg-light rounded-3">
-                                    <h6 class="fw-semibold text-muted mb-3">
-                                        <i class="bi bi-grid-3x3 me-2"></i>Ma trận tồn kho
-                                    </h6>
-                                    <div class="table-responsive">
-                                        <table class="table table-sm table-bordered align-middle text-center mb-0 bg-white" style="border-radius: 8px; overflow: hidden;">
-                                            <thead class="table-light">
-                                                <tr>
-                                                    <th style="min-width: 100px;" class="small">Màu / Size</th>
-                                                    <% sizeOptions.forEach(function(size) { %>
-                                                        <th class="small"><%= size.value %></th>
-                                                    <% }) %>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                <% colorOptions.forEach(function(color) { %>
-                                                    <tr>
-                                                        <th class="text-start small bg-light"><%= color.value %></th>
-                                                        <% sizeOptions.forEach(function(size) {
-                                                            const snapshot = inventorySnapshot && inventorySnapshot[String(color.id)] && inventorySnapshot[String(color.id)][String(size.id)]
-                                                                ? inventorySnapshot[String(color.id)][String(size.id)] : null;
-                                                        %>
-                                                            <td style="min-width: 90px;">
-                                                                <input type="number" step="1000" class="form-control form-control-sm mb-1" placeholder="Giá"
-                                                                    name="inventory[<%= color.id %>][<%= size.id %>][price]"
-                                                                    value="<%= snapshot ? snapshot.price : '' %>" style="font-size: 11px;">
-                                                                <input type="number" min="0" class="form-control form-control-sm" placeholder="SL"
-                                                                    name="inventory[<%= color.id %>][<%= size.id %>][stock]"
-                                                                    value="<%= snapshot ? snapshot.stock : '' %>" style="font-size: 11px;">
-                                                            </td>
-                                                        <% }) %>
-                                                    </tr>
-                                                <% }) %>
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                    <small class="text-muted d-block mt-2">Bỏ trống giá để dùng giá cơ bản.</small>
-                                </div>
-
-                                <div class="d-flex gap-2">
-                                    <button type="submit" class="btn btn-dark flex-grow-1" style="border-radius: 10px; padding: 12px;">
-                                        <i class="bi <%= editingProduct ? 'bi-check-lg' : 'bi-plus-lg' %> me-2"></i>
-                                        <%= editingProduct ? "Cập nhật" : "Thêm mới" %>
-                                    </button>
-                                    <% if (editingProduct) { %>
-                                        <a href="/admin/products" class="btn btn-outline-secondary" style="border-radius: 10px; padding: 12px;">Huỷ</a>
-                                    <% } %>
-                                </div>
-                            </form>
-
-                            <% if (editingProduct) { %>
-                                <div class="mt-4 p-3 border rounded-3">
-                                    <h6 class="fw-semibold mb-2">
-                                        <i class="bi bi-box-seam me-2"></i>Inventory Matrix
-                                    </h6>
-                                    <div id="inventory-matrix-root" data-product-id="<%= editingProduct.id %>">
-                                        <div class="text-muted text-center py-3 small">Đang tải...</div>
-                                    </div>
-                                </div>
-                            <% } %>
+                <% } %>
+                    <% if (errorMessage) { %>
+                        <div class="alert alert-danger d-flex align-items-center gap-2" style="border-radius: 12px;">
+                            <i class="bi bi-exclamation-triangle"></i>
+                            <%= errorMessage %>
                         </div>
-                    </div>
-                </div>
+                        <% } %>
 
-                <!-- Table Card -->
-                <div class="col-lg-7">
-                    <div class="card border-0 shadow-sm" style="border-radius: 16px;">
-                        <div class="card-body p-4">
-                            <div class="d-flex align-items-center justify-content-between mb-4">
-                                <div>
-                                    <h5 class="fw-bold mb-1">Danh sách sản phẩm</h5>
-                                    <p class="text-muted small mb-0">
-                                        Tổng cộng <%= products ? products.length : 0 %> sản phẩm
-                                    </p>
-                                </div>
-                                <div class="d-flex align-items-center gap-2 px-3 py-2 rounded-pill"
-                                    style="background: #ecfdf5; color: #047857;">
-                                    <i class="bi bi-box-seam"></i>
-                                    <span class="small fw-semibold"><%= products ? products.length : 0 %></span>
-                                </div>
-                            </div>
+                            <div class="row g-4">
+                                <!-- Form Card -->
+                                <div class="col-lg-5">
+                                    <div class="card border-0 shadow-sm" style="border-radius: 16px;">
+                                        <div class="card-body p-4">
+                                            <div class="d-flex align-items-center gap-3 mb-4">
+                                                <div class="d-flex align-items-center justify-content-center"
+                                                    style="width: 48px; height: 48px; border-radius: 12px; background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+                                                    <i class="bi bi-box-seam text-white" style="font-size: 20px;"></i>
+                                                </div>
+                                                <div>
+                                                    <h5 class="fw-bold mb-0">
+                                                        <%= editingProduct ? "Chỉnh sửa sản phẩm" : "Thêm sản phẩm" %>
+                                                    </h5>
+                                                    <small class="text-muted">Điền thông tin bên dưới</small>
+                                                </div>
+                                            </div>
 
-                            <div class="table-responsive">
-                                <table class="table table-hover align-middle mb-0">
-                                    <thead>
-                                        <tr class="text-muted small text-uppercase" style="letter-spacing: 0.05em;">
-                                            <th class="border-0 py-3">Sản phẩm</th>
-                                            <th class="border-0 py-3 text-end">Giá</th>
-                                            <th class="border-0 py-3">Trạng thái</th>
-                                            <th class="border-0 py-3 text-end">Thao tác</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <% if (products && products.length) { %>
-                                            <% products.forEach(function(product) { %>
-                                                <tr>
-                                                    <td class="py-3">
-                                                        <div class="d-flex align-items-center gap-3">
-                                                            <% if (product.thumbnailUrl) { %>
-                                                                <img src="<%= product.thumbnailUrl %>" alt="<%= product.name %>"
-                                                                    class="rounded" style="width: 56px; height: 56px; object-fit: cover;">
-                                                            <% } else { %>
-                                                                <div class="d-flex align-items-center justify-content-center rounded"
-                                                                    style="width: 56px; height: 56px; background: #f3f4f6;">
-                                                                    <i class="bi bi-image text-muted"></i>
-                                                                </div>
+                                            <form
+                                                action="<%= editingProduct ? `/admin/products/${editingProduct.id}` : '/admin/products' %>"
+                                                method="POST" enctype="multipart/form-data">
+
+                                                <!-- Basic Info -->
+                                                <div class="mb-4 p-3 bg-light rounded-3">
+                                                    <h6 class="fw-semibold text-muted mb-3">
+                                                        <i class="bi bi-info-circle me-2"></i>Thông tin cơ bản
+                                                    </h6>
+                                                    <div class="mb-3">
+                                                        <label class="form-label small fw-semibold text-muted">TÊN SẢN
+                                                            PHẨM</label>
+                                                        <input type="text" name="name" class="form-control"
+                                                            value="<%= editingProduct ? editingProduct.name : (formData && formData.name) || '' %>"
+                                                            required placeholder="VD: Áo khoác denim"
+                                                            style="border-radius: 10px; padding: 12px;">
+                                                    </div>
+                                                    <div class="mb-3">
+                                                        <label
+                                                            class="form-label small fw-semibold text-muted">SLUG</label>
+                                                        <input type="text" name="slug" class="form-control"
+                                                            placeholder="Để trống để tự tạo"
+                                                            value="<%= editingProduct ? editingProduct.slug : (formData && formData.slug) || '' %>"
+                                                            style="border-radius: 10px; padding: 12px;">
+                                                    </div>
+                                                    <div class="mb-3">
+                                                        <label class="form-label small fw-semibold text-muted">GIÁ
+                                                            (VND)</label>
+                                                        <input type="number" name="basePrice" min="0"
+                                                            class="form-control"
+                                                            value="<%= editingProduct ? editingProduct.basePrice : (formData && formData.basePrice) || '' %>"
+                                                            required placeholder="0"
+                                                            style="border-radius: 10px; padding: 12px;">
+                                                    </div>
+                                                    <div class="mb-0">
+                                                        <label class="form-label small fw-semibold text-muted">MÔ
+                                                            TẢ</label>
+                                                        <textarea name="description" rows="3" class="form-control"
+                                                            placeholder="Mô tả sản phẩm..."
+                                                            style="border-radius: 10px; padding: 12px;"><%= editingProduct ? editingProduct.description || '' : (formData && formData.description) || '' %></textarea>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Category & Status -->
+                                                <div class="mb-4 p-3 bg-light rounded-3">
+                                                    <h6 class="fw-semibold text-muted mb-3">
+                                                        <i class="bi bi-tag me-2"></i>Phân loại & Trạng thái
+                                                    </h6>
+                                                    <div class="mb-3">
+                                                        <label class="form-label small fw-semibold text-muted">DANH
+                                                            MỤC</label>
+                                                        <select name="categoryIds" class="form-select" multiple size="4"
+                                                            style="border-radius: 10px; padding: 10px;">
+                                                            <% const selectedCats=editingProduct ?
+                                                                editingProduct.categoryIds : (formData &&
+                                                                formData.categoryIds); %>
+                                                                <% categories.forEach(function(category) { %>
+                                                                    <option value="<%= category.id %>" <%=selectedCats
+                                                                        && selectedCats.includes(String(category.id))
+                                                                        ? 'selected' : '' %>>
+                                                                        <%= category.name %>
+                                                                    </option>
+                                                                    <% }) %>
+                                                        </select>
+                                                        <small class="text-muted">Giữ Ctrl/Cmd để chọn nhiều</small>
+                                                    </div>
+                                                    <div class="form-check form-switch">
+                                                        <input class="form-check-input" type="checkbox" id="isActive"
+                                                            name="isActive" <%=editingProduct ? (editingProduct.isActive
+                                                            ? 'checked' : '' ) : 'checked' %>>
+                                                        <label class="form-check-label" for="isActive">Hiển thị sản
+                                                            phẩm</label>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Images -->
+                                                <div class="mb-4 p-3 bg-light rounded-3">
+                                                    <h6 class="fw-semibold text-muted mb-3">
+                                                        <i class="bi bi-image me-2"></i>Hình ảnh
+                                                    </h6>
+                                                    <div class="mb-3">
+                                                        <label class="form-label small fw-semibold text-muted">ẢNH
+                                                            THUMBNAIL</label>
+                                                        <input type="file" name="thumbnail" class="form-control"
+                                                            accept="image/*"
+                                                            style="border-radius: 10px; padding: 10px;">
+                                                        <% if (editingProduct && editingProduct.thumbnailUrl) { %>
+                                                            <img src="<%= editingProduct.thumbnailUrl %>"
+                                                                alt="<%= editingProduct.name %>" class="rounded mt-2"
+                                                                style="max-height: 80px;">
                                                             <% } %>
-                                                            <div>
-                                                                <div class="fw-semibold"><%= product.name %></div>
-                                                                <small class="text-muted">ID: #<%= product.id %></small>
+                                                    </div>
+                                                    <div class="mb-3">
+                                                        <label class="form-label small fw-semibold text-muted">BỘ SƯU
+                                                            TẬP (3 ảnh)</label>
+                                                        <input type="file" name="galleryImages" class="form-control"
+                                                            accept="image/*" multiple
+                                                            style="border-radius: 10px; padding: 10px;">
+                                                        <% if (editingProduct && editingProduct.galleries &&
+                                                            editingProduct.galleries.length) { %>
+                                                            <div class="d-flex flex-wrap gap-2 mt-2">
+                                                                <% editingProduct.galleries.forEach(function(gallery) {
+                                                                    %>
+                                                                    <img src="<%= gallery.imageUrl %>" alt="gallery"
+                                                                        class="rounded"
+                                                                        style="width: 60px; height: 60px; object-fit: cover;">
+                                                                    <% }) %>
+                                                            </div>
+                                                            <% } %>
+                                                    </div>
+                                                    <div class="mb-0">
+                                                        <label class="form-label small fw-semibold text-muted">ẢNH THEO
+                                                            MÀU</label>
+                                                        <div id="color-image-list" class="d-flex flex-column gap-2">
+                                                            <div
+                                                                class="color-image-row d-flex gap-2 align-items-center">
+                                                                <select name="colorImageColorIds[]"
+                                                                    class="form-select form-select-sm"
+                                                                    style="border-radius: 8px;">
+                                                                    <option value="">Chọn màu</option>
+                                                                    <% colorOptions.forEach(function(color) { %>
+                                                                        <option value="<%= color.id %>">
+                                                                            <%= color.value %>
+                                                                        </option>
+                                                                        <% }) %>
+                                                                </select>
+                                                                <input type="file" name="colorImageFiles[]"
+                                                                    class="form-control form-control-sm"
+                                                                    accept="image/*" style="border-radius: 8px;">
+                                                                <button type="button"
+                                                                    class="btn btn-sm btn-outline-danger remove-color-image"
+                                                                    style="border-radius: 8px;">
+                                                                    <i class="bi bi-x"></i>
+                                                                </button>
                                                             </div>
                                                         </div>
-                                                    </td>
-                                                    <td class="py-3 text-end fw-semibold">
-                                                        <%= Number(product.basePrice || 0).toLocaleString('vi-VN', { style: 'currency', currency: 'VND' }) %>
-                                                    </td>
-                                                    <td class="py-3">
-                                                        <% if (product.isActive) { %>
-                                                            <span class="badge fw-semibold" style="background: #d1fae5; color: #065f46; padding: 6px 12px; border-radius: 20px;">
-                                                                <i class="bi bi-check-circle me-1"></i>Active
-                                                            </span>
-                                                        <% } else { %>
-                                                            <span class="badge fw-semibold" style="background: #f3f4f6; color: #6b7280; padding: 6px 12px; border-radius: 20px;">
-                                                                <i class="bi bi-eye-slash me-1"></i>Ẩn
-                                                            </span>
+                                                        <button type="button"
+                                                            class="btn btn-outline-secondary btn-sm mt-2"
+                                                            id="addColorImageRow" style="border-radius: 8px;">
+                                                            <i class="bi bi-plus me-1"></i>Thêm màu
+                                                        </button>
+                                                        <% if (editingProduct && editingProduct.colorImages &&
+                                                            editingProduct.colorImages.length) { %>
+                                                            <div class="d-flex flex-wrap gap-2 mt-2">
+                                                                <% editingProduct.colorImages.forEach(function(img) { %>
+                                                                    <div class="border rounded p-2 text-center"
+                                                                        style="width: 80px;">
+                                                                        <img src="<%= img.imageUrl %>" alt="color"
+                                                                            class="rounded"
+                                                                            style="height: 50px; object-fit: cover;">
+                                                                    </div>
+                                                                    <% }) %>
+                                                            </div>
+                                                            <% } %>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Inventory Matrix -->
+                                                <div class="mb-4 p-3 bg-light rounded-3">
+                                                    <h6 class="fw-semibold text-muted mb-3">
+                                                        <i class="bi bi-grid-3x3 me-2"></i>Ma trận tồn kho
+                                                    </h6>
+                                                    <div class="table-responsive">
+                                                        <table
+                                                            class="table table-sm table-bordered align-middle text-center mb-0 bg-white"
+                                                            style="border-radius: 8px; overflow: hidden;">
+                                                            <thead class="table-light">
+                                                                <tr>
+                                                                    <th style="min-width: 100px;" class="small">Màu /
+                                                                        Size</th>
+                                                                    <% sizeOptions.forEach(function(size) { %>
+                                                                        <th class="small">
+                                                                            <%= size.value %>
+                                                                        </th>
+                                                                        <% }) %>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                <% colorOptions.forEach(function(color) { %>
+                                                                    <tr>
+                                                                        <th class="text-start small bg-light">
+                                                                            <%= color.value %>
+                                                                        </th>
+                                                                        <% sizeOptions.forEach(function(size) { const
+                                                                            snapshot=inventorySnapshot &&
+                                                                            inventorySnapshot[String(color.id)] &&
+                                                                            inventorySnapshot[String(color.id)][String(size.id)]
+                                                                            ?
+                                                                            inventorySnapshot[String(color.id)][String(size.id)]
+                                                                            : null; %>
+                                                                            <td style="min-width: 90px;">
+                                                                                <input type="number" step="1000"
+                                                                                    class="form-control form-control-sm mb-1"
+                                                                                    placeholder="Giá"
+                                                                                    name="inventory[<%= color.id %>][<%= size.id %>][price]"
+                                                                                    value="<%= snapshot ? snapshot.price : '' %>"
+                                                                                    style="font-size: 11px;">
+                                                                                <input type="number" min="0"
+                                                                                    class="form-control form-control-sm"
+                                                                                    placeholder="SL"
+                                                                                    name="inventory[<%= color.id %>][<%= size.id %>][stock]"
+                                                                                    value="<%= snapshot ? snapshot.stock : '' %>"
+                                                                                    style="font-size: 11px;">
+                                                                            </td>
+                                                                            <% }) %>
+                                                                    </tr>
+                                                                    <% }) %>
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                    <small class="text-muted d-block mt-2">Bỏ trống giá để dùng giá cơ
+                                                        bản.</small>
+                                                </div>
+
+                                                <div class="d-flex gap-2">
+                                                    <button type="submit" class="btn btn-dark flex-grow-1"
+                                                        style="border-radius: 10px; padding: 12px;">
+                                                        <i
+                                                            class="bi <%= editingProduct ? 'bi-check-lg' : 'bi-plus-lg' %> me-2"></i>
+                                                        <%= editingProduct ? "Cập nhật" : "Thêm mới" %>
+                                                    </button>
+                                                    <% if (editingProduct) { %>
+                                                        <a href="/admin/products" class="btn btn-outline-secondary"
+                                                            style="border-radius: 10px; padding: 12px;">Huỷ</a>
                                                         <% } %>
-                                                    </td>
-                                                    <td class="py-3 text-end">
-                                                        <a class="btn btn-sm btn-outline-dark me-1" style="border-radius: 8px;"
-                                                            href="/admin/products/<%= product.id %>/edit">
-                                                            <i class="bi bi-pencil"></i>
-                                                        </a>
-                                                        <form class="d-inline" method="POST"
-                                                            action="/admin/products/<%= product.id %>/delete"
-                                                            onsubmit="return confirm('Xác nhận xoá sản phẩm này?');">
-                                                            <button class="btn btn-sm btn-outline-danger" type="submit" style="border-radius: 8px;">
-                                                                <i class="bi bi-trash"></i>
-                                                            </button>
-                                                        </form>
-                                                    </td>
-                                                </tr>
-                                            <% }) %>
-                                        <% } else { %>
-                                            <tr>
-                                                <td colspan="4" class="text-center py-5 text-muted">
-                                                    <i class="bi bi-box" style="font-size: 48px;"></i>
-                                                    <p class="mt-2 mb-0">Chưa có sản phẩm nào</p>
-                                                </td>
-                                            </tr>
-                                        <% } %>
-                                    </tbody>
-                                </table>
+                                                </div>
+                                            </form>
+
+                                            <% if (editingProduct) { %>
+                                                <div class="mt-4 p-3 border rounded-3">
+                                                    <h6 class="fw-semibold mb-2">
+                                                        <i class="bi bi-box-seam me-2"></i>Inventory Matrix
+                                                    </h6>
+                                                    <div id="inventory-matrix-root"
+                                                        data-product-id="<%= editingProduct.id %>">
+                                                        <div class="text-muted text-center py-3 small">Đang tải...</div>
+                                                    </div>
+                                                </div>
+                                                <% } %>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Table Card -->
+                                <div class="col-lg-7">
+                                    <div class="card border-0 shadow-sm" style="border-radius: 16px;">
+                                        <div class="card-body p-4">
+                                            <div class="d-flex align-items-center justify-content-between mb-4">
+                                                <div>
+                                                    <h5 class="fw-bold mb-1">Danh sách sản phẩm</h5>
+                                                    <p class="text-muted small mb-0">
+                                                        Tổng cộng <%= products ? products.length : 0 %> sản phẩm
+                                                    </p>
+                                                </div>
+                                                <div class="d-flex align-items-center gap-2 px-3 py-2 rounded-pill"
+                                                    style="background: #ecfdf5; color: #047857;">
+                                                    <i class="bi bi-box-seam"></i>
+                                                    <span class="small fw-semibold">
+                                                        <%= products ? products.length : 0 %>
+                                                    </span>
+                                                </div>
+                                            </div>
+
+                                            <div class="table-responsive">
+                                                <table class="table table-hover align-middle mb-0">
+                                                    <thead>
+                                                        <tr class="text-muted small text-uppercase"
+                                                            style="letter-spacing: 0.05em;">
+                                                            <th class="border-0 py-3">Sản phẩm</th>
+                                                            <th class="border-0 py-3 text-end">Giá</th>
+                                                            <th class="border-0 py-3">Trạng thái</th>
+                                                            <th class="border-0 py-3 text-end">Thao tác</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        <% if (products && products.length) { %>
+                                                            <% products.forEach(function(product) { %>
+                                                                <tr>
+                                                                    <td class="py-3">
+                                                                        <div class="d-flex align-items-center gap-3">
+                                                                            <% if (product.thumbnailUrl) { %>
+                                                                                <img src="<%= product.thumbnailUrl %>"
+                                                                                    alt="<%= product.name %>"
+                                                                                    class="rounded"
+                                                                                    style="width: 56px; height: 56px; object-fit: cover;">
+                                                                                <% } else { %>
+                                                                                    <div class="d-flex align-items-center justify-content-center rounded"
+                                                                                        style="width: 56px; height: 56px; background: #f3f4f6;">
+                                                                                        <i
+                                                                                            class="bi bi-image text-muted"></i>
+                                                                                    </div>
+                                                                                    <% } %>
+                                                                                        <div>
+                                                                                            <div class="fw-semibold">
+                                                                                                <%= product.name %>
+                                                                                            </div>
+                                                                                            <small
+                                                                                                class="text-muted">ID: #
+                                                                                                <%= product.id %>
+                                                                                                    </small>
+                                                                                        </div>
+                                                                        </div>
+                                                                    </td>
+                                                                    <td class="py-3 text-end fw-semibold">
+                                                                        <%= Number(product.basePrice ||
+                                                                            0).toLocaleString('vi-VN', {
+                                                                            style: 'currency' , currency: 'VND' }) %>
+                                                                    </td>
+                                                                    <td class="py-3">
+                                                                        <% if (product.isActive) { %>
+                                                                            <span class="badge fw-semibold"
+                                                                                style="background: #d1fae5; color: #065f46; padding: 6px 12px; border-radius: 20px;">
+                                                                                <i
+                                                                                    class="bi bi-check-circle me-1"></i>Active
+                                                                            </span>
+                                                                            <% } else { %>
+                                                                                <span class="badge fw-semibold"
+                                                                                    style="background: #f3f4f6; color: #6b7280; padding: 6px 12px; border-radius: 20px;">
+                                                                                    <i
+                                                                                        class="bi bi-eye-slash me-1"></i>Ẩn
+                                                                                </span>
+                                                                                <% } %>
+                                                                    </td>
+                                                                    <td class="py-3 text-end">
+                                                                        <a class="btn btn-sm btn-outline-dark me-1"
+                                                                            style="border-radius: 8px;"
+                                                                            href="/admin/products/<%= product.id %>/edit">
+                                                                            <i class="bi bi-pencil"></i>
+                                                                        </a>
+                                                                        <form class="d-inline" method="POST"
+                                                                            action="/admin/products/<%= product.id %>/delete"
+                                                                            onsubmit="return confirm('Xác nhận xoá sản phẩm này?');">
+                                                                            <button
+                                                                                class="btn btn-sm btn-outline-danger"
+                                                                                type="submit"
+                                                                                style="border-radius: 8px;">
+                                                                                <i class="bi bi-trash"></i>
+                                                                            </button>
+                                                                        </form>
+                                                                    </td>
+                                                                </tr>
+                                                                <% }) %>
+                                                                    <% } else { %>
+                                                                        <tr>
+                                                                            <td colspan="4"
+                                                                                class="text-center py-5 text-muted">
+                                                                                <i class="bi bi-box"
+                                                                                    style="font-size: 48px;"></i>
+                                                                                <p class="mt-2 mb-0">Chưa có sản phẩm
+                                                                                    nào</p>
+                                                                            </td>
+                                                                        </tr>
+                                                                        <% } %>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </main>
+                            </div>
+        </main>
 
-    <%- include('../partials/footer') %>
+        <%- include('../partials/footer') %>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-    <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <script type="text/babel" data-presets="env,react" data-plugins="proposal-class-properties,proposal-object-rest-spread,proposal-optional-chaining,proposal-nullish-coalescing-operator" src="/js/AdminSidebar.jsx"></script>
-    <script>
-        (function () {
-            const list = document.getElementById("color-image-list");
-            const addBtn = document.getElementById("addColorImageRow");
-            if (!list || !addBtn) return;
+            <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+            <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+            <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+            <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+            <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+            <script type="text/babel" data-presets="env,react"
+                data-plugins="proposal-class-properties,proposal-object-rest-spread,proposal-optional-chaining,proposal-nullish-coalescing-operator"
+                src="/js/AdminSidebar.jsx"></script>
+            <script>
+                (function () {
+                    const list = document.getElementById("color-image-list");
+                    const addBtn = document.getElementById("addColorImageRow");
+                    if (!list || !addBtn) return;
 
-            const ensureSelectName = (row) => {
-                const select = row.querySelector("select");
-                const fileInput = row.querySelector('input[type="file"]');
-                if (!select || !fileInput) return;
-                if (!select.dataset.originalName) {
-                    select.dataset.originalName = select.name || "colorImageColorIds[]";
-                }
-                select.name = fileInput.files && fileInput.files.length > 0 ? select.dataset.originalName : "";
-            };
-
-            const bindRowEvents = (row) => {
-                const fileInput = row.querySelector('input[type="file"]');
-                if (fileInput) {
-                    fileInput.addEventListener("change", () => ensureSelectName(row));
-                    ensureSelectName(row);
-                }
-                const removeBtn = row.querySelector(".remove-color-image");
-                if (removeBtn) {
-                    removeBtn.addEventListener("click", () => {
-                        if (list.children.length > 1) {
-                            row.remove();
-                        } else {
-                            row.querySelectorAll("input").forEach((input) => (input.value = ""));
-                            const select = row.querySelector("select");
-                            if (select) select.selectedIndex = 0;
+                    const ensureSelectName = (row) => {
+                        const select = row.querySelector("select");
+                        const fileInput = row.querySelector('input[type="file"]');
+                        if (!select || !fileInput) return;
+                        if (!select.dataset.originalName) {
+                            select.dataset.originalName = select.name || "colorImageColorIds[]";
                         }
-                    });
-                }
-            };
+                        select.name = fileInput.files && fileInput.files.length > 0 ? select.dataset.originalName : "";
+                    };
 
-            Array.from(list.children).forEach((row) => bindRowEvents(row));
-            addBtn.addEventListener("click", () => {
-                const template = list.children[0];
-                if (!template) return;
-                const clone = template.cloneNode(true);
-                clone.querySelectorAll("input").forEach((input) => (input.value = ""));
-                const select = clone.querySelector("select");
-                if (select) select.selectedIndex = 0;
-                list.appendChild(clone);
-                bindRowEvents(clone);
-            });
-        })();
-    </script>
-    <% if (editingProduct) { %>
-        <script type="text/babel" data-presets="env,react" data-plugins="proposal-class-properties,proposal-object-rest-spread,proposal-optional-chaining,proposal-nullish-coalescing-operator" src="/js/AdminStockMatrix.jsx"></script>
-    <% } %>
+                    const bindRowEvents = (row) => {
+                        const fileInput = row.querySelector('input[type="file"]');
+                        if (fileInput) {
+                            fileInput.addEventListener("change", () => ensureSelectName(row));
+                            ensureSelectName(row);
+                        }
+                        const removeBtn = row.querySelector(".remove-color-image");
+                        if (removeBtn) {
+                            removeBtn.addEventListener("click", () => {
+                                if (list.children.length > 1) {
+                                    row.remove();
+                                } else {
+                                    row.querySelectorAll("input").forEach((input) => (input.value = ""));
+                                    const select = row.querySelector("select");
+                                    if (select) select.selectedIndex = 0;
+                                }
+                            });
+                        }
+                    };
+
+                    Array.from(list.children).forEach((row) => bindRowEvents(row));
+                    addBtn.addEventListener("click", () => {
+                        const template = list.children[0];
+                        if (!template) return;
+                        const clone = template.cloneNode(true);
+                        clone.querySelectorAll("input").forEach((input) => (input.value = ""));
+                        const select = clone.querySelector("select");
+                        if (select) select.selectedIndex = 0;
+                        list.appendChild(clone);
+                        bindRowEvents(clone);
+                    });
+                })();
+            </script>
+            <% if (editingProduct) { %>
+                <script type="text/babel" data-presets="env,react"
+                    data-plugins="proposal-class-properties,proposal-object-rest-spread,proposal-optional-chaining,proposal-nullish-coalescing-operator"
+                    src="/js/AdminStockMatrix.jsx"></script>
+                <% } %>
 </body>
 
 </html>

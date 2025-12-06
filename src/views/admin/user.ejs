@@ -13,190 +13,190 @@
 <body class="<%= theme === 'dark' ? 'theme-dark' : 'theme-light' %>">
     <%- include('../partials/header') %>
 
-        <main class="site-main py-5">
-            <div class="container pt-5">
-                <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 mb-3">
-                    <div>
-                        <p class="text-muted text-uppercase mb-1" style="letter-spacing: 0.3em;">Admin</p>
-                        <h2 class="fw-bold mb-0">Quản lý người dùng</h2>
-                        <small class="text-muted">Thêm, sửa, xoá tài khoản người dùng hệ thống.</small>
-                    </div>
-                </div>
-                <div class="admin-subnav mb-4" data-role="<%= currentUser ? currentUser.roleId : '' %>">
-                    <div id="admin-sidebar-root"></div>
-                </div>
+        <div class="admin-subnav" data-role="<%= currentUser ? currentUser.roleId : '' %>"
+            data-username="<%= currentUser ? (currentUser.username || currentUser.email) : '' %>">
+            <div id="admin-sidebar-root"></div>
+        </div>
 
-                <div class="row g-4">
-                    <!-- Form Card -->
-                    <div class="col-lg-4">
-                        <div class="card border-0 shadow-sm" style="border-radius: 16px;">
-                            <div class="card-body p-4">
-                                <div class="d-flex align-items-center gap-3 mb-4">
-                                    <div class="d-flex align-items-center justify-content-center"
-                                        style="width: 48px; height: 48px; border-radius: 12px; background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);">
-                                        <i class="bi bi-person-plus text-white" style="font-size: 20px;"></i>
-                                    </div>
-                                    <div>
-                                        <h5 class="fw-bold mb-0" id="formTitle">Thêm người dùng</h5>
-                                        <small class="text-muted">Điền thông tin bên dưới</small>
-                                    </div>
+        <main class="admin-content-wrapper">
+            <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 mb-4">
+                <div>
+                    <p class="text-muted text-uppercase mb-1" style="letter-spacing: 0.3em; font-size: 0.75rem;">Admin
+                    </p>
+                    <h2 class="fw-bold mb-0">Quản lý người dùng</h2>
+                    <small class="text-muted">Thêm, sửa, xoá tài khoản người dùng hệ thống.</small>
+                </div>
+            </div>
+
+            <div class="row g-4">
+                <!-- Form Card -->
+                <div class="col-lg-4">
+                    <div class="card border-0 shadow-sm" style="border-radius: 16px;">
+                        <div class="card-body p-4">
+                            <div class="d-flex align-items-center gap-3 mb-4">
+                                <div class="d-flex align-items-center justify-content-center"
+                                    style="width: 48px; height: 48px; border-radius: 12px; background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);">
+                                    <i class="bi bi-person-plus text-white" style="font-size: 20px;"></i>
                                 </div>
-
-                                <form id="userForm" action="/admin/create-user" method="POST">
-                                    <input type="hidden" id="userId" name="id">
-
-                                    <div class="mb-3">
-                                        <label for="email" class="form-label small fw-semibold text-muted">EMAIL</label>
-                                        <input type="email" class="form-control" id="email"
-                                            placeholder="email@example.com" name="email" required
-                                            style="border-radius: 10px; padding: 12px;">
-                                    </div>
-                                    <div class="mb-3">
-                                        <label for="password" class="form-label small fw-semibold text-muted">MẬT
-                                            KHẨU</label>
-                                        <input type="password" class="form-control" id="password" placeholder="••••••••"
-                                            name="password" required style="border-radius: 10px; padding: 12px;">
-                                    </div>
-                                    <div class="mb-3">
-                                        <label for="username" class="form-label small fw-semibold text-muted">TÊN NGƯỜI
-                                            DÙNG</label>
-                                        <input type="text" class="form-control" id="username" placeholder="Nhập tên"
-                                            name="username" required style="border-radius: 10px; padding: 12px;">
-                                    </div>
-                                    <div class="mb-4">
-                                        <label for="role" class="form-label small fw-semibold text-muted">VAI
-                                            TRÒ</label>
-                                        <select class="form-select" id="role" name="role"
-                                            style="border-radius: 10px; padding: 12px;">
-                                            <option value="3" selected>Khách hàng</option>
-                                            <option value="2">Quản lý kho</option>
-                                            <option value="1">Admin</option>
-                                        </select>
-                                    </div>
-                                    <div class="d-flex gap-2">
-                                        <button type="submit" class="btn btn-dark flex-grow-1" id="submitBtn"
-                                            style="border-radius: 10px; padding: 12px;">
-                                            <i class="bi bi-plus-lg me-2"></i>Thêm mới
-                                        </button>
-                                        <button type="button" class="btn btn-outline-secondary d-none" id="cancelEdit"
-                                            style="border-radius: 10px; padding: 12px;">
-                                            Huỷ
-                                        </button>
-                                    </div>
-                                </form>
+                                <div>
+                                    <h5 class="fw-bold mb-0" id="formTitle">Thêm người dùng</h5>
+                                    <small class="text-muted">Điền thông tin bên dưới</small>
+                                </div>
                             </div>
+
+                            <form id="userForm" action="/admin/create-user" method="POST">
+                                <input type="hidden" id="userId" name="id">
+
+                                <div class="mb-3">
+                                    <label for="email" class="form-label small fw-semibold text-muted">EMAIL</label>
+                                    <input type="email" class="form-control" id="email" placeholder="email@example.com"
+                                        name="email" required style="border-radius: 10px; padding: 12px;">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="password" class="form-label small fw-semibold text-muted">MẬT
+                                        KHẨU</label>
+                                    <input type="password" class="form-control" id="password" placeholder="••••••••"
+                                        name="password" required style="border-radius: 10px; padding: 12px;">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="username" class="form-label small fw-semibold text-muted">TÊN NGƯỜI
+                                        DÙNG</label>
+                                    <input type="text" class="form-control" id="username" placeholder="Nhập tên"
+                                        name="username" required style="border-radius: 10px; padding: 12px;">
+                                </div>
+                                <div class="mb-4">
+                                    <label for="role" class="form-label small fw-semibold text-muted">VAI
+                                        TRÒ</label>
+                                    <select class="form-select" id="role" name="role"
+                                        style="border-radius: 10px; padding: 12px;">
+                                        <option value="3" selected>Khách hàng</option>
+                                        <option value="2">Quản lý kho</option>
+                                        <option value="1">Admin</option>
+                                    </select>
+                                </div>
+                                <div class="d-flex gap-2">
+                                    <button type="submit" class="btn btn-dark flex-grow-1" id="submitBtn"
+                                        style="border-radius: 10px; padding: 12px;">
+                                        <i class="bi bi-plus-lg me-2"></i>Thêm mới
+                                    </button>
+                                    <button type="button" class="btn btn-outline-secondary d-none" id="cancelEdit"
+                                        style="border-radius: 10px; padding: 12px;">
+                                        Huỷ
+                                    </button>
+                                </div>
+                            </form>
                         </div>
                     </div>
+                </div>
 
-                    <!-- Table Card -->
-                    <div class="col-lg-8">
-                        <div class="card border-0 shadow-sm" style="border-radius: 16px;">
-                            <div class="card-body p-4">
-                                <div class="d-flex align-items-center justify-content-between mb-4">
-                                    <div>
-                                        <h5 class="fw-bold mb-1">Danh sách người dùng</h5>
-                                        <p class="text-muted small mb-0">
-                                            <% const userCount=Array.isArray(userlist) ? userlist.length : 0; %>
-                                                Tổng cộng <%= userCount %> người dùng
-                                        </p>
-                                    </div>
-                                    <div class="d-flex align-items-center gap-2 px-3 py-2 rounded-pill"
-                                        style="background: #f0fdf4; color: #166534;">
-                                        <i class="bi bi-people"></i>
-                                        <span class="small fw-semibold">
-                                            <%= userCount %>
-                                        </span>
-                                    </div>
+                <!-- Table Card -->
+                <div class="col-lg-8">
+                    <div class="card border-0 shadow-sm" style="border-radius: 16px;">
+                        <div class="card-body p-4">
+                            <div class="d-flex align-items-center justify-content-between mb-4">
+                                <div>
+                                    <h5 class="fw-bold mb-1">Danh sách người dùng</h5>
+                                    <p class="text-muted small mb-0">
+                                        <% const userCount=Array.isArray(userlist) ? userlist.length : 0; %>
+                                            Tổng cộng <%= userCount %> người dùng
+                                    </p>
                                 </div>
+                                <div class="d-flex align-items-center gap-2 px-3 py-2 rounded-pill"
+                                    style="background: #f0fdf4; color: #166534;">
+                                    <i class="bi bi-people"></i>
+                                    <span class="small fw-semibold">
+                                        <%= userCount %>
+                                    </span>
+                                </div>
+                            </div>
 
-                                <div class="table-responsive">
-                                    <table class="table table-hover align-middle mb-0">
-                                        <thead>
-                                            <tr class="text-muted small text-uppercase" style="letter-spacing: 0.05em;">
-                                                <th class="border-0 py-3">ID</th>
-                                                <th class="border-0 py-3">Người dùng</th>
-                                                <th class="border-0 py-3">Vai trò</th>
-                                                <th class="border-0 py-3 text-end">Thao tác</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <% if (Array.isArray(userlist) && userlist.length> 0) { %>
-                                                <% userlist.forEach(function (user) { %>
-                                                    <tr>
-                                                        <td class="py-3">
-                                                            <span class="fw-semibold">#<%= user.id %></span>
-                                                        </td>
-                                                        <td class="py-3">
-                                                            <div class="d-flex align-items-center gap-3">
-                                                                <div class="d-flex align-items-center justify-content-center rounded-circle"
-                                                                    style="width: 42px; height: 42px; background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%); color: #4338ca; font-weight: 600;">
-                                                                    <%= user.username ?
-                                                                        user.username.charAt(0).toUpperCase() : 'U' %>
-                                                                </div>
-                                                                <div>
-                                                                    <div class="fw-semibold">
-                                                                        <%= user.username || 'N/A' %>
-                                                                    </div>
-                                                                    <small class="text-muted">
-                                                                        <%= user.email %>
-                                                                    </small>
-                                                                </div>
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle mb-0">
+                                    <thead>
+                                        <tr class="text-muted small text-uppercase" style="letter-spacing: 0.05em;">
+                                            <th class="border-0 py-3">ID</th>
+                                            <th class="border-0 py-3">Người dùng</th>
+                                            <th class="border-0 py-3">Vai trò</th>
+                                            <th class="border-0 py-3 text-end">Thao tác</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <% if (Array.isArray(userlist) && userlist.length> 0) { %>
+                                            <% userlist.forEach(function (user) { %>
+                                                <tr>
+                                                    <td class="py-3">
+                                                        <span class="fw-semibold">#<%= user.id %></span>
+                                                    </td>
+                                                    <td class="py-3">
+                                                        <div class="d-flex align-items-center gap-3">
+                                                            <div class="d-flex align-items-center justify-content-center rounded-circle"
+                                                                style="width: 42px; height: 42px; background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%); color: #4338ca; font-weight: 600;">
+                                                                <%= user.username ?
+                                                                    user.username.charAt(0).toUpperCase() : 'U' %>
                                                             </div>
-                                                        </td>
-                                                        <td class="py-3">
-                                                            <% if (String(user.roleId)==="1" ) { %>
+                                                            <div>
+                                                                <div class="fw-semibold">
+                                                                    <%= user.username || 'N/A' %>
+                                                                </div>
+                                                                <small class="text-muted">
+                                                                    <%= user.email %>
+                                                                </small>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                    <td class="py-3">
+                                                        <% if (String(user.roleId)==="1" ) { %>
+                                                            <span class="badge fw-semibold"
+                                                                style="background: #fee2e2; color: #991b1b; padding: 6px 12px; border-radius: 20px;">
+                                                                <i class="bi bi-shield-check me-1"></i>Admin
+                                                            </span>
+                                                            <% } else if (String(user.roleId)==="2" ) { %>
                                                                 <span class="badge fw-semibold"
-                                                                    style="background: #fee2e2; color: #991b1b; padding: 6px 12px; border-radius: 20px;">
-                                                                    <i class="bi bi-shield-check me-1"></i>Admin
+                                                                    style="background: #dbeafe; color: #1e40af; padding: 6px 12px; border-radius: 20px;">
+                                                                    <i class="bi bi-box-seam me-1"></i>Quản lý kho
                                                                 </span>
-                                                                <% } else if (String(user.roleId)==="2" ) { %>
+                                                                <% } else { %>
                                                                     <span class="badge fw-semibold"
-                                                                        style="background: #dbeafe; color: #1e40af; padding: 6px 12px; border-radius: 20px;">
-                                                                        <i class="bi bi-box-seam me-1"></i>Quản lý kho
+                                                                        style="background: #f3f4f6; color: #374151; padding: 6px 12px; border-radius: 20px;">
+                                                                        <i class="bi bi-person me-1"></i>Khách hàng
                                                                     </span>
-                                                                    <% } else { %>
-                                                                        <span class="badge fw-semibold"
-                                                                            style="background: #f3f4f6; color: #374151; padding: 6px 12px; border-radius: 20px;">
-                                                                            <i class="bi bi-person me-1"></i>Khách hàng
-                                                                        </span>
-                                                                        <% } %>
-                                                        </td>
-                                                        <td class="py-3 text-end">
-                                                            <button type="button"
-                                                                class="btn btn-sm btn-outline-dark me-1 btn-edit"
-                                                                style="border-radius: 8px;" data-id="<%= user.id %>"
-                                                                data-email="<%= user.email %>"
-                                                                data-username="<%= user.username %>"
-                                                                data-role="<%= user.roleId %>">
-                                                                <i class="bi bi-pencil"></i>
+                                                                    <% } %>
+                                                    </td>
+                                                    <td class="py-3 text-end">
+                                                        <button type="button"
+                                                            class="btn btn-sm btn-outline-dark me-1 btn-edit"
+                                                            style="border-radius: 8px;" data-id="<%= user.id %>"
+                                                            data-email="<%= user.email %>"
+                                                            data-username="<%= user.username %>"
+                                                            data-role="<%= user.roleId %>">
+                                                            <i class="bi bi-pencil"></i>
+                                                        </button>
+                                                        <form action="/admin/delete-user/<%= user.id %>" method="POST"
+                                                            class="d-inline"
+                                                            onsubmit="return confirm('Xác nhận xoá người dùng này?');">
+                                                            <button type="submit" class="btn btn-sm btn-outline-danger"
+                                                                style="border-radius: 8px;">
+                                                                <i class="bi bi-trash"></i>
                                                             </button>
-                                                            <form action="/admin/delete-user/<%= user.id %>"
-                                                                method="POST" class="d-inline"
-                                                                onsubmit="return confirm('Xác nhận xoá người dùng này?');">
-                                                                <button type="submit"
-                                                                    class="btn btn-sm btn-outline-danger"
-                                                                    style="border-radius: 8px;">
-                                                                    <i class="bi bi-trash"></i>
-                                                                </button>
-                                                            </form>
-                                                        </td>
-                                                    </tr>
-                                                    <% }) %>
-                                                        <% } else { %>
-                                                            <tr>
-                                                                <td colspan="4" class="text-center py-5 text-muted">
-                                                                    <i class="bi bi-inbox" style="font-size: 48px;"></i>
-                                                                    <p class="mt-2 mb-0">Chưa có người dùng nào</p>
-                                                                </td>
-                                                            </tr>
-                                                            <% } %>
-                                        </tbody>
-                                    </table>
-                                </div>
+                                                        </form>
+                                                    </td>
+                                                </tr>
+                                                <% }) %>
+                                                    <% } else { %>
+                                                        <tr>
+                                                            <td colspan="4" class="text-center py-5 text-muted">
+                                                                <i class="bi bi-inbox" style="font-size: 48px;"></i>
+                                                                <p class="mt-2 mb-0">Chưa có người dùng nào</p>
+                                                            </td>
+                                                        </tr>
+                                                        <% } %>
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
                     </div>
                 </div>
+            </div>
             </div>
         </main>
 

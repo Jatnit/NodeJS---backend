@@ -21,7 +21,8 @@ const isAdminSession = (req) =>
 const isManagerOrAdminSession = (req) =>
   isAuthenticated(req) &&
   (String(req.session.user.roleId) === "1" ||
-    String(req.session.user.roleId) === "2");
+    String(req.session.user.roleId) === "2" ||
+    String(req.session.user.roleId) === "0");
 
 const ensureAdminPage = (req, res) => {
   if (!isAuthenticated(req)) {
@@ -609,19 +610,27 @@ const handleSignIn = async (req, res) => {
       req.session.theme = "light";
     }
 
+    // Super Admin -> Dashboard
+    if (normalizedRole === "0") {
+      console.log(
+        "[SIGNIN] Super Admin login success:",
+        email,
+        "(role: SuperAdmin)"
+      );
+      return res.redirect("/admin/dashboard");
+    }
+    // Admin -> Dashboard
     if (normalizedRole === "1") {
       console.log("[SIGNIN] Admin login success:", email, "(role: Admin)");
       return res.redirect("/admin/dashboard");
     }
+    // Manager -> Dashboard
     if (normalizedRole === "2") {
-      console.log("[SIGNIN] User login success:", email, "(role: Customer)");
-      return res.redirect(`/user/profile/${user.id}`);
+      console.log("[SIGNIN] Manager login success:", email, "(role: Manager)");
+      return res.redirect("/admin/dashboard");
     }
-    console.warn(
-      "[SIGNIN] Unknown role, fallback to profile:",
-      email,
-      normalizedRole
-    );
+    // Customer -> Profile
+    console.log("[SIGNIN] Customer login success:", email, "(role: Customer)");
     return res.redirect(`/user/profile/${user.id}`);
   } catch (error) {
     console.error("[SIGNIN] Unexpected error for email:", email, error);
@@ -1205,6 +1214,24 @@ module.exports = {
     return res.render("admin/inventory.ejs", {
       currentUser: req.session.user,
       theme: theme || "light",
+    });
+  },
+  renderAuditLogs: (req, res) => {
+    // Check if user is Super Admin (roleId = 0)
+    const user = req.session?.user;
+    const isSuperAdmin = user && Number(user.roleId) === 0;
+
+    if (!isSuperAdmin) {
+      // Redirect non-super-admins to dashboard with error
+      return res.redirect("/admin/dashboard?status=forbidden");
+    }
+
+    const theme =
+      (req.session && req.session.theme) || (req.cookies && req.cookies.theme);
+    return res.render("admin-audit-logs.ejs", {
+      currentUser: req.session.user,
+      theme: theme || "light",
+      errorMessage: null,
     });
   },
 };

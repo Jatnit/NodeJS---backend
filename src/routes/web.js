@@ -84,6 +84,9 @@ const initWebRoutes = (app) => {
     adminProductController.deleteProduct
   );
 
+  // Audit Logs - Super Admin only
+  router.get("/admin/audit-logs", homeController.renderAuditLogs);
+
   router.get("/user/profile/:id", homeController.handleUserProfile);
 
   return app.use("/", router);

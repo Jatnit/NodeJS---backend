@@ -1,6 +1,7 @@
 import jwt from "jsonwebtoken";
 
 const ROLE_MAP = {
+  superadmin: 0,
   admin: 1,
   manager: 2,
   customer: 3,
@@ -67,7 +68,9 @@ const authorize =
     }
 
     const roleId = Number(user.roleId);
-    if (roleId === ROLE_MAP.admin) {
+
+    // SuperAdmin and Admin can access everything
+    if (roleId === ROLE_MAP.superadmin || roleId === ROLE_MAP.admin) {
       return next();
     }
 
@@ -104,5 +107,3 @@ const attachUserIfAvailable = (req, _res, next) => {
 };
 
 export { verifyToken, authorize, attachUserIfAvailable, ROLE_MAP };
-
-

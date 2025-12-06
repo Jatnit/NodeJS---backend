@@ -1,0 +1,289 @@
+<!-- Admin Sidebar Partial -->
+<style>
+    .admin-sidebar {
+        width: 240px;
+        background: linear-gradient(180deg, #6c737e 0%, #4a5159 100%);
+        color: white;
+        padding: 1.5rem 1rem;
+        position: fixed;
+        left: 0;
+        top: 70px;
+        /* Bắt đầu dưới header */
+        height: calc(100vh - 70px);
+        /* Trừ đi chiều cao header */
+        overflow-y: auto;
+        z-index: 1000;
+        box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .admin-sidebar .sidebar-brand {
+        font-size: 1.1rem;
+        font-weight: 700;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+        margin-bottom: 1.5rem;
+        padding: 0 0.5rem 1rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .admin-sidebar .super-badge {
+        background: linear-gradient(135deg, #fbbf24, #f59e0b);
+        color: #1f2937;
+        padding: 0.2rem 0.6rem;
+        border-radius: 50px;
+        font-size: 0.65rem;
+        font-weight: 700;
+        letter-spacing: 0.05em;
+    }
+
+    .admin-sidebar .nav-section {
+        margin-bottom: 1rem;
+    }
+
+    .admin-sidebar .nav-section-title {
+        font-size: 0.65rem;
+        font-weight: 600;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+        color: rgba(255, 255, 255, 0.5);
+        padding: 0 0.75rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .admin-sidebar .nav-link {
+        color: rgba(255, 255, 255, 0.8);
+        padding: 0.75rem 1rem;
+        border-radius: 10px;
+        margin-bottom: 0.25rem;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        text-decoration: none;
+        font-size: 0.9rem;
+        font-weight: 500;
+    }
+
+    .admin-sidebar .nav-link:hover {
+        background: rgba(255, 255, 255, 0.1);
+        color: white;
+        transform: translateX(3px);
+    }
+
+    .admin-sidebar .nav-link.active {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    }
+
+    .admin-sidebar .nav-link i {
+        font-size: 1.1rem;
+        width: 22px;
+        text-align: center;
+    }
+
+    .admin-sidebar .sidebar-divider {
+        border: 0;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        margin: 1rem 0;
+    }
+
+    .admin-sidebar .sidebar-footer {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        padding: 1rem;
+        background: rgba(0, 0, 0, 0.1);
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .admin-sidebar .sidebar-footer .user-info {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .admin-sidebar .sidebar-footer .user-avatar {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+
+    .admin-sidebar .sidebar-footer .user-name {
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
+
+    .admin-sidebar .sidebar-footer .user-role {
+        font-size: 0.7rem;
+        color: rgba(255, 255, 255, 0.6);
+    }
+
+    /* Admin content area */
+    .admin-content {
+        margin-left: 240px;
+        padding: 2rem;
+        min-height: calc(100vh - 70px);
+        background: #f8f9fa;
+    }
+
+    body.theme-dark .admin-content {
+        background: var(--app-bg);
+    }
+
+    /* Responsive */
+    @media (max-width: 991.98px) {
+        .admin-sidebar {
+            transform: translateX(-100%);
+            transition: transform 0.3s ease;
+        }
+
+        .admin-sidebar.show {
+            transform: translateX(0);
+        }
+
+        .admin-content {
+            margin-left: 0;
+        }
+
+        .mobile-sidebar-toggle {
+            display: block !important;
+        }
+    }
+
+    .mobile-sidebar-toggle {
+        display: none;
+        position: fixed;
+        bottom: 20px;
+        left: 20px;
+        z-index: 1050;
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background: #6c737e;
+        color: white;
+        border: none;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        font-size: 1.25rem;
+    }
+</style>
+
+<aside class="admin-sidebar" id="adminSidebar">
+    <div class="sidebar-brand">
+        <span>ADMIN</span>
+        <% const userRoleId=Number(currentUser?.roleId); %>
+            <% if (userRoleId===0) { %>
+                <span class="super-badge">Super</span>
+                <% } %>
+    </div>
+
+    <nav>
+        <div class="nav-section">
+            <div class="nav-section-title">Tổng quan</div>
+            <a href="/admin/dashboard"
+                class="nav-link <%= typeof activePage !== 'undefined' && activePage === 'dashboard' ? 'active' : '' %>">
+                <i class="bi bi-speedometer2"></i>
+                Dashboard
+            </a>
+        </div>
+
+        <div class="nav-section">
+            <div class="nav-section-title">Quản lý</div>
+            <a href="/admin/products"
+                class="nav-link <%= typeof activePage !== 'undefined' && activePage === 'products' ? 'active' : '' %>">
+                <i class="bi bi-box-seam"></i>
+                Sản phẩm
+            </a>
+            <a href="/admin/categories"
+                class="nav-link <%= typeof activePage !== 'undefined' && activePage === 'categories' ? 'active' : '' %>">
+                <i class="bi bi-tags"></i>
+                Danh mục
+            </a>
+            <a href="/admin/orders"
+                class="nav-link <%= typeof activePage !== 'undefined' && activePage === 'orders' ? 'active' : '' %>">
+                <i class="bi bi-receipt"></i>
+                Đơn hàng
+            </a>
+            <a href="/admin/inventory"
+                class="nav-link <%= typeof activePage !== 'undefined' && activePage === 'inventory' ? 'active' : '' %>">
+                <i class="bi bi-boxes"></i>
+                Kho hàng
+            </a>
+            <a href="/admin/users"
+                class="nav-link <%= typeof activePage !== 'undefined' && activePage === 'users' ? 'active' : '' %>">
+                <i class="bi bi-people"></i>
+                Người dùng
+            </a>
+        </div>
+
+        <% if (userRoleId===0) { %>
+            <hr class="sidebar-divider">
+            <div class="nav-section">
+                <div class="nav-section-title">Bảo mật</div>
+                <a href="/admin/audit-logs"
+                    class="nav-link <%= typeof activePage !== 'undefined' && activePage === 'audit-logs' ? 'active' : '' %>">
+                    <i class="bi bi-shield-lock"></i>
+                    Audit Logs
+                </a>
+            </div>
+            <% } %>
+    </nav>
+
+    <div class="sidebar-footer">
+        <div class="user-info">
+            <div class="user-avatar">
+                <%= (currentUser?.username || currentUser?.email || 'A' ).charAt(0).toUpperCase() %>
+            </div>
+            <div>
+                <div class="user-name">
+                    <%= currentUser?.username || currentUser?.email || 'Admin' %>
+                </div>
+                <div class="user-role">
+                    <% if (userRoleId===0) { %>
+                        Super Admin
+                        <% } else if (userRoleId===1) { %>
+                            Administrator
+                            <% } else if (userRoleId===2) { %>
+                                Manager
+                                <% } else { %>
+                                    Staff
+                                    <% } %>
+                </div>
+            </div>
+        </div>
+    </div>
+</aside>
+
+<!-- Mobile toggle button -->
+<button class="mobile-sidebar-toggle" id="mobileSidebarToggle">
+    <i class="bi bi-list"></i>
+</button>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const sidebar = document.getElementById('adminSidebar');
+        const toggleBtn = document.getElementById('mobileSidebarToggle');
+
+        if (toggleBtn && sidebar) {
+            toggleBtn.addEventListener('click', function () {
+                sidebar.classList.toggle('show');
+                const icon = toggleBtn.querySelector('i');
+                if (sidebar.classList.contains('show')) {
+                    icon.className = 'bi bi-x-lg';
+                } else {
+                    icon.className = 'bi bi-list';
+                }
+            });
+        }
+    });
+</script>
