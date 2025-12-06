@@ -14,6 +14,13 @@ import bcrypt from "bcryptjs";
 import userService from "../service/userService";
 import adminService from "../service/adminService";
 import { CheckoutError, createOrderTransaction } from "../service/orderService";
+import {
+  logLogin,
+  logLogout,
+  logCreate,
+  logUpdate,
+  logDelete,
+} from "../service/auditLogger";
 
 const isAuthenticated = (req) => req.session && req.session.user;
 const isAdminSession = (req) =>
@@ -490,7 +497,14 @@ const handleCreateUser = async (req, res) => {
 
   try {
     if (source === "signup") {
-      await userService.registerUser(email, password, username, 2);
+      const newUser = await userService.registerUser(
+        email,
+        password,
+        username,
+        3
+      );
+      // Log user registration
+      logCreate(req, "users", newUser.id, { email, username, roleId: 3 });
       return res.redirect("/signin?status=signup_success");
     }
 
@@ -499,12 +513,20 @@ const handleCreateUser = async (req, res) => {
     }
 
     const normalizedRole = role && role !== "" ? role : "2";
-    await adminService.adminCreateUser(
+    const newUser = await adminService.adminCreateUser(
       email,
       password,
       username,
       normalizedRole
     );
+
+    // Log admin user creation
+    logCreate(req, "users", newUser.id, {
+      email,
+      username,
+      roleId: normalizedRole,
+    });
+
     return res.redirect("/admin/users");
   } catch (error) {
     console.log("handleCreateUser error:", error);
@@ -525,7 +547,18 @@ const handleDeleteUser = async (req, res) => {
   }
   let id = req.params.id;
   if (id) {
+    // Get user data before deletion for audit log
+    const user = await userService.getUserById(id);
+
     await adminService.deleteUserById(id);
+
+    // Log user deletion
+    if (user) {
+      logDelete(req, "users", id, {
+        email: user.email,
+        username: user.username,
+      });
+    }
   }
   return res.redirect("/admin/users");
 };
@@ -541,8 +574,26 @@ const handleEditUser = async (req, res) => {
   }
 
   try {
+    // Get old user data for audit log
+    const oldUser = await userService.getUserById(id);
+
     const normalizedRole = role && role !== "" ? role : "2";
     await adminService.updateUserById(id, email, username, normalizedRole);
+
+    // Log user update
+    if (oldUser) {
+      logUpdate(
+        req,
+        "users",
+        id,
+        {
+          email: oldUser.email,
+          username: oldUser.username,
+          roleId: oldUser.roleId,
+        },
+        { email, username, roleId: normalizedRole }
+      );
+    }
   } catch (error) {
     console.log("handleEditUser error:", error);
   }
@@ -612,28 +663,28 @@ const handleSignIn = async (req, res) => {
       req.session.theme = "light";
     }
 
-    // Super Admin -> Dashboard
-    if (normalizedRole === "0") {
+    // Log successful login
+    logLogin(req, user.id);
+
+    // Customer (role=3) -> Home page
+    if (normalizedRole === "3") {
       console.log(
-        "[SIGNIN] Super Admin login success:",
+        "[SIGNIN] Customer login success:",
         email,
-        "(role: SuperAdmin)"
+        "(role: Customer)"
       );
-      return res.redirect("/admin/dashboard");
+      return res.redirect("/");
     }
-    // Admin -> Dashboard
-    if (normalizedRole === "1") {
-      console.log("[SIGNIN] Admin login success:", email, "(role: Admin)");
-      return res.redirect("/admin/dashboard");
-    }
-    // Manager -> Dashboard
-    if (normalizedRole === "2") {
-      console.log("[SIGNIN] Manager login success:", email, "(role: Manager)");
-      return res.redirect("/admin/dashboard");
-    }
-    // Customer -> Profile
-    console.log("[SIGNIN] Customer login success:", email, "(role: Customer)");
-    return res.redirect(`/user/profile/${user.id}`);
+
+    // All admin roles (0, 1, 2, 4) -> Admin Dashboard
+    console.log(
+      "[SIGNIN] Admin login success:",
+      email,
+      "(role:",
+      normalizedRole,
+      ")"
+    );
+    return res.redirect("/admin/dashboard");
   } catch (error) {
     console.error("[SIGNIN] Unexpected error for email:", email, error);
     return res.status(500).render("signin.ejs", {
@@ -801,6 +852,9 @@ const handleOrderCancellation = async (req, res) => {
 };
 
 const handleLogout = (req, res) => {
+  // Log logout before destroying session
+  logLogout(req);
+
   req.session.user = null;
   req.session.theme = null;
   req.session.destroy((err) => {

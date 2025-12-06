@@ -174,13 +174,33 @@ const AuditLogsPage = () => {
 
   // Render JSON diff
   const renderJsonDiff = (oldVal, newVal, changedFields) => {
-    if (!changedFields || changedFields.length === 0) {
+    // Ensure changedFields is an array
+    let fields = changedFields;
+    if (typeof fields === 'string') {
+      try {
+        fields = JSON.parse(fields);
+      } catch {
+        fields = [];
+      }
+    }
+    if (!Array.isArray(fields)) {
+      fields = [];
+    }
+    
+    // If no fields provided, compute from oldVal and newVal
+    if (fields.length === 0 && (oldVal || newVal)) {
+      const oldKeys = Object.keys(oldVal || {});
+      const newKeys = Object.keys(newVal || {});
+      fields = [...new Set([...oldKeys, ...newKeys])];
+    }
+    
+    if (fields.length === 0) {
       return <p className="text-muted">Không có thay đổi</p>;
     }
 
     return (
       <div className="json-diff">
-        {changedFields.map((field) => (
+        {fields.map((field) => (
           <div key={field} className="diff-row mb-3">
             <div className="diff-field fw-bold mb-2">{field}</div>
             <div className="row g-2">
@@ -714,7 +734,7 @@ const AuditLogsPage = () => {
                   <div className="p-3 bg-light rounded">{selectedLog.description || "Không có mô tả"}</div>
                 </div>
 
-                {selectedLog.actionType === "UPDATE" && selectedLog.changedFields?.length > 0 && (
+                {selectedLog.actionType === "UPDATE" && (selectedLog.oldValues || selectedLog.newValues) && (
                   <div className="mt-4">
                     <div className="detail-label mb-3">
                       <i className="bi bi-arrow-left-right me-2"></i>So sánh thay đổi

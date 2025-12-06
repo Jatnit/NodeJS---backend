@@ -8,6 +8,7 @@ import {
 } from "../models";
 import sequelize from "../configs/database";
 import cloudinaryService from "../service/cloudinaryService";
+import { logCreate, logUpdate, logDelete } from "../service/auditLogger";
 
 const COLOR_ATTRIBUTE_ID = Number(process.env.COLOR_ATTRIBUTE_ID || 1);
 const SIZE_ATTRIBUTE_ID = Number(process.env.SIZE_ATTRIBUTE_ID || 2);
@@ -448,6 +449,9 @@ const createProduct = async (req, res) => {
       }
     });
 
+    // Log product creation
+    logCreate(req, "products", product.id, { name, slug, basePrice });
+
     return res.redirect("/admin/products?status=created");
   } catch (error) {
     console.log("createProduct error:", error);
@@ -568,6 +572,15 @@ const updateProduct = async (req, res) => {
       }
     });
 
+    // Log product update
+    logUpdate(
+      req,
+      "products",
+      id,
+      { name: product.name, slug: product.slug, basePrice: product.basePrice },
+      { name, slug, basePrice }
+    );
+
     return res.redirect("/admin/products?status=updated");
   } catch (error) {
     console.log("updateProduct error:", error);
@@ -593,7 +606,19 @@ const deleteProduct = async (req, res) => {
   if (ensureAdmin(req, res)) return;
   const { id } = req.params;
   try {
+    // Get product data before deletion for audit log
+    const product = await Product.findByPk(id, { raw: true });
+
     await Product.destroy({ where: { id } });
+
+    // Log product deletion
+    if (product) {
+      logDelete(req, "products", id, {
+        name: product.name,
+        slug: product.slug,
+      });
+    }
+
     return res.redirect("/admin/products?status=deleted");
   } catch (error) {
     console.log("deleteProduct error:", error);

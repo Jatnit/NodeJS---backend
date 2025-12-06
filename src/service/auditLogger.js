@@ -178,20 +178,24 @@ const logActivity = async (options) => {
       );
 
     // Tạo log entry
+    console.log("[AuditLog Debug] oldValues:", oldValues);
+    console.log("[AuditLog Debug] newValues:", newValues);
+    console.log("[AuditLog Debug] changedFields:", changedFields);
+
     const logEntry = await AuditLog.create({
       userId: logUserId,
       actionType,
       entityTable,
       entityId,
-      oldValues: oldValues ? JSON.stringify(oldValues) : null,
-      newValues: newValues ? JSON.stringify(newValues) : null,
-      changedFields: changedFields ? JSON.stringify(changedFields) : null,
+      oldValues: oldValues || null,
+      newValues: newValues || null,
+      changedFields: changedFields || null,
       ipAddress: req ? getClientIp(req) : null,
       userAgent: req ? getUserAgent(req) : null,
       requestMethod: req?.method || null,
       requestUrl: req?.originalUrl || null,
       description: finalDescription,
-      metadata: metadata ? JSON.stringify(metadata) : null,
+      metadata: metadata || null,
     });
 
     console.log(

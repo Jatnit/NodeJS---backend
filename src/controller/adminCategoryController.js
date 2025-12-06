@@ -1,5 +1,6 @@
 import { Category } from "../models";
 import cloudinaryService from "../service/cloudinaryService";
+import { logCreate, logUpdate, logDelete } from "../service/auditLogger";
 
 const ensureAdmin = (req, res) => {
   if (!req.session || !req.session.user) {
@@ -82,11 +83,17 @@ const createCategory = async (req, res) => {
       imageUrl = upload?.secure_url || null;
     }
 
-    await Category.create({
+    const category = await Category.create({
       name: name.trim(),
       slug: slug && slug.trim() ? slug.trim() : normalizeSlug(name),
       parentId: parentId ? Number(parentId) : null,
       imageUrl,
+    });
+
+    // Log category creation
+    logCreate(req, "categories", category.id, {
+      name: category.name,
+      slug: category.slug,
     });
 
     return res.redirect("/admin/categories?status=created");
@@ -109,6 +116,13 @@ const updateCategory = async (req, res) => {
     return res.redirect("/admin/categories?status=notfound");
   }
 
+  // Store old data for audit log
+  const oldData = {
+    name: category.name,
+    slug: category.slug,
+    parentId: category.parentId,
+  };
+
   try {
     let imageUrl = category.imageUrl;
     if (req.file && req.file.buffer) {
@@ -118,15 +132,26 @@ const updateCategory = async (req, res) => {
       imageUrl = upload?.secure_url || imageUrl;
     }
 
+    const newName = name && name.trim() ? name.trim() : category.name;
+    const newSlug =
+      slug && slug.trim()
+        ? slug.trim()
+        : category.slug || normalizeSlug(name || category.name);
+    const newParentId =
+      parentId && Number(parentId) !== Number(id) ? Number(parentId) : null;
+
     await category.update({
-      name: name && name.trim() ? name.trim() : category.name,
-      slug:
-        slug && slug.trim()
-          ? slug.trim()
-          : category.slug || normalizeSlug(name || category.name),
-      parentId:
-        parentId && Number(parentId) !== Number(id) ? Number(parentId) : null,
+      name: newName,
+      slug: newSlug,
+      parentId: newParentId,
       imageUrl,
+    });
+
+    // Log category update
+    logUpdate(req, "categories", id, oldData, {
+      name: newName,
+      slug: newSlug,
+      parentId: newParentId,
     });
 
     return res.redirect("/admin/categories?status=updated");
@@ -149,7 +174,19 @@ const deleteCategory = async (req, res) => {
   if (ensureAdmin(req, res)) return;
   const { id } = req.params;
   try {
+    // Get category data before deletion for audit log
+    const category = await Category.findByPk(id, { raw: true });
+
     await Category.destroy({ where: { id } });
+
+    // Log category deletion
+    if (category) {
+      logDelete(req, "categories", id, {
+        name: category.name,
+        slug: category.slug,
+      });
+    }
+
     return res.redirect("/admin/categories?status=deleted");
   } catch (error) {
     console.log("deleteCategory error:", error);
