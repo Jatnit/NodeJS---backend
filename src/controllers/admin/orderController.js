@@ -1,4 +1,4 @@
-import sequelize from "../configs/database";
+import sequelize from "../../configs/database";
 import {
   Order,
   OrderDetail,
@@ -6,13 +6,13 @@ import {
   Product,
   User,
   AttributeValue,
-} from "../models";
+} from "../../models";
 import {
   CheckoutError,
   createOrderTransaction,
   restockOrderItems,
-} from "../service/orderService";
-import { logUpdate } from "../service/auditLogger";
+} from "../../service/orderService";
+import { logUpdate } from "../../service/auditLogger";
 
 const ORDER_STATUSES = [
   "Mới",

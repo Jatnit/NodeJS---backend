@@ -5,10 +5,10 @@ import {
   ProductColorImage,
   ProductSKU,
   AttributeValue,
-} from "../models";
-import sequelize from "../configs/database";
-import cloudinaryService from "../service/cloudinaryService";
-import { logCreate, logUpdate, logDelete } from "../service/auditLogger";
+} from "../../models";
+import sequelize from "../../configs/database";
+import cloudinaryService from "../../service/cloudinaryService";
+import { logCreate, logUpdate, logDelete } from "../../service/auditLogger";
 
 const COLOR_ATTRIBUTE_ID = Number(process.env.COLOR_ATTRIBUTE_ID || 1);
 const SIZE_ATTRIBUTE_ID = Number(process.env.SIZE_ATTRIBUTE_ID || 2);

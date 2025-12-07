@@ -1,7 +1,7 @@
 import express from "express";
-import homeController from "../controller/homeController";
-import adminCategoryController from "../controller/adminCategoryController";
-import adminProductController from "../controller/adminProductController";
+import homeController from "../controllers/client/homeController";
+import categoryController from "../controllers/admin/categoryController";
+import productController from "../controllers/admin/productController";
 import upload from "../middleware/upload";
 const router = express.Router();
 
@@ -43,46 +43,40 @@ const initWebRoutes = (app) => {
   );
 
   // admin categories
-  router.get("/admin/categories", adminCategoryController.listCategories);
+  router.get("/admin/categories", categoryController.listCategories);
   router.get(
     "/admin/categories/:id/edit",
-    adminCategoryController.renderEditCategory
+    categoryController.renderEditCategory
   );
   router.post(
     "/admin/categories",
     upload.single("image"),
-    adminCategoryController.createCategory
+    categoryController.createCategory
   );
   router.post(
     "/admin/categories/:id",
     upload.single("image"),
-    adminCategoryController.updateCategory
+    categoryController.updateCategory
   );
   router.post(
     "/admin/categories/:id/delete",
-    adminCategoryController.deleteCategory
+    categoryController.deleteCategory
   );
 
   // admin products
-  router.get("/admin/products", adminProductController.listProducts);
-  router.get(
-    "/admin/products/:id/edit",
-    adminProductController.renderEditProduct
-  );
+  router.get("/admin/products", productController.listProducts);
+  router.get("/admin/products/:id/edit", productController.renderEditProduct);
   router.post(
     "/admin/products",
     productUpload,
-    adminProductController.createProduct
+    productController.createProduct
   );
   router.post(
     "/admin/products/:id",
     productUpload,
-    adminProductController.updateProduct
+    productController.updateProduct
   );
-  router.post(
-    "/admin/products/:id/delete",
-    adminProductController.deleteProduct
-  );
+  router.post("/admin/products/:id/delete", productController.deleteProduct);
 
   // Audit Logs - Super Admin only
   router.get("/admin/audit-logs", homeController.renderAuditLogs);

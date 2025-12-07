@@ -1,5 +1,5 @@
 import { Op } from "sequelize";
-import sequelize from "../configs/database";
+import sequelize from "../../configs/database";
 import {
   Product,
   ProductSKU,
@@ -10,7 +10,7 @@ import {
   Review,
   ReviewImage,
   User,
-} from "../models";
+} from "../../models";
 
 const MAX_LIMIT = 60;
 const DEFAULT_LIMIT = 9;

@@ -1,9 +1,9 @@
 import express from "express";
-import productApiController from "../controller/productApiController";
-import DashboardController from "../controller/DashboardController";
-import orderController from "../controller/orderController";
-import inventoryController from "../controller/inventoryController";
-import auditLogController from "../controller/auditLogController";
+import productApiController from "../controllers/api/productController";
+import dashboardController from "../controllers/admin/dashboardController";
+import orderController from "../controllers/admin/orderController";
+import inventoryController from "../controllers/admin/inventoryController";
+import auditLogController from "../controllers/admin/auditLogController";
 import {
   verifyToken,
   authorize,
@@ -32,7 +32,7 @@ const initApiRoutes = (app) => {
     orderController.listOrders
   );
   // IMPORTANT: /orders/recent phải đặt TRƯỚC /orders/:id để không bị match sai
-  router.get("/orders/recent", DashboardController.getRecentOrders);
+  router.get("/orders/recent", dashboardController.getRecentOrders);
   router.get(
     "/orders/:id",
     verifyToken,
@@ -57,7 +57,7 @@ const initApiRoutes = (app) => {
     authorize("admin", "manager"),
     inventoryController.getBestSellers
   );
-  router.get("/dashboard/summary", DashboardController.getSummary);
+  router.get("/dashboard/summary", dashboardController.getSummary);
 
   // ============================================
   // AUDIT LOGS - Chỉ Super Admin (roleId = 0)

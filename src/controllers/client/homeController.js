@@ -1,26 +1,29 @@
-import Product from "../models/Product";
-import ProductSKU from "../models/ProductSKU";
-import ProductGallery from "../models/ProductGallery";
-import ProductColorImage from "../models/ProductColorImage";
-import AttributeValue from "../models/AttributeValue";
-import Order from "../models/Order";
-import OrderDetail from "../models/OrderDetail";
-import UserAddress from "../models/UserAddress";
-import Category from "../models/Category";
-import User from "../models/User";
+import Product from "../../models/Product";
+import ProductSKU from "../../models/ProductSKU";
+import ProductGallery from "../../models/ProductGallery";
+import ProductColorImage from "../../models/ProductColorImage";
+import AttributeValue from "../../models/AttributeValue";
+import Order from "../../models/Order";
+import OrderDetail from "../../models/OrderDetail";
+import UserAddress from "../../models/UserAddress";
+import Category from "../../models/Category";
+import User from "../../models/User";
 import { Op, fn, col, literal } from "sequelize";
 
 import bcrypt from "bcryptjs";
-import userService from "../service/userService";
-import adminService from "../service/adminService";
-import { CheckoutError, createOrderTransaction } from "../service/orderService";
+import userService from "../../service/userService";
+import adminService from "../../service/adminService";
+import {
+  CheckoutError,
+  createOrderTransaction,
+} from "../../service/orderService";
 import {
   logLogin,
   logLogout,
   logCreate,
   logUpdate,
   logDelete,
-} from "../service/auditLogger";
+} from "../../service/auditLogger";
 
 const isAuthenticated = (req) => req.session && req.session.user;
 const isAdminSession = (req) =>
@@ -196,7 +199,7 @@ const renderCheckoutWithError = async (
     paymentMethod,
     errorMessage: message,
   });
-  return res.status(statusCode).render("checkout.ejs", viewModel);
+  return res.status(statusCode).render("client/checkout.ejs", viewModel);
 };
 
 const mapAddressesForProfile = (addresses = []) =>
@@ -480,7 +483,7 @@ const getAdminDashboardData = async () => {
 // Get the client
 
 const handleHelloWorld = (req, res) => {
-  return res.render("home.ejs");
+  return res.render("client/home.ejs");
 };
 
 const handleUserPage = async (req, res) => {
@@ -531,7 +534,7 @@ const handleCreateUser = async (req, res) => {
   } catch (error) {
     console.log("handleCreateUser error:", error);
     if (source === "signup") {
-      return res.status(400).render("signup.ejs", {
+      return res.status(400).render("client/signup.ejs", {
         errorMessage: "Không thể tạo tài khoản. Email có thể đã tồn tại.",
         successMessage: null,
         formData: { email, username },
@@ -607,7 +610,7 @@ const renderSignIn = (req, res) => {
   if (status === "signup_success") {
     successMessage = "Tạo tài khoản thành công. Vui lòng đăng nhập.";
   }
-  return res.render("signin.ejs", {
+  return res.render("client/signin.ejs", {
     errorMessage: null,
     successMessage,
     formData: { email: "" },
@@ -615,7 +618,7 @@ const renderSignIn = (req, res) => {
 };
 
 const renderSignUp = (req, res) => {
-  return res.render("signup.ejs", {
+  return res.render("client/signup.ejs", {
     errorMessage: null,
     successMessage: null,
     formData: { email: "", username: "" },
@@ -630,7 +633,7 @@ const handleSignIn = async (req, res) => {
     const user = await userService.getUserByEmail(email);
     if (!user) {
       console.warn("[SIGNIN] Email not found:", email);
-      return res.status(401).render("signin.ejs", {
+      return res.status(401).render("client/signin.ejs", {
         errorMessage: "Email không tồn tại trong hệ thống.",
         successMessage: null,
         formData: { email },
@@ -640,7 +643,7 @@ const handleSignIn = async (req, res) => {
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       console.warn("[SIGNIN] Wrong password for email:", email);
-      return res.status(401).render("signin.ejs", {
+      return res.status(401).render("client/signin.ejs", {
         errorMessage: "Mật khẩu không chính xác.",
         successMessage: null,
         formData: { email },
@@ -687,7 +690,7 @@ const handleSignIn = async (req, res) => {
     return res.redirect("/admin/dashboard");
   } catch (error) {
     console.error("[SIGNIN] Unexpected error for email:", email, error);
-    return res.status(500).render("signin.ejs", {
+    return res.status(500).render("client/signin.ejs", {
       errorMessage: "Có lỗi xảy ra. Vui lòng thử lại.",
       successMessage: null,
       formData: { email },
@@ -708,7 +711,7 @@ const handleUserProfile = async (req, res) => {
   try {
     const user = await userService.getUserById(id);
     if (!user) {
-      return res.status(404).render("user-profile.ejs", {
+      return res.status(404).render("client/user-profile.ejs", {
         user: null,
         addresses: [],
         orders: [],
@@ -719,7 +722,7 @@ const handleUserProfile = async (req, res) => {
       getAddressesByUserId(id).then((list) => mapAddressesForProfile(list)),
       getOrdersForProfile(id),
     ]);
-    return res.render("user-profile.ejs", {
+    return res.render("client/user-profile.ejs", {
       user,
       addresses,
       orders,
@@ -727,7 +730,7 @@ const handleUserProfile = async (req, res) => {
     });
   } catch (error) {
     console.log("handleUserProfile error:", error);
-    return res.status(500).render("user-profile.ejs", {
+    return res.status(500).render("client/user-profile.ejs", {
       user: null,
       addresses: [],
       orders: [],
@@ -767,7 +770,7 @@ const renderOrderDetailPage = async (req, res) => {
         Number(orderRecord.userId) === Number(req.session.user.id));
 
     if (!hasAccess) {
-      return res.status(404).render("order-detail.ejs", {
+      return res.status(404).render("client/order-detail.ejs", {
         orderSummary: null,
         items: [],
         breakdown: null,
@@ -789,7 +792,7 @@ const renderOrderDetailPage = async (req, res) => {
     });
 
     const viewModel = buildOrderDetailViewModel(orderRecord, detailRecords);
-    return res.render("order-detail.ejs", {
+    return res.render("client/order-detail.ejs", {
       ...viewModel,
       cancelAction: `/user/orders/${orderRecord.id}/cancel`,
       successMessage,
@@ -798,7 +801,7 @@ const renderOrderDetailPage = async (req, res) => {
     });
   } catch (error) {
     console.log("renderOrderDetailPage error:", error);
-    return res.status(500).render("order-detail.ejs", {
+    return res.status(500).render("client/order-detail.ejs", {
       orderSummary: null,
       items: [],
       breakdown: null,
@@ -888,13 +891,13 @@ const handleProductListing = async (req, res) => {
       raw: true,
     });
 
-    return res.render("products.ejs", {
+    return res.render("client/products.ejs", {
       categories,
       errorMessage: null,
     });
   } catch (error) {
     console.log("handleProductListing error:", error);
-    return res.render("products.ejs", {
+    return res.render("client/products.ejs", {
       categories: [],
       errorMessage: "Không thể tải danh sách danh mục.",
     });
@@ -954,7 +957,7 @@ const handleProductDetail = async (req, res) => {
     });
 
     if (!productRecord) {
-      return res.status(404).render("product-detail.ejs", {
+      return res.status(404).render("client/product-detail.ejs", {
         product: null,
         galleries: [],
         colorImages: [],
@@ -1012,7 +1015,7 @@ const handleProductDetail = async (req, res) => {
       }
     });
 
-    return res.render("product-detail.ejs", {
+    return res.render("client/product-detail.ejs", {
       product,
       galleries,
       colorImages,
@@ -1023,7 +1026,7 @@ const handleProductDetail = async (req, res) => {
     });
   } catch (error) {
     console.log("handleProductDetail error:", error);
-    return res.status(500).render("product-detail.ejs", {
+    return res.status(500).render("client/product-detail.ejs", {
       product: null,
       galleries: [],
       colorImages: [],
@@ -1130,7 +1133,7 @@ const renderCheckoutPage = async (req, res) => {
     paymentMethod: "COD",
   });
 
-  return res.render("checkout.ejs", viewModel);
+  return res.render("client/checkout.ejs", viewModel);
 };
 
 const handleCheckout = async (req, res) => {
@@ -1182,7 +1185,7 @@ const handleCheckout = async (req, res) => {
 
     req.session.cart = { items: [], subtotal: 0 };
 
-    return res.render("checkout-success.ejs", {
+    return res.render("client/checkout-success.ejs", {
       order: checkoutResult.order,
     });
   } catch (error) {
@@ -1284,7 +1287,7 @@ module.exports = {
 
     const theme =
       (req.session && req.session.theme) || (req.cookies && req.cookies.theme);
-    return res.render("admin-audit-logs.ejs", {
+    return res.render("admin/audit-logs.ejs", {
       currentUser: req.session.user,
       theme: theme || "light",
       errorMessage: null,

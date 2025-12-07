@@ -1,8 +1,4 @@
-import {
-  Product,
-  ProductSKU,
-  AttributeValue,
-} from "../models";
+import { Product, ProductSKU, AttributeValue } from "../../models";
 
 const listInventory = async (_req, res) => {
   try {
@@ -83,5 +79,3 @@ export default {
   listInventory,
   getBestSellers,
 };
-
-

@@ -293,8 +293,7 @@
                                                             </table>
                                                         </div>
                                                         <small class="text-muted d-block mt-2">Bỏ trống giá để dùng giá
-                                                            cơ
-                                                            bản.</small>
+                                                            cơ bản.</small>
                                                     </div>
 
                                                     <div class="d-flex gap-2">
@@ -461,8 +460,9 @@
                 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
                 <script type="text/babel" data-presets="env,react"
                     data-plugins="proposal-class-properties,proposal-object-rest-spread,proposal-optional-chaining,proposal-nullish-coalescing-operator"
-                    src="/js/AdminSidebar.jsx"></script>
+                    src="/js/admin/Sidebar.jsx"></script>
                 <script>
+                    // Color Image Row Management
                     (function () {
                         const list = document.getElementById("color-image-list");
                         const addBtn = document.getElementById("addColorImageRow");
@@ -491,8 +491,8 @@
                                         row.remove();
                                     } else {
                                         row.querySelectorAll("input").forEach((input) => (input.value = ""));
-                                        const select = row.querySelector("select");
-                                        if (select) select.selectedIndex = 0;
+                                        const sel = row.querySelector("select");
+                                        if (sel) sel.selectedIndex = 0;
                                     }
                                 });
                             }
@@ -627,7 +627,7 @@
                 <% if (editingProduct) { %>
                     <script type="text/babel" data-presets="env,react"
                         data-plugins="proposal-class-properties,proposal-object-rest-spread,proposal-optional-chaining,proposal-nullish-coalescing-operator"
-                        src="/js/AdminStockMatrix.jsx"></script>
+                        src="/js/admin/StockMatrix.jsx"></script>
                     <% } %>
 </body>
 

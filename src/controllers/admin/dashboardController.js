@@ -1,5 +1,5 @@
 import { Op, fn, col, literal } from "sequelize";
-import { Order, Product, User } from "../models";
+import { Order, Product, User } from "../../models";
 
 const buildDateKey = (date) => {
   const d = new Date(date);
@@ -33,7 +33,10 @@ const getRecentRevenue = async () => {
   });
 
   const revenueMap = new Map(
-    revenueRows.map((row) => [buildDateKey(row.orderDate), Number(row.total) || 0])
+    revenueRows.map((row) => [
+      buildDateKey(row.orderDate),
+      Number(row.total) || 0,
+    ])
   );
 
   const series = [];
