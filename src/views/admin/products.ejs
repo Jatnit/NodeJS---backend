@@ -190,37 +190,69 @@
                                                                 <% } %>
                                                         </div>
                                                         <div class="mb-0">
-                                                            <label class="form-label small fw-semibold text-muted">ẢNH
-                                                                THEO
-                                                                MÀU</label>
-                                                            <div id="color-image-list" class="d-flex flex-column gap-2">
+                                                            <label class="form-label small fw-semibold text-muted">
+                                                                <i class="bi bi-palette me-1"></i>MÀU SẮC & TỒN KHO
+                                                            </label>
+                                                            <div id="color-inventory-list"
+                                                                class="d-flex flex-column gap-3">
+                                                                <!-- Color Inventory Block Template -->
                                                                 <div
-                                                                    class="color-image-row d-flex gap-2 align-items-center">
-                                                                    <select name="colorImageColorIds[]"
-                                                                        class="form-select form-select-sm"
-                                                                        style="border-radius: 8px;">
-                                                                        <option value="">Chọn màu</option>
-                                                                        <% colorOptions.forEach(function(color) { %>
-                                                                            <option value="<%= color.id %>">
-                                                                                <%= color.value %>
-                                                                            </option>
-                                                                            <% }) %>
-                                                                    </select>
-                                                                    <input type="file" name="colorImageFiles"
-                                                                        class="form-control form-control-sm"
-                                                                        accept="image/*" style="border-radius: 8px;">
-                                                                    <button type="button"
-                                                                        class="btn btn-sm btn-outline-danger remove-color-image"
-                                                                        style="border-radius: 8px;">
-                                                                        <i class="bi bi-x"></i>
-                                                                    </button>
+                                                                    class="color-inventory-block border rounded-3 p-3 bg-white">
+                                                                    <!-- Top row: Color select + File input + Remove button -->
+                                                                    <div class="d-flex gap-2 align-items-center mb-3">
+                                                                        <select name="colorImageColorIds[]"
+                                                                            class="form-select form-select-sm"
+                                                                            style="border-radius: 8px; max-width: 150px;">
+                                                                            <option value="">Chọn màu</option>
+                                                                            <% colorOptions.forEach(function(color) { %>
+                                                                                <option value="<%= color.id %>">
+                                                                                    <%= color.value %>
+                                                                                </option>
+                                                                                <% }) %>
+                                                                        </select>
+                                                                        <input type="file" name="colorImageFiles"
+                                                                            class="form-control form-control-sm"
+                                                                            accept="image/*"
+                                                                            style="border-radius: 8px;">
+                                                                        <button type="button"
+                                                                            class="btn btn-sm btn-outline-danger remove-color-block"
+                                                                            style="border-radius: 8px;">
+                                                                            <i class="bi bi-trash"></i>
+                                                                        </button>
+                                                                    </div>
+                                                                    <!-- Bottom row: Size inventory table -->
+                                                                    <div class="size-inventory-row">
+                                                                        <div class="d-flex gap-2 flex-wrap">
+                                                                            <% sizeOptions.forEach(function(size) { %>
+                                                                                <div class="size-cell text-center p-2 bg-light rounded"
+                                                                                    style="min-width: 80px; flex: 1;">
+                                                                                    <div
+                                                                                        class="small fw-semibold text-muted mb-1">
+                                                                                        <%= size.value %>
+                                                                                    </div>
+                                                                                    <input type="number" step="1000"
+                                                                                        class="form-control form-control-sm mb-1 price-input"
+                                                                                        placeholder="Giá"
+                                                                                        data-size-id="<%= size.id %>"
+                                                                                        style="font-size: 11px;">
+                                                                                    <input type="number" min="0"
+                                                                                        class="form-control form-control-sm stock-input"
+                                                                                        placeholder="SL"
+                                                                                        data-size-id="<%= size.id %>"
+                                                                                        style="font-size: 11px;">
+                                                                                </div>
+                                                                                <% }) %>
+                                                                        </div>
+                                                                    </div>
                                                                 </div>
                                                             </div>
                                                             <button type="button"
-                                                                class="btn btn-outline-secondary btn-sm mt-2"
-                                                                id="addColorImageRow" style="border-radius: 8px;">
+                                                                class="btn btn-outline-secondary btn-sm mt-3"
+                                                                id="addColorInventoryBlock" style="border-radius: 8px;">
                                                                 <i class="bi bi-plus me-1"></i>Thêm màu
                                                             </button>
+                                                            <small class="text-muted d-block mt-2">Bỏ trống giá để dùng
+                                                                giá cơ bản.</small>
                                                             <% if (editingProduct && editingProduct.colorImages &&
                                                                 editingProduct.colorImages.length) { %>
                                                                 <div class="d-flex flex-wrap gap-2 mt-2">
@@ -236,64 +268,6 @@
                                                                 </div>
                                                                 <% } %>
                                                         </div>
-                                                    </div>
-
-                                                    <!-- Inventory Matrix -->
-                                                    <div class="mb-4 p-3 bg-light rounded-3">
-                                                        <h6 class="fw-semibold text-muted mb-3">
-                                                            <i class="bi bi-grid-3x3 me-2"></i>Ma trận tồn kho
-                                                        </h6>
-                                                        <div class="table-responsive">
-                                                            <table
-                                                                class="table table-sm table-bordered align-middle text-center mb-0 bg-white"
-                                                                style="border-radius: 8px; overflow: hidden;">
-                                                                <thead class="table-light">
-                                                                    <tr>
-                                                                        <th style="min-width: 100px;" class="small">Màu
-                                                                            /
-                                                                            Size</th>
-                                                                        <% sizeOptions.forEach(function(size) { %>
-                                                                            <th class="small">
-                                                                                <%= size.value %>
-                                                                            </th>
-                                                                            <% }) %>
-                                                                    </tr>
-                                                                </thead>
-                                                                <tbody>
-                                                                    <% colorOptions.forEach(function(color) { %>
-                                                                        <tr>
-                                                                            <th class="text-start small bg-light">
-                                                                                <%= color.value %>
-                                                                            </th>
-                                                                            <% sizeOptions.forEach(function(size) {
-                                                                                const snapshot=inventorySnapshot &&
-                                                                                inventorySnapshot[String(color.id)] &&
-                                                                                inventorySnapshot[String(color.id)][String(size.id)]
-                                                                                ?
-                                                                                inventorySnapshot[String(color.id)][String(size.id)]
-                                                                                : null; %>
-                                                                                <td style="min-width: 90px;">
-                                                                                    <input type="number" step="1000"
-                                                                                        class="form-control form-control-sm mb-1"
-                                                                                        placeholder="Giá"
-                                                                                        name="inventory[<%= color.id %>][<%= size.id %>][price]"
-                                                                                        value="<%= snapshot ? snapshot.price : '' %>"
-                                                                                        style="font-size: 11px;">
-                                                                                    <input type="number" min="0"
-                                                                                        class="form-control form-control-sm"
-                                                                                        placeholder="SL"
-                                                                                        name="inventory[<%= color.id %>][<%= size.id %>][stock]"
-                                                                                        value="<%= snapshot ? snapshot.stock : '' %>"
-                                                                                        style="font-size: 11px;">
-                                                                                </td>
-                                                                                <% }) %>
-                                                                        </tr>
-                                                                        <% }) %>
-                                                                </tbody>
-                                                            </table>
-                                                        </div>
-                                                        <small class="text-muted d-block mt-2">Bỏ trống giá để dùng giá
-                                                            cơ bản.</small>
                                                     </div>
 
                                                     <div class="d-flex gap-2">
@@ -462,15 +436,42 @@
                     data-plugins="proposal-class-properties,proposal-object-rest-spread,proposal-optional-chaining,proposal-nullish-coalescing-operator"
                     src="/js/admin/Sidebar.jsx"></script>
                 <script>
-                    // Color Image Row Management
+                    // Color Inventory Block Management
                     (function () {
-                        const list = document.getElementById("color-image-list");
-                        const addBtn = document.getElementById("addColorImageRow");
+                        const list = document.getElementById("color-inventory-list");
+                        const addBtn = document.getElementById("addColorInventoryBlock");
                         if (!list || !addBtn) return;
 
-                        const ensureSelectName = (row) => {
-                            const select = row.querySelector("select");
-                            const fileInput = row.querySelector('input[type="file"]');
+                        // Update inventory input names when color is selected
+                        const updateInventoryNames = (block) => {
+                            const select = block.querySelector("select");
+                            const colorId = select ? select.value : "";
+
+                            // Update price inputs
+                            block.querySelectorAll(".price-input").forEach((input) => {
+                                const sizeId = input.dataset.sizeId;
+                                if (colorId && sizeId) {
+                                    input.name = `inventory[${colorId}][${sizeId}][price]`;
+                                } else {
+                                    input.name = "";
+                                }
+                            });
+
+                            // Update stock inputs
+                            block.querySelectorAll(".stock-input").forEach((input) => {
+                                const sizeId = input.dataset.sizeId;
+                                if (colorId && sizeId) {
+                                    input.name = `inventory[${colorId}][${sizeId}][stock]`;
+                                } else {
+                                    input.name = "";
+                                }
+                            });
+                        };
+
+                        // Ensure color select name is set only when file is selected
+                        const ensureSelectName = (block) => {
+                            const select = block.querySelector("select");
+                            const fileInput = block.querySelector('input[type="file"]');
                             if (!select || !fileInput) return;
                             if (!select.dataset.originalName) {
                                 select.dataset.originalName = select.name || "colorImageColorIds[]";
@@ -478,36 +479,57 @@
                             select.name = fileInput.files && fileInput.files.length > 0 ? select.dataset.originalName : "";
                         };
 
-                        const bindRowEvents = (row) => {
-                            const fileInput = row.querySelector('input[type="file"]');
-                            if (fileInput) {
-                                fileInput.addEventListener("change", () => ensureSelectName(row));
-                                ensureSelectName(row);
+                        const bindBlockEvents = (block) => {
+                            const select = block.querySelector("select");
+                            const fileInput = block.querySelector('input[type="file"]');
+
+                            // When color changes, update inventory input names
+                            if (select) {
+                                select.addEventListener("change", () => {
+                                    updateInventoryNames(block);
+                                });
                             }
-                            const removeBtn = row.querySelector(".remove-color-image");
+
+                            // When file is selected, ensure select name is set
+                            if (fileInput) {
+                                fileInput.addEventListener("change", () => ensureSelectName(block));
+                                ensureSelectName(block);
+                            }
+
+                            // Remove button
+                            const removeBtn = block.querySelector(".remove-color-block");
                             if (removeBtn) {
                                 removeBtn.addEventListener("click", () => {
                                     if (list.children.length > 1) {
-                                        row.remove();
+                                        block.remove();
                                     } else {
-                                        row.querySelectorAll("input").forEach((input) => (input.value = ""));
-                                        const sel = row.querySelector("select");
+                                        // Reset the block instead of removing
+                                        block.querySelectorAll("input").forEach((input) => (input.value = ""));
+                                        const sel = block.querySelector("select");
                                         if (sel) sel.selectedIndex = 0;
+                                        updateInventoryNames(block);
                                     }
                                 });
                             }
+
+                            // Initial update
+                            updateInventoryNames(block);
                         };
 
-                        Array.from(list.children).forEach((row) => bindRowEvents(row));
+                        // Bind events to existing blocks
+                        Array.from(list.children).forEach((block) => bindBlockEvents(block));
+
+                        // Add new block button
                         addBtn.addEventListener("click", () => {
-                            const template = list.children[0];
+                            const template = list.querySelector(".color-inventory-block");
                             if (!template) return;
                             const clone = template.cloneNode(true);
+                            // Clear all inputs
                             clone.querySelectorAll("input").forEach((input) => (input.value = ""));
                             const select = clone.querySelector("select");
                             if (select) select.selectedIndex = 0;
                             list.appendChild(clone);
-                            bindRowEvents(clone);
+                            bindBlockEvents(clone);
                         });
                     })();
                 </script>
