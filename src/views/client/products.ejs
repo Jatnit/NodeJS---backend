@@ -154,7 +154,7 @@
 </head>
 
 <body class="<%= theme === 'dark' ? 'theme-dark' : 'theme-light' %>">
-    <%- include('partials/header') %>
+    <%- include('../partials/header') %>
 
         <main class="site-main">
             <section class="py-5">
@@ -213,7 +213,7 @@
             </section>
         </main>
 
-        <%- include('partials/footer') %>
+        <%- include('../partials/footer') %>
 
             <script>
                 (function () {
@@ -234,7 +234,7 @@
             <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
             <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
             <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-            <script type="text/babel" data-presets="env,react" src="/js/ProductListing.jsx"></script>
+            <script type="text/babel" data-presets="env,react" src="/js/client/ProductListing.jsx"></script>
 </body>
 
 </html>

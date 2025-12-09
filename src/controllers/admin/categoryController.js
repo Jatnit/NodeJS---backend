@@ -1,6 +1,6 @@
-import { Category } from "../models";
-import cloudinaryService from "../service/cloudinaryService";
-import { logCreate, logUpdate, logDelete } from "../service/auditLogger";
+import { Category } from "../../models";
+import cloudinaryService from "../../service/cloudinaryService";
+import { logCreate, logUpdate, logDelete } from "../../service/auditLogger";
 
 const ensureAdmin = (req, res) => {
   if (!req.session || !req.session.user) {

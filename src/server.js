@@ -1,3 +1,5 @@
+require("dotenv").config();
+
 import express from "express";
 import configViewEngine from "./configs/viewEngine";
 import initWebRoutes from "./routes/web";
@@ -6,7 +8,6 @@ import bodyParser from "body-parser";
 import session from "express-session";
 import sequelize from "./configs/database";
 import { Role } from "./models";
-require("dotenv").config();
 
 const app = express();
 const PORT = process.env.PORT || 8000;
@@ -49,7 +50,7 @@ app.use((req, res, next) => {
   if (res.headersSent) {
     return next();
   }
-  return res.status(404).render("404.ejs", {
+  return res.status(404).render("errors/404.ejs", {
     errorMessage: "Trang bạn đang truy cập hiện không tồn tại.",
   });
 });
@@ -61,7 +62,9 @@ app.use((err, req, res, next) => {
   if (res.headersSent) {
     return;
   }
-  res.status(500).render("404.ejs", { errorMessage: "Đã xảy ra lỗi máy chủ." });
+  res
+    .status(500)
+    .render("errors/404.ejs", { errorMessage: "Đã xảy ra lỗi máy chủ." });
 });
 
 const ensureDefaultRoles = async () => {

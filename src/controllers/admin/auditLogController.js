@@ -5,8 +5,8 @@
  */
 
 import { Op } from "sequelize";
-import AuditLog from "../models/AuditLog";
-import { User } from "../models";
+import AuditLog from "../../models/AuditLog";
+import { User } from "../../models";
 
 // Role ID cho Super Admin
 const SUPER_ADMIN_ROLE_ID = 0;
