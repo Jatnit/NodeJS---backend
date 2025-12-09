@@ -1,0 +1,19 @@
+# Database Configuration
+DB_HOST=localhost
+DB_USER=root
+DB_PASSWORD= 
+DB_NAME=jwt
+DB_PORT=3306
+
+# Server Configuration
+PORT=8000
+
+# Cloudinary Configuration (Required for image uploads)
+# Get credentials from https://cloudinary.com/console
+CLOUDINARY_CLOUD_NAME=dsryvdt5h
+CLOUDINARY_API_KEY=456681574536849
+CLOUDINARY_API_SECRET=eDmscsxbuNBA1Rh0BdFrgk0XPmM
+
+# Attribute IDs (for product variants)
+COLOR_ATTRIBUTE_ID=1
+SIZE_ATTRIBUTE_ID=2
