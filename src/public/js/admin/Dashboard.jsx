@@ -507,12 +507,6 @@ const DashboardPage = () => {
                 <div>
                   <h5 className="fw-bold mb-1">
                     Đơn hàng gần đây
-                    <span 
-                      className="badge bg-success ms-2" 
-                      style={{ fontSize: "10px", verticalAlign: "middle" }}
-                    >
-                      Auto-refresh 3s
-                    </span>
                   </h5>
                   <p className="text-muted small mb-0">8 đơn mới nhất</p>
                 </div>
