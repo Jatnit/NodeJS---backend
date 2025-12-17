@@ -1,4 +1,4 @@
-const { useEffect, useState } = React;
+const { useEffect, useState, useRef, useCallback } = React;
 
 const formatCurrency = (value) =>
   new Intl.NumberFormat("vi-VN", {
@@ -14,6 +14,119 @@ const formatDate = (dateStr) => {
     month: "2-digit",
     year: "numeric",
   });
+};
+
+const formatTime = (dateStr) => {
+  if (!dateStr) return "--";
+  return new Date(dateStr).toLocaleTimeString("vi-VN", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+};
+
+// ============================================
+// NEW ORDER NOTIFICATION TOAST
+// ============================================
+const NewOrderToast = ({ orders, onDismiss }) => {
+  if (!orders || orders.length === 0) return null;
+
+  return (
+    <div
+      style={{
+        position: "fixed",
+        top: "80px",
+        right: "20px",
+        zIndex: 9999,
+        display: "flex",
+        flexDirection: "column",
+        gap: "10px",
+        maxHeight: "calc(100vh - 100px)",
+        overflowY: "auto",
+      }}
+    >
+      {orders.map((order) => (
+        <div
+          key={order.id}
+          className="animate__animated animate__fadeInRight"
+          style={{
+            background: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
+            color: "white",
+            padding: "16px 20px",
+            borderRadius: "12px",
+            boxShadow: "0 10px 40px rgba(16, 185, 129, 0.4)",
+            minWidth: "320px",
+            maxWidth: "400px",
+            cursor: "pointer",
+            animation: "slideIn 0.3s ease-out",
+          }}
+          onClick={() => onDismiss(order.id)}
+        >
+          <div className="d-flex align-items-start justify-content-between">
+            <div>
+              <div className="d-flex align-items-center gap-2 mb-2">
+                <i className="bi bi-bell-fill" style={{ fontSize: "20px" }}></i>
+                <span className="fw-bold">🎉 Đơn hàng mới!</span>
+              </div>
+              <div className="small opacity-90">
+                <div className="fw-semibold mb-1">Mã đơn: {order.code}</div>
+                <div>Khách: {order.customerName}</div>
+                <div className="mt-1 fw-bold">{formatCurrency(order.totalAmount)}</div>
+              </div>
+            </div>
+            <button
+              className="btn btn-link text-white p-0"
+              onClick={(e) => {
+                e.stopPropagation();
+                onDismiss(order.id);
+              }}
+              style={{ opacity: 0.7 }}
+            >
+              <i className="bi bi-x-lg"></i>
+            </button>
+          </div>
+          <div className="mt-2 small opacity-75">
+            <i className="bi bi-clock me-1"></i>
+            {formatTime(order.orderDate)} - Nhấn để đóng
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+// ============================================
+// NOTIFICATION SOUND
+// ============================================
+const playNotificationSound = () => {
+  try {
+    // Create audio context for notification
+    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+
+    // Pleasant notification sound
+    oscillator.frequency.value = 800;
+    oscillator.type = "sine";
+    gainNode.gain.value = 0.3;
+
+    oscillator.start();
+    
+    // Quick beep pattern
+    setTimeout(() => {
+      oscillator.frequency.value = 1000;
+    }, 100);
+    setTimeout(() => {
+      oscillator.frequency.value = 1200;
+    }, 200);
+    setTimeout(() => {
+      oscillator.stop();
+    }, 300);
+  } catch (e) {
+    console.log("Audio not supported");
+  }
 };
 
 const StatCard = ({ title, value, icon, color, loading }) => (
@@ -140,12 +253,84 @@ const RevenueBar = ({ data, loading }) => {
   );
 };
 
+// ============================================
+// LIVE INDICATOR
+// ============================================
+const LiveIndicator = ({ isLive, lastUpdate }) => (
+  <div
+    className="d-flex align-items-center gap-2 px-3 py-2 rounded-pill"
+    style={{ 
+      background: isLive ? "#f0fdf4" : "#fef3c7", 
+      color: isLive ? "#166534" : "#92400e" 
+    }}
+  >
+    <span 
+      style={{
+        width: "8px",
+        height: "8px",
+        borderRadius: "50%",
+        background: isLive ? "#22c55e" : "#f59e0b",
+        animation: isLive ? "pulse 2s infinite" : "none",
+      }}
+    ></span>
+    <span className="small fw-semibold">
+      {isLive ? "LIVE" : "Đang kết nối..."} 
+      {lastUpdate && <span className="opacity-75 ms-1">• {formatTime(lastUpdate)}</span>}
+    </span>
+  </div>
+);
+
 const DashboardPage = () => {
   const [summary, setSummary] = useState(null);
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [newOrders, setNewOrders] = useState([]);
+  const [lastUpdate, setLastUpdate] = useState(null);
+  const [isLive, setIsLive] = useState(true);
+  
+  // Store previous order IDs to detect new orders
+  const previousOrderIdsRef = useRef(new Set());
+  const isFirstLoadRef = useRef(true);
 
+  // Fetch recent orders
+  const fetchOrders = useCallback(async () => {
+    try {
+      const ordersRes = await axios.get("/api/orders/recent");
+      const fetchedOrders = ordersRes.data?.data || [];
+      
+      // Get IDs of fetched orders
+      const currentOrderIds = new Set(fetchedOrders.map(o => o.id));
+      
+      // Detect new orders (not in previous fetch)
+      if (!isFirstLoadRef.current) {
+        const newOrdersList = fetchedOrders.filter(
+          order => !previousOrderIdsRef.current.has(order.id)
+        );
+        
+        if (newOrdersList.length > 0) {
+          // Play notification sound
+          playNotificationSound();
+          
+          // Add to new orders notification
+          setNewOrders(prev => [...newOrdersList, ...prev].slice(0, 5));
+        }
+      }
+      
+      // Update previous IDs
+      previousOrderIdsRef.current = currentOrderIds;
+      isFirstLoadRef.current = false;
+      
+      setOrders(fetchedOrders);
+      setLastUpdate(new Date().toISOString());
+      setIsLive(true);
+    } catch (err) {
+      console.error("Fetch orders error:", err);
+      setIsLive(false);
+    }
+  }, []);
+
+  // Initial data load
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
@@ -156,7 +341,15 @@ const DashboardPage = () => {
           axios.get("/api/orders/recent"),
         ]);
         setSummary(summaryRes.data?.data || {});
-        setOrders(ordersRes.data?.data || []);
+        
+        const fetchedOrders = ordersRes.data?.data || [];
+        setOrders(fetchedOrders);
+        
+        // Initialize previous order IDs
+        previousOrderIdsRef.current = new Set(fetchedOrders.map(o => o.id));
+        isFirstLoadRef.current = false;
+        
+        setLastUpdate(new Date().toISOString());
       } catch (err) {
         console.error("Dashboard error:", err);
         setError("Không thể tải dữ liệu. Vui lòng thử lại.");
@@ -165,6 +358,20 @@ const DashboardPage = () => {
       }
     };
     fetchData();
+  }, []);
+
+  // Poll for new orders every 3 seconds
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+      fetchOrders();
+    }, 3000);
+
+    return () => clearInterval(intervalId);
+  }, [fetchOrders]);
+
+  // Dismiss notification
+  const dismissNotification = useCallback((orderId) => {
+    setNewOrders(prev => prev.filter(o => o.id !== orderId));
   }, []);
 
   const stats = [
@@ -190,6 +397,9 @@ const DashboardPage = () => {
 
   return (
     <div className="pb-5">
+      {/* New Order Notifications */}
+      <NewOrderToast orders={newOrders} onDismiss={dismissNotification} />
+
       {error && (
         <div className="alert alert-danger d-flex align-items-center gap-2 mb-4">
           <i className="bi bi-exclamation-triangle"></i>
@@ -226,13 +436,7 @@ const DashboardPage = () => {
                     Tổng hợp từ các đơn hoàn thành
                   </p>
                 </div>
-                <div
-                  className="d-flex align-items-center gap-2 px-3 py-2 rounded-pill"
-                  style={{ background: "#f0fdf4", color: "#166534" }}
-                >
-                  <i className="bi bi-graph-up-arrow"></i>
-                  <span className="small fw-semibold">Realtime</span>
-                </div>
+                <LiveIndicator isLive={isLive} lastUpdate={lastUpdate} />
               </div>
               <RevenueBar data={summary?.recentRevenue || []} loading={loading} />
             </div>
@@ -301,7 +505,15 @@ const DashboardPage = () => {
             <div className="card-body p-4">
               <div className="d-flex align-items-center justify-content-between mb-4">
                 <div>
-                  <h5 className="fw-bold mb-1">Đơn hàng gần đây</h5>
+                  <h5 className="fw-bold mb-1">
+                    Đơn hàng gần đây
+                    <span 
+                      className="badge bg-success ms-2" 
+                      style={{ fontSize: "10px", verticalAlign: "middle" }}
+                    >
+                      Auto-refresh 3s
+                    </span>
+                  </h5>
                   <p className="text-muted small mb-0">8 đơn mới nhất</p>
                 </div>
                 <a
@@ -362,6 +574,24 @@ const DashboardPage = () => {
           </div>
         </div>
       </div>
+
+      {/* CSS for animations */}
+      <style>{`
+        @keyframes pulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.5; }
+        }
+        @keyframes slideIn {
+          from {
+            transform: translateX(100%);
+            opacity: 0;
+          }
+          to {
+            transform: translateX(0);
+            opacity: 1;
+          }
+        }
+      `}</style>
     </div>
   );
 };

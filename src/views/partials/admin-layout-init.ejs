@@ -1,11 +1,14 @@
 <!-- Admin Layout Init Script - Run before React to prevent layout jump -->
 <script>
-    (function () {
-        // Apply sidebar collapsed state immediately from localStorage
-        var isCollapsed = localStorage.getItem('adminSidebarCollapsed') === 'true';
-        document.body.classList.add('has-admin-sidebar');
-        if (isCollapsed) {
-            document.body.classList.add('sidebar-collapsed');
-        }
-    })();
+  (function () {
+    // Apply sidebar collapsed state immediately from localStorage
+    var isCollapsed = localStorage.getItem("adminSidebarCollapsed") === "true";
+    document.body.classList.add("has-admin-sidebar");
+    if (isCollapsed) {
+      document.body.classList.add("sidebar-collapsed");
+    }
+  })();
 </script>
+
+<!-- Order Notification System - Auto-refresh mỗi 3s với popup thông báo đơn hàng mới -->
+<script src="/js/admin/order-notification.js" defer></script>
