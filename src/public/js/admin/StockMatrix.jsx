@@ -174,8 +174,38 @@ const InventoryMatrix = ({ productId }) => {
     );
   }
 
+  // Sắp xếp sizes theo thứ tự chuẩn: S, M, L, XL, XXL
+  const SIZE_ORDER = ['S', 'M', 'L', 'XL', 'XXL'];
+  const sortedSizes = [...state.sizes].sort((a, b) => {
+    const indexA = SIZE_ORDER.indexOf(a.label);
+    const indexB = SIZE_ORDER.indexOf(b.label);
+    if (indexA === -1 && indexB === -1) return a.label.localeCompare(b.label);
+    if (indexA === -1) return 1;
+    if (indexB === -1) return -1;
+    return indexA - indexB;
+  });
+
+  // Style để ẩn spinners trên input number
+  const inputStyle = {
+    MozAppearance: 'textfield',
+    WebkitAppearance: 'none',
+    appearance: 'textfield',
+  };
+
   return (
     <div>
+      {/* CSS để ẩn spinners cho Chrome, Safari, Edge, Opera */}
+      <style>{`
+        .stock-input::-webkit-outer-spin-button,
+        .stock-input::-webkit-inner-spin-button {
+          -webkit-appearance: none;
+          margin: 0;
+        }
+        .stock-input {
+          -moz-appearance: textfield;
+        }
+      `}</style>
+
       {state.error ? (
         <div className="alert alert-danger">{state.error}</div>
       ) : null}
@@ -188,7 +218,7 @@ const InventoryMatrix = ({ productId }) => {
           <thead className="table-light">
             <tr>
               <th style={{ minWidth: "120px" }}>Màu / Size</th>
-              {state.sizes.map((size) => (
+              {sortedSizes.map((size) => (
                 <th key={size.id}>{size.label}</th>
               ))}
             </tr>
@@ -197,27 +227,25 @@ const InventoryMatrix = ({ productId }) => {
             {state.colors.map((color) => (
               <tr key={color.id}>
                 <th className="text-start">{color.label}</th>
-                {state.sizes.map((size) => {
+                {sortedSizes.map((size) => {
                   const key = `${color.id}-${size.id}`;
                   const cell = state.matrix[key];
-                  if (!cell || !cell.skuId) {
-                    return (
-                      <td key={key} className="text-muted">
-                        —
-                      </td>
-                    );
-                  }
+                  const hasSku = cell && cell.skuId;
+                  const displayValue = hasSku ? cell.value : 0;
+                  
                   return (
                     <td key={key}>
                       <input
                         type="number"
                         min="0"
-                        className="form-control form-control-sm text-end"
-                        value={cell.value}
+                        className={`form-control form-control-sm text-center stock-input ${!hasSku ? 'text-muted bg-light' : ''}`}
+                        style={inputStyle}
+                        value={displayValue}
                         onChange={(event) =>
                           handleCellChange(key, event.target.value)
                         }
-                        disabled={state.saving}
+                        disabled={state.saving || !hasSku}
+                        title={!hasSku ? 'Chưa có biến thể này trong kho' : ''}
                       />
                     </td>
                   );

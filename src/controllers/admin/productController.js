@@ -44,8 +44,11 @@ const getCategories = () =>
     raw: true,
   });
 
+// Thứ tự chuẩn cho sizes
+const SIZE_ORDER = ['S', 'M', 'L', 'XL', 'XXL'];
+
 const getAttributeOptions = async () => {
-  const [colors, sizes] = await Promise.all([
+  const [colors, sizesRaw] = await Promise.all([
     AttributeValue.findAll({
       where: { attributeId: COLOR_ATTRIBUTE_ID },
       order: [
@@ -56,13 +59,21 @@ const getAttributeOptions = async () => {
     }),
     AttributeValue.findAll({
       where: { attributeId: SIZE_ATTRIBUTE_ID },
-      order: [
-        ["value", "ASC"],
-        ["id", "ASC"],
-      ],
       raw: true,
     }),
   ]);
+  
+  // Sắp xếp sizes theo thứ tự chuẩn: S, M, L, XL, XXL
+  const sizes = sizesRaw.sort((a, b) => {
+    const indexA = SIZE_ORDER.indexOf(a.value);
+    const indexB = SIZE_ORDER.indexOf(b.value);
+    // Nếu không tìm thấy trong SIZE_ORDER, đẩy xuống cuối
+    if (indexA === -1 && indexB === -1) return a.value.localeCompare(b.value);
+    if (indexA === -1) return 1;
+    if (indexB === -1) return -1;
+    return indexA - indexB;
+  });
+  
   return { colors, sizes };
 };
 
@@ -178,9 +189,7 @@ const parseInventoryPayload = (rawInventory, basePrice) => {
         priceRaw === undefined || priceRaw === ""
           ? Number(basePrice) || 0
           : Number(priceRaw);
-      if (Number.isNaN(stockQuantity) && Number.isNaN(priceValue)) {
-        return;
-      }
+      // Luôn tạo entry cho mọi size, kể cả khi stock = 0 hoặc để trống
       entries.push({
         colorValueId,
         sizeValueId,
@@ -231,7 +240,8 @@ const syncInventoryMatrix = async (
         { price: nextPrice, stockQuantity: nextStock },
         { where: { id: existingMap.get(key).id }, transaction }
       );
-    } else if (nextStock > 0) {
+    } else {
+      // Luôn tạo SKU mới cho tất cả color/size, kể cả khi stock = 0
       await ProductSKU.create(
         {
           productId,

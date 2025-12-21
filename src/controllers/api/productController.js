@@ -115,7 +115,9 @@ const buildSortClause = (sort) => {
 
 const ensureAdminApi = (req, res) => {
   const user = req.session?.user;
-  if (!user || String(user.roleId) !== "1") {
+  const roleId = String(user?.roleId || "");
+  // Cho phép Super Admin (0) và Admin (1)
+  if (!user || (roleId !== "0" && roleId !== "1")) {
     res.status(403).json({
       success: false,
       message: "Bạn không có quyền truy cập tính năng này.",
@@ -740,6 +742,84 @@ export default {
       return res.status(500).json({
         success: false,
         message: "Không thể cập nhật tồn kho.",
+      });
+    }
+  },
+
+  /**
+   * Bulk action for multiple products
+   * POST /api/products/bulk-action
+   * Body: { action: 'activate' | 'deactivate' | 'delete', productIds: number[] }
+   */
+  async bulkAction(req, res) {
+    if (!ensureAdminApi(req, res)) {
+      return;
+    }
+
+    const { action, productIds } = req.body || {};
+
+    if (!action || !['activate', 'deactivate', 'delete'].includes(action)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Hành động không hợp lệ.',
+      });
+    }
+
+    if (!Array.isArray(productIds) || !productIds.length) {
+      return res.status(400).json({
+        success: false,
+        message: 'Vui lòng chọn ít nhất một sản phẩm.',
+      });
+    }
+
+    const validIds = productIds
+      .map((id) => Number(id))
+      .filter((id) => Number.isFinite(id) && id > 0);
+
+    if (!validIds.length) {
+      return res.status(400).json({
+        success: false,
+        message: 'Không có sản phẩm hợp lệ để thực hiện.',
+      });
+    }
+
+    try {
+      let affected = 0;
+
+      if (action === 'activate') {
+        const [affectedRows] = await Product.update(
+          { isActive: true },
+          { where: { id: { [Op.in]: validIds } } }
+        );
+        affected = affectedRows;
+      } else if (action === 'deactivate') {
+        const [affectedRows] = await Product.update(
+          { isActive: false },
+          { where: { id: { [Op.in]: validIds } } }
+        );
+        affected = affectedRows;
+      } else if (action === 'delete') {
+        affected = await Product.destroy({
+          where: { id: { [Op.in]: validIds } },
+        });
+      }
+
+      const actionLabels = {
+        activate: 'Bật hoạt động',
+        deactivate: 'Tắt hoạt động',
+        delete: 'Xóa',
+      };
+
+      return res.json({
+        success: true,
+        message: `${actionLabels[action]} thành công ${affected} sản phẩm.`,
+        affected,
+      });
+    } catch (error) {
+      console.log('bulkAction error:', error);
+      return res.status(500).json({
+        success: false,
+        message: 'Có lỗi xảy ra khi thực hiện hành động.',
       });
     }
   },
