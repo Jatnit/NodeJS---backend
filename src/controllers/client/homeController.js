@@ -1015,12 +1015,23 @@ const handleProductDetail = async (req, res) => {
       }
     });
 
+    // Sắp xếp sizes theo thứ tự chuẩn: S, M, L, XL, XXL
+    const SIZE_ORDER = ['S', 'M', 'L', 'XL', 'XXL'];
+    const sortedSizeOptions = Array.from(sizeMap.values()).sort((a, b) => {
+      const indexA = SIZE_ORDER.indexOf(a.value);
+      const indexB = SIZE_ORDER.indexOf(b.value);
+      if (indexA === -1 && indexB === -1) return a.value.localeCompare(b.value);
+      if (indexA === -1) return 1;
+      if (indexB === -1) return -1;
+      return indexA - indexB;
+    });
+
     return res.render("client/product-detail.ejs", {
       product,
       galleries,
       colorImages,
       colorOptions: Array.from(colorMap.values()),
-      sizeOptions: Array.from(sizeMap.values()),
+      sizeOptions: sortedSizeOptions,
       skuOptions,
       errorMessage: null,
     });

@@ -24,6 +24,10 @@ const initApiRoutes = (app) => {
     "/products/:id/stock-matrix",
     productApiController.updateStockMatrix
   );
+  router.post(
+    "/products/bulk-action",
+    productApiController.bulkAction
+  );
   router.post("/orders", attachUserIfAvailable, orderController.checkout);
   router.get(
     "/orders",

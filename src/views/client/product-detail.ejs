@@ -319,10 +319,22 @@
                                         <% } %>
 
                                             <% if (sizeOptions && sizeOptions.length) { %>
+                                                <%
+                                                    // Sắp xếp sizes theo thứ tự chuẩn: S, M, L, XL, XXL
+                                                    const SIZE_ORDER = ['S', 'M', 'L', 'XL', 'XXL'];
+                                                    const sortedSizes = [...sizeOptions].sort((a, b) => {
+                                                        const indexA = SIZE_ORDER.indexOf(a.value);
+                                                        const indexB = SIZE_ORDER.indexOf(b.value);
+                                                        if (indexA === -1 && indexB === -1) return a.value.localeCompare(b.value);
+                                                        if (indexA === -1) return 1;
+                                                        if (indexB === -1) return -1;
+                                                        return indexA - indexB;
+                                                    });
+                                                %>
                                                 <div class="mb-4">
                                                     <p class="option-label">Size</p>
                                                     <div class="pill-group" id="sizeOptions">
-                                                        <% sizeOptions.forEach(function(size) { %>
+                                                        <% sortedSizes.forEach(function(size) { %>
                                                             <button type="button" class="pill"
                                                                 data-size-id="<%= size.id %>">
                                                                 <%= size.value %>
