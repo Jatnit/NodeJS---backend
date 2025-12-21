@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="vi" data-bs-theme="<%= theme %>">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đánh giá đơn hàng <%= order.code %> - Moda Clothing</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --font-body: 'Inter', sans-serif;
+            --font-display: 'Playfair Display', serif;
+            --color-primary: #1a1a2e;
+            --color-accent: #e94560;
+            --color-success: #10b981;
+            --color-warning: #f59e0b;
+            --color-gold: #fbbf24;
+        }
+
+        body {
+            font-family: var(--font-body);
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            min-height: 100vh;
+        }
+
+        .review-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+        }
+
+        .page-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .page-title {
+            font-family: var(--font-display);
+            font-size: 2rem;
+            color: var(--color-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .order-info {
+            color: #64748b;
+            font-size: 0.95rem;
+        }
+
+        .deadline-notice {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            border-radius: 16px;
+            padding: 1rem 1.5rem;
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .deadline-notice i {
+            font-size: 1.5rem;
+            color: var(--color-warning);
+        }
+
+        .product-card {
+            background: white;
+            border-radius: 20px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .product-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+        }
+
+        .product-card.reviewed {
+            border: 2px solid var(--color-success);
+        }
+
+        .product-info {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .product-image {
+            width: 80px;
+            height: 80px;
+            border-radius: 12px;
+            object-fit: cover;
+            background: #f1f5f9;
+        }
+
+        .product-details h4 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+            color: var(--color-primary);
+        }
+
+        .product-variant {
+            font-size: 0.85rem;
+            color: #64748b;
+        }
+
+        .reviewed-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: var(--color-success);
+            color: white;
+            padding: 0.35rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .rating-section {
+            margin-bottom: 1.5rem;
+        }
+
+        .rating-label {
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+            color: var(--color-primary);
+        }
+
+        .star-rating {
+            display: flex;
+            gap: 0.5rem;
+            flex-direction: row-reverse;
+            justify-content: flex-end;
+        }
+
+        .star-rating input {
+            display: none;
+        }
+
+        .star-rating label {
+            font-size: 2rem;
+            color: #e2e8f0;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .star-rating label:hover,
+        .star-rating label:hover ~ label,
+        .star-rating input:checked ~ label {
+            color: var(--color-gold);
+            transform: scale(1.1);
+        }
+
+        .comment-section textarea {
+            width: 100%;
+            min-height: 100px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 1rem;
+            font-size: 0.95rem;
+            resize: vertical;
+            transition: border-color 0.3s ease;
+        }
+
+        .comment-section textarea:focus {
+            outline: none;
+            border-color: var(--color-accent);
+        }
+
+        .btn-submit-review {
+            background: linear-gradient(135deg, var(--color-success) 0%, #059669 100%);
+            color: white;
+            border: none;
+            padding: 0.75rem 2rem;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-submit-review:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+        }
+
+        .btn-submit-review:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-back {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #64748b;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+
+        .btn-back:hover {
+            color: var(--color-primary);
+        }
+
+        .success-message {
+            background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+            border-radius: 12px;
+            padding: 1rem 1.5rem;
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            color: #065f46;
+        }
+
+        .existing-review {
+            background: #f8fafc;
+            border-radius: 12px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .existing-stars {
+            color: var(--color-gold);
+            font-size: 1.25rem;
+        }
+
+        .existing-comment {
+            color: #475569;
+            font-style: italic;
+            margin-top: 0.5rem;
+        }
+
+        @media (max-width: 576px) {
+            .page-title {
+                font-size: 1.5rem;
+            }
+
+            .product-image {
+                width: 60px;
+                height: 60px;
+            }
+
+            .star-rating label {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <%- include('../partials/header') %>
+
+    <main class="review-container">
+        <a href="/user/profile/<%= userId %>" class="btn-back mb-4">
+            <i class="bi bi-arrow-left"></i>Quay lại hồ sơ
+        </a>
+
+        <div class="page-header">
+            <h1 class="page-title">Đánh giá sản phẩm</h1>
+            <p class="order-info">
+                <i class="bi bi-receipt me-1"></i>Đơn hàng <%= order.code %> · 
+                Ngày đặt: <%= new Date(order.orderDate).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' }) %>
+            </p>
+        </div>
+
+        <% if (successMessage) { %>
+        <div class="success-message">
+            <i class="bi bi-check-circle-fill" style="font-size: 1.5rem;"></i>
+            <span><%= successMessage %></span>
+        </div>
+        <% } %>
+
+        <div class="deadline-notice">
+            <i class="bi bi-clock"></i>
+            <div>
+                <strong>Hạn đánh giá:</strong> 
+                <%= new Date(reviewDeadline).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' }) %>
+                <br>
+                <small style="color: #92400e;">Lưu ý: Sau khi gửi đánh giá, bạn không thể chỉnh sửa.</small>
+            </div>
+        </div>
+
+        <% products.forEach(function(product, index) { %>
+        <div class="product-card <%= product.isReviewed ? 'reviewed' : '' %>" id="product-<%= product.productId %>">
+            <div class="product-info">
+                <img src="<%= product.thumbnail %>" alt="<%= product.name %>" class="product-image" 
+                     onerror="this.src='/images/placeholder.png'">
+                <div class="product-details">
+                    <h4><%= product.name %></h4>
+                    <p class="product-variant mb-1">
+                        <% if (product.color) { %>Màu: <%= product.color %><% } %>
+                        <% if (product.color && product.size) { %> · <% } %>
+                        <% if (product.size) { %>Size: <%= product.size %><% } %>
+                    </p>
+                    <p class="product-variant mb-0">
+                        SL: <%= product.quantity %> × <%= product.unitPrice.toLocaleString('vi-VN') %>đ
+                    </p>
+                </div>
+                <% if (product.isReviewed) { %>
+                <span class="reviewed-badge ms-auto">
+                    <i class="bi bi-check-circle"></i>Đã đánh giá
+                </span>
+                <% } %>
+            </div>
+
+            <% if (product.isReviewed && product.existingReview) { %>
+            <div class="existing-review">
+                <p class="mb-2" style="font-weight: 600; color: var(--color-primary);">Đánh giá của bạn:</p>
+                <div class="existing-stars">
+                    <% for (let i = 1; i <= 5; i++) { %>
+                        <i class="bi bi-star<%= i <= product.existingReview.rating ? '-fill' : '' %>"></i>
+                    <% } %>
+                </div>
+                <% if (product.existingReview.comment) { %>
+                <p class="existing-comment mb-0">"<%= product.existingReview.comment %>"</p>
+                <% } %>
+            </div>
+            <% } else { %>
+            <form class="review-form" data-product-id="<%= product.productId %>">
+                <div class="rating-section">
+                    <p class="rating-label">Đánh giá của bạn:</p>
+                    <div class="star-rating">
+                        <input type="radio" name="rating-<%= product.productId %>" value="5" id="star5-<%= product.productId %>">
+                        <label for="star5-<%= product.productId %>"><i class="bi bi-star-fill"></i></label>
+                        
+                        <input type="radio" name="rating-<%= product.productId %>" value="4" id="star4-<%= product.productId %>">
+                        <label for="star4-<%= product.productId %>"><i class="bi bi-star-fill"></i></label>
+                        
+                        <input type="radio" name="rating-<%= product.productId %>" value="3" id="star3-<%= product.productId %>">
+                        <label for="star3-<%= product.productId %>"><i class="bi bi-star-fill"></i></label>
+                        
+                        <input type="radio" name="rating-<%= product.productId %>" value="2" id="star2-<%= product.productId %>">
+                        <label for="star2-<%= product.productId %>"><i class="bi bi-star-fill"></i></label>
+                        
+                        <input type="radio" name="rating-<%= product.productId %>" value="1" id="star1-<%= product.productId %>">
+                        <label for="star1-<%= product.productId %>"><i class="bi bi-star-fill"></i></label>
+                    </div>
+                </div>
+
+                <div class="comment-section mb-3">
+                    <textarea name="comment" placeholder="Chia sẻ trải nghiệm của bạn về sản phẩm này... (không bắt buộc)"></textarea>
+                </div>
+
+                <button type="submit" class="btn-submit-review">
+                    <i class="bi bi-send"></i>
+                    Gửi đánh giá
+                </button>
+            </form>
+            <% } %>
+        </div>
+        <% }) %>
+
+        <div class="text-center mt-4">
+            <a href="/user/profile/<%= userId %>" class="btn-back">
+                <i class="bi bi-arrow-left"></i>Quay lại hồ sơ
+            </a>
+        </div>
+    </main>
+
+    <%- include('../partials/footer') %>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.querySelectorAll('.review-form').forEach(form => {
+            form.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                const productId = this.dataset.productId;
+                const ratingInput = this.querySelector(`input[name="rating-${productId}"]:checked`);
+                const commentInput = this.querySelector('textarea[name="comment"]');
+                const submitBtn = this.querySelector('.btn-submit-review');
+                
+                if (!ratingInput) {
+                    alert('Vui lòng chọn số sao đánh giá!');
+                    return;
+                }
+                
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Đang gửi...';
+                
+                try {
+                    const response = await fetch('/user/orders/<%= order.id %>/review', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            productId: Number(productId),
+                            rating: Number(ratingInput.value),
+                            comment: commentInput.value.trim(),
+                        }),
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        // Reload trang với thông báo thành công
+                        window.location.href = '/user/orders/<%= order.id %>/review?success=true';
+                    } else {
+                        alert(result.message || 'Có lỗi xảy ra.');
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = '<i class="bi bi-send"></i> Gửi đánh giá';
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    alert('Có lỗi xảy ra. Vui lòng thử lại.');
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<i class="bi bi-send"></i> Gửi đánh giá';
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>

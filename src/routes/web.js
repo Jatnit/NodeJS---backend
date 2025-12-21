@@ -90,6 +90,10 @@ const initWebRoutes = (app) => {
   router.post("/user/addresses/:id/delete", homeController.handleDeleteAddress);
   router.post("/user/addresses/:id/set-default", homeController.handleSetDefaultAddress);
 
+  // Order Review
+  router.get("/user/orders/:orderId/review", homeController.renderReviewPage);
+  router.post("/user/orders/:orderId/review", homeController.handleSubmitReview);
+
   return app.use("/", router);
 };
 

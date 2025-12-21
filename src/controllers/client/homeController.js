@@ -8,6 +8,7 @@ import OrderDetail from "../../models/OrderDetail";
 import UserAddress from "../../models/UserAddress";
 import Category from "../../models/Category";
 import User from "../../models/User";
+import Review from "../../models/Review";
 import { Op, fn, col, literal } from "sequelize";
 
 import bcrypt from "bcryptjs";
@@ -251,8 +252,58 @@ const getOrdersForProfile = async (userId, limit = 6) => {
     raw: true,
   });
 
+  const now = new Date();
+  const REVIEW_DAYS = 15; // Số ngày cho phép đánh giá sau khi hoàn thành
+
+  // Lấy danh sách order IDs để kiểm tra review
+  const orderIds = rows.map(o => o.id);
+  
+  // Kiểm tra xem các order đã có review chưa
+  const existingReviews = await Review.findAll({
+    where: { orderId: { [Op.in]: orderIds }, userId },
+    attributes: ['orderId', 'productId'],
+    raw: true,
+  });
+  
+  // Tạo map orderId -> số lượng review
+  const reviewCountMap = {};
+  existingReviews.forEach(r => {
+    reviewCountMap[r.orderId] = (reviewCountMap[r.orderId] || 0) + 1;
+  });
+
+  // Lấy số lượng sản phẩm trong mỗi order
+  const orderDetailCounts = await OrderDetail.findAll({
+    where: { orderId: { [Op.in]: orderIds } },
+    attributes: ['orderId', [fn('COUNT', col('Id')), 'count']],
+    group: ['orderId'],
+    raw: true,
+  });
+  
+  const productCountMap = {};
+  orderDetailCounts.forEach(r => {
+    productCountMap[r.orderId] = Number(r.count) || 0;
+  });
+
   return rows.map((order) => {
     const status = order.status || "Mới";
+    const isCompleted = status === "Hoàn thành";
+    
+    // Kiểm tra đã đánh giá hết chưa
+    const reviewCount = reviewCountMap[order.id] || 0;
+    const productCount = productCountMap[order.id] || 0;
+    const hasReviewed = productCount > 0 && reviewCount >= productCount;
+    
+    // Tính toán khả năng đánh giá (trong vòng 15 ngày, chưa đánh giá hết)
+    let canReview = false;
+    let reviewDeadline = null;
+    
+    if (isCompleted && order.orderDate && !hasReviewed) {
+      const orderDate = new Date(order.orderDate);
+      reviewDeadline = new Date(orderDate);
+      reviewDeadline.setDate(reviewDeadline.getDate() + REVIEW_DAYS);
+      canReview = now <= reviewDeadline;
+    }
+    
     return {
       id: order.id,
       code: `#${String(order.id).padStart(5, "0")}`,
@@ -264,6 +315,10 @@ const getOrdersForProfile = async (userId, limit = 6) => {
         : null,
       progress: buildOrderProgress(status),
       isCancelled: status === "Đã hủy",
+      isCompleted,
+      canReview,
+      hasReviewed,
+      reviewDeadline: reviewDeadline ? reviewDeadline.toISOString() : null,
     };
   });
 };
@@ -1433,4 +1488,179 @@ module.exports = {
       return res.status(500).json({ success: false, message: "Có lỗi xảy ra." });
     }
   },
+
+  // ==================== REVIEW MANAGEMENT ====================
+  renderReviewPage: async (req, res) => {
+    if (!isAuthenticated(req)) {
+      return res.redirect("/signin");
+    }
+    
+    const { orderId } = req.params;
+    const userId = req.session.user.id;
+    const theme = (req.session && req.session.theme) || (req.cookies && req.cookies.theme);
+    
+    try {
+      // Lấy thông tin đơn hàng
+      const order = await Order.findOne({
+        where: { id: orderId, userId },
+        raw: true,
+      });
+      
+      if (!order) {
+        return res.redirect(`/user/profile/${userId}`);
+      }
+      
+      // Kiểm tra trạng thái và thời hạn đánh giá
+      if (order.status !== "Hoàn thành") {
+        return res.redirect(`/user/orders/${orderId}?error=not_completed`);
+      }
+      
+      const REVIEW_DAYS = 15;
+      const orderDate = new Date(order.orderDate);
+      const reviewDeadline = new Date(orderDate);
+      reviewDeadline.setDate(reviewDeadline.getDate() + REVIEW_DAYS);
+      
+      if (new Date() > reviewDeadline) {
+        return res.redirect(`/user/orders/${orderId}?error=review_expired`);
+      }
+      
+      // Lấy chi tiết đơn hàng (sản phẩm đã mua)
+      const orderDetails = await OrderDetail.findAll({
+        where: { orderId },
+        include: [
+          {
+            model: ProductSKU,
+            include: [
+              { model: Product },
+              { model: AttributeValue, as: "colorValue" },
+              { model: AttributeValue, as: "sizeValue" },
+            ],
+          },
+        ],
+      });
+      
+      // Lấy các review đã có của user cho order này
+      const existingReviews = await Review.findAll({
+        where: { orderId, userId },
+        raw: true,
+      });
+      const reviewedProductIds = existingReviews.map(r => r.productId);
+      
+      // Map sản phẩm để hiển thị
+      const products = orderDetails.map(detail => {
+        const sku = detail.ProductSKU;
+        const product = sku?.Product;
+        const productId = product?.id;
+        const isReviewed = reviewedProductIds.includes(productId);
+        const existingReview = existingReviews.find(r => r.productId === productId);
+        
+        return {
+          orderDetailId: detail.id,
+          productId,
+          productSkuId: detail.productSkuId,
+          name: product?.name || "Sản phẩm",
+          thumbnail: product?.thumbnail || "/images/placeholder.png",
+          color: sku?.colorValue?.Value || detail.color || null,
+          size: sku?.sizeValue?.Value || detail.size || null,
+          quantity: detail.quantity,
+          unitPrice: Number(detail.unitPrice) || 0,
+          isReviewed,
+          existingReview: existingReview ? {
+            rating: existingReview.rating,
+            comment: existingReview.comment,
+          } : null,
+        };
+      });
+      
+      return res.render("client/order-review.ejs", {
+        order: {
+          id: order.id,
+          code: `#${String(order.id).padStart(5, "0")}`,
+          orderDate: order.orderDate,
+        },
+        products,
+        userId,
+        reviewDeadline: reviewDeadline.toISOString(),
+        theme: theme || "light",
+        errorMessage: null,
+        successMessage: req.query.success === "true" ? "Đánh giá của bạn đã được ghi nhận!" : null,
+      });
+    } catch (error) {
+      console.error("renderReviewPage error:", error);
+      return res.redirect(`/user/profile/${userId}`);
+    }
+  },
+
+  handleSubmitReview: async (req, res) => {
+    if (!isAuthenticated(req)) {
+      return res.status(401).json({ success: false, message: "Chưa đăng nhập." });
+    }
+    
+    try {
+      const userId = req.session.user.id;
+      const { orderId } = req.params;
+      const { productId, rating, comment } = req.body;
+      
+      // Validate
+      if (!productId || !rating) {
+        return res.status(400).json({ success: false, message: "Thiếu thông tin đánh giá." });
+      }
+      
+      const ratingNum = Number(rating);
+      if (ratingNum < 1 || ratingNum > 5) {
+        return res.status(400).json({ success: false, message: "Đánh giá phải từ 1 đến 5 sao." });
+      }
+      
+      // Kiểm tra đơn hàng thuộc về user
+      const order = await Order.findOne({
+        where: { id: orderId, userId, status: "Hoàn thành" },
+        raw: true,
+      });
+      
+      if (!order) {
+        return res.status(403).json({ success: false, message: "Đơn hàng không hợp lệ." });
+      }
+      
+      // Kiểm tra sản phẩm có trong đơn hàng
+      const orderDetail = await OrderDetail.findOne({
+        where: { orderId },
+        include: [{
+          model: ProductSKU,
+          where: { productId },
+        }],
+      });
+      
+      if (!orderDetail) {
+        return res.status(403).json({ success: false, message: "Sản phẩm không có trong đơn hàng." });
+      }
+      
+      // Kiểm tra đã đánh giá chưa - không cho phép sửa
+      const existingReview = await Review.findOne({
+        where: { orderId, userId, productId },
+      });
+      
+      if (existingReview) {
+        return res.status(400).json({ 
+          success: false, 
+          message: "Bạn đã đánh giá sản phẩm này rồi. Không thể sửa đánh giá." 
+        });
+      }
+      
+      // Tạo review mới
+      await Review.create({
+        userId,
+        productId,
+        orderId: Number(orderId),
+        rating: ratingNum,
+        comment: comment || null,
+        createdAt: new Date(),
+      });
+      
+      return res.json({ success: true, message: "Đánh giá thành công!" });
+    } catch (error) {
+      console.error("handleSubmitReview error:", error);
+      return res.status(500).json({ success: false, message: "Có lỗi xảy ra." });
+    }
+  },
 };
+
