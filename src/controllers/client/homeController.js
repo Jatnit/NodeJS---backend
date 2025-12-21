@@ -209,6 +209,11 @@ const mapAddressesForProfile = (addresses = []) =>
     phoneNumber: address.phoneNumber || "Chưa cập nhật",
     fullAddress: formatFullAddress(address) || "Chưa có địa chỉ",
     isDefault: Boolean(address.isDefault),
+    // Thêm các field riêng lẻ để hỗ trợ form sửa địa chỉ
+    addressLine: address.addressLine || "",
+    ward: address.ward || "",
+    district: address.district || "",
+    city: address.city || "",
   }));
 
 const buildOrderProgress = (status) => {
@@ -1303,5 +1308,129 @@ module.exports = {
       theme: theme || "light",
       errorMessage: null,
     });
+  },
+
+  // ==================== ADDRESS MANAGEMENT ====================
+  handleAddAddress: async (req, res) => {
+    if (!isAuthenticated(req)) {
+      return res.status(401).json({ success: false, message: "Chưa đăng nhập." });
+    }
+    try {
+      const userId = req.session.user.id;
+      const { recipientName, phoneNumber, addressLine, ward, district, city, isDefault } = req.body;
+      
+      // Nếu đặt làm mặc định, bỏ mặc định các địa chỉ khác
+      if (isDefault) {
+        await UserAddress.update({ isDefault: false }, { where: { userId } });
+      }
+      
+      const newAddress = await UserAddress.create({
+        userId,
+        recipientName,
+        phoneNumber,
+        addressLine,
+        ward,
+        district,
+        city,
+        isDefault: isDefault || false,
+      });
+      
+      return res.json({ 
+        success: true, 
+        message: "Thêm địa chỉ thành công.",
+        address: newAddress.toJSON()
+      });
+    } catch (error) {
+      console.error("handleAddAddress error:", error);
+      return res.status(500).json({ success: false, message: "Có lỗi xảy ra." });
+    }
+  },
+
+  handleUpdateAddress: async (req, res) => {
+    if (!isAuthenticated(req)) {
+      return res.status(401).json({ success: false, message: "Chưa đăng nhập." });
+    }
+    try {
+      const userId = req.session.user.id;
+      const addressId = Number(req.params.id);
+      const { recipientName, phoneNumber, addressLine, ward, district, city, isDefault } = req.body;
+      
+      const address = await UserAddress.findOne({ where: { id: addressId, userId } });
+      if (!address) {
+        return res.status(404).json({ success: false, message: "Không tìm thấy địa chỉ." });
+      }
+      
+      // Nếu đặt làm mặc định, bỏ mặc định các địa chỉ khác
+      if (isDefault) {
+        await UserAddress.update({ isDefault: false }, { where: { userId } });
+      }
+      
+      await address.update({
+        recipientName,
+        phoneNumber,
+        addressLine,
+        ward,
+        district,
+        city,
+        isDefault: isDefault || false,
+      });
+      
+      return res.json({ 
+        success: true, 
+        message: "Cập nhật địa chỉ thành công.",
+        address: address.toJSON()
+      });
+    } catch (error) {
+      console.error("handleUpdateAddress error:", error);
+      return res.status(500).json({ success: false, message: "Có lỗi xảy ra." });
+    }
+  },
+
+  handleDeleteAddress: async (req, res) => {
+    if (!isAuthenticated(req)) {
+      return res.status(401).json({ success: false, message: "Chưa đăng nhập." });
+    }
+    try {
+      const userId = req.session.user.id;
+      const addressId = Number(req.params.id);
+      
+      const address = await UserAddress.findOne({ where: { id: addressId, userId } });
+      if (!address) {
+        return res.status(404).json({ success: false, message: "Không tìm thấy địa chỉ." });
+      }
+      
+      await address.destroy();
+      
+      return res.json({ success: true, message: "Xóa địa chỉ thành công." });
+    } catch (error) {
+      console.error("handleDeleteAddress error:", error);
+      return res.status(500).json({ success: false, message: "Có lỗi xảy ra." });
+    }
+  },
+
+  handleSetDefaultAddress: async (req, res) => {
+    if (!isAuthenticated(req)) {
+      return res.status(401).json({ success: false, message: "Chưa đăng nhập." });
+    }
+    try {
+      const userId = req.session.user.id;
+      const addressId = Number(req.params.id);
+      
+      const address = await UserAddress.findOne({ where: { id: addressId, userId } });
+      if (!address) {
+        return res.status(404).json({ success: false, message: "Không tìm thấy địa chỉ." });
+      }
+      
+      // Bỏ mặc định tất cả địa chỉ khác
+      await UserAddress.update({ isDefault: false }, { where: { userId } });
+      
+      // Đặt địa chỉ này làm mặc định
+      await address.update({ isDefault: true });
+      
+      return res.json({ success: true, message: "Đã đặt làm địa chỉ mặc định." });
+    } catch (error) {
+      console.error("handleSetDefaultAddress error:", error);
+      return res.status(500).json({ success: false, message: "Có lỗi xảy ra." });
+    }
   },
 };

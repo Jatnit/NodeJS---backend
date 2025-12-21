@@ -64,48 +64,137 @@ const styles = `
   }
   .product-layout {
     display: grid;
-    grid-template-columns: 300px 1fr;
-    gap: 2.5rem;
+    grid-template-columns: 280px 1fr;
+    gap: 2rem;
   }
   @media (max-width: 991px) {
     .product-layout {
       grid-template-columns: 1fr;
     }
   }
+  
+  /* Mobile Filter Toggle Button */
+  .mobile-filter-toggle {
+    display: none;
+    position: fixed;
+    bottom: 1.5rem;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 100;
+    background: #111;
+    color: #fff;
+    border: none;
+    border-radius: 999px;
+    padding: 0.75rem 1.5rem;
+    font-weight: 600;
+    font-size: 0.85rem;
+    letter-spacing: 0.1em;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+    cursor: pointer;
+  }
+  @media (max-width: 991px) {
+    .mobile-filter-toggle {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+  }
+  
+  /* Mobile Filter Overlay */
+  .filter-overlay {
+    display: none;
+  }
+  @media (max-width: 991px) {
+    .filter-overlay {
+      display: block;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 1000;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s ease;
+    }
+    .filter-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+  }
+  
+  /* Filters Panel */
   .filters-panel {
     background: var(--card-bg, #fff);
-    border-radius: 28px;
-    padding: 2rem;
-    box-shadow: 0 30px 80px rgba(15, 15, 15, 0.08);
+    border-radius: 24px;
+    padding: 1.5rem;
+    box-shadow: 0 20px 60px rgba(15, 15, 15, 0.08);
     position: sticky;
-    top: 110px;
+    top: 100px;
     height: fit-content;
   }
+  @media (max-width: 991px) {
+    .filters-panel {
+      position: fixed;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      width: 280px;
+      max-width: 85vw;
+      border-radius: 0;
+      z-index: 1001;
+      transform: translateX(-100%);
+      transition: transform 0.3s ease;
+      overflow-y: auto;
+      padding-top: 1rem;
+      padding-bottom: 6rem;
+    }
+    .filters-panel.mobile-open {
+      transform: translateX(0);
+    }
+    .filters-panel .filter-close-btn {
+      display: flex;
+    }
+  }
+  .filter-close-btn {
+    display: none;
+    position: absolute;
+    top: 0.75rem;
+    right: 0.75rem;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(0,0,0,0.08);
+    font-size: 1.2rem;
+    cursor: pointer;
+    align-items: center;
+    justify-content: center;
+  }
+  
   .filters-panel h5 {
-    font-size: 0.85rem;
-    letter-spacing: 0.3em;
+    font-size: 0.8rem;
+    letter-spacing: 0.25em;
     font-weight: 600;
     color: #8d7a5f;
   }
   .filter-section + .filter-section {
-    margin-top: 2rem;
+    margin-top: 1.5rem;
   }
   .category-list {
     list-style: none;
     padding: 0;
-    margin: 1rem 0 0;
+    margin: 0.75rem 0 0;
     display: flex;
     flex-direction: column;
-    gap: 0.6rem;
+    gap: 0.5rem;
   }
   .category-list label {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    font-size: 0.95rem;
+    font-size: 0.9rem;
   }
   .price-form {
-    margin-top: 1rem;
+    margin-top: 0.75rem;
   }
   .price-form::after {
     content: "";
@@ -114,17 +203,18 @@ const styles = `
   }
   .price-inputs {
     display: flex;
-    gap: 0.75rem;
+    gap: 0.5rem;
     flex-wrap: wrap;
   }
   .price-inputs input {
-    flex: none;
-    width: 92px;
+    flex: 1;
+    min-width: 70px;
     border-radius: 999px;
     border: 1px solid #e3e3e3;
-    padding: 0.35rem 0.9rem;
+    padding: 0.35rem 0.75rem;
     background: transparent;
     text-align: center;
+    font-size: 0.85rem;
   }
   .price-form button {
     display: none;
@@ -189,47 +279,59 @@ const styles = `
     display: flex;
     flex-wrap: wrap;
     justify-content: space-between;
-    gap: 1rem;
+    gap: 0.75rem;
     align-items: center;
-    margin-bottom: 1.5rem;
+    margin-bottom: 1.25rem;
   }
   .toolbar-actions {
     display: flex;
-    gap: 1rem;
+    gap: 0.75rem;
     align-items: center;
   }
   .toolbar-actions select {
     border-radius: 999px;
     border: 1px solid #dcdcdc;
-    padding: 0.45rem 1.25rem;
+    padding: 0.4rem 1rem;
     background: transparent;
+    font-size: 0.85rem;
   }
+  
+  /* Product Grid - Always 3 columns */
   .product-grid {
     width: 100%;
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 2.25rem;
+    gap: 1.5rem;
     align-items: stretch;
   }
   @media (max-width: 1200px) {
     .product-grid {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 2rem;
+      gap: 1.25rem;
     }
   }
   @media (max-width: 768px) {
     .product-grid {
-      grid-template-columns: repeat(1, minmax(0, 1fr));
-      gap: 1.5rem;
+      gap: 0.75rem;
+    }
+  }
+  @media (max-width: 480px) {
+    .product-grid {
+      gap: 0.5rem;
     }
   }
   .product-card {
     position: relative;
-    border-radius: 32px;
+    border-radius: 20px;
     overflow: hidden;
     background: linear-gradient(180deg, rgba(255,255,255,0.9), rgba(245,245,245,1));
-    box-shadow: 0 25px 60px rgba(20, 20, 20, 0.08);
+    box-shadow: 0 15px 40px rgba(20, 20, 20, 0.08);
     width: 100%;
+  }
+  @media (max-width: 768px) {
+    .product-card {
+      border-radius: 12px;
+      box-shadow: 0 8px 20px rgba(20, 20, 20, 0.06);
+    }
   }
   .product-card figure {
     margin: 0;
@@ -244,17 +346,48 @@ const styles = `
     transform: scale(1.05);
   }
   .product-meta {
-    padding: 1.25rem 1.5rem 1.5rem;
+    padding: 1rem 1.25rem 1.25rem;
+  }
+  @media (max-width: 768px) {
+    .product-meta {
+      padding: 0.5rem 0.5rem 0.75rem;
+    }
   }
   .product-meta h4 {
-    font-size: 1rem;
-    letter-spacing: 0.18em;
+    font-size: 0.9rem;
+    letter-spacing: 0.12em;
     text-transform: uppercase;
-    margin-bottom: 0.6rem;
+    margin-bottom: 0.4rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  @media (max-width: 768px) {
+    .product-meta h4 {
+      font-size: 0.65rem;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.2rem;
+    }
   }
   .price-tag {
     font-weight: 600;
     color: #b48b57;
+    font-size: 0.9rem;
+  }
+  @media (max-width: 768px) {
+    .price-tag {
+      font-size: 0.6rem;
+    }
+  }
+  .product-categories-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+  }
+  @media (max-width: 768px) {
+    .product-categories-tags {
+      display: none;
+    }
   }
   .card-hover {
     position: absolute;
@@ -266,6 +399,11 @@ const styles = `
     justify-content: center;
     transition: opacity 0.3s ease;
   }
+  @media (max-width: 768px) {
+    .card-hover {
+      display: none;
+    }
+  }
   .product-card:hover .card-hover {
     opacity: 1;
   }
@@ -274,14 +412,16 @@ const styles = `
     flex-direction: column;
     gap: 0.6rem;
     width: 100%;
-    max-width: 220px;
+    max-width: 180px;
+    padding: 0 1rem;
   }
   .card-hover button {
     border-radius: 999px;
-    padding: 0.55rem 1.5rem;
+    padding: 0.5rem 1rem;
     border: none;
     font-weight: 600;
-    letter-spacing: 0.15em;
+    font-size: 0.75rem;
+    letter-spacing: 0.1em;
   }
   .card-hover button.add {
     background: #111;
@@ -598,6 +738,7 @@ const ProductListing = ({ initialCategories = [] }) => {
   const [activeProduct, setActiveProduct] = useState(null);
   const [detailLoading, setDetailLoading] = useState(false);
   const [detailError, setDetailError] = useState("");
+  const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
 
   const handlePriceSubmit = (event) => {
     event.preventDefault();
@@ -774,8 +915,32 @@ const ProductListing = ({ initialCategories = [] }) => {
   return (
     <div className="product-page">
       <style>{styles}</style>
+      
+      {/* Mobile Filter Toggle */}
+      <button 
+        className="mobile-filter-toggle"
+        onClick={() => setMobileFilterOpen(true)}
+      >
+        <i className="bi bi-funnel"></i>
+        Bộ lọc
+      </button>
+      
+      {/* Mobile Filter Overlay */}
+      <div 
+        className={`filter-overlay ${mobileFilterOpen ? 'active' : ''}`}
+        onClick={() => setMobileFilterOpen(false)}
+      />
+      
       <div className="product-layout">
-        <aside className="filters-panel">
+        <aside className={`filters-panel ${mobileFilterOpen ? 'mobile-open' : ''}`}>
+          {/* Close button for mobile */}
+          <button 
+            className="filter-close-btn"
+            onClick={() => setMobileFilterOpen(false)}
+          >
+            ×
+          </button>
+          
           <div className="filter-section">
             <h5>Danh mục</h5>
             <ul className="category-list">
@@ -848,7 +1013,10 @@ const ProductListing = ({ initialCategories = [] }) => {
             <button
               type="button"
               className="ghost"
-              onClick={clearFilters}
+              onClick={() => {
+                clearFilters();
+                setMobileFilterOpen(false);
+              }}
               disabled={
                 !filters.categories.length &&
                 !filters.searchTerm &&
@@ -861,7 +1029,10 @@ const ProductListing = ({ initialCategories = [] }) => {
             <button
               type="button"
               className="primary"
-              onClick={() => setPage(1)}
+              onClick={() => {
+                setPage(1);
+                setMobileFilterOpen(false);
+              }}
             >
               Áp dụng
             </button>
