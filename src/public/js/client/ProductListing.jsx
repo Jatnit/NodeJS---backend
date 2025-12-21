@@ -37,17 +37,24 @@ const getSwatchHex = (label) => {
 };
 
 const COLOR_SWATCHES = [
-  { id: 3, label: "Yellow", hex: "#F3C257" },
-  { id: 2, label: "Black", hex: "#111111" },
-  { id: 1, label: "White", hex: "#F5F5F5", border: "#D9D9D9" },
+  { id: 1, label: "Trắng", hex: "#F7F7F7", border: "#D9D9D9" },
+  { id: 2, label: "Đen", hex: "#111111" },
+  { id: 3, label: "Xanh Navy", hex: "#000080" },
+  { id: 4, label: "Xám", hex: "#808080" },
+  { id: 5, label: "Đỏ", hex: "#FF0000" },
+  { id: 11, label: "Vàng", hex: "#FFD700" },
+  { id: 12, label: "Nâu", hex: "#8B4513" },
+  { id: 13, label: "Tím", hex: "#800080" },
+  { id: 14, label: "Hồng", hex: "#FFC0CB", border: "#D9D9D9" },
+  { id: 15, label: "Xanh Lá", hex: "#228B22" },
 ];
 
 const SIZE_OPTIONS = [
-  { id: 4, label: "XS" },
-  { id: 5, label: "S" },
-  { id: 6, label: "M" },
-  { id: 7, label: "L" },
-  { id: 8, label: "XL" },
+  { id: 6, label: "S" },
+  { id: 7, label: "M" },
+  { id: 8, label: "L" },
+  { id: 9, label: "XL" },
+  { id: 10, label: "XXL" },
 ];
 
 const styles = `
@@ -577,8 +584,7 @@ const toggleValue = (list, value) => {
 const ProductListing = ({ initialCategories = [] }) => {
   const [filters, setFilters] = useState({
     categories: [],
-    colors: [],
-    sizes: [],
+    searchTerm: "",
     minPrice: "",
     maxPrice: "",
   });
@@ -606,22 +612,10 @@ const ProductListing = ({ initialCategories = [] }) => {
           .split(",")
           .filter(Boolean)
       : [];
-    const colors = params.get("colors")
-      ? params
-          .get("colors")
-          .split(",")
-          .filter(Boolean)
-      : [];
-    const sizes = params.get("sizes")
-      ? params
-          .get("sizes")
-          .split(",")
-          .filter(Boolean)
-      : [];
+    const searchTerm = params.get("search") || "";
     setFilters({
       categories,
-      colors,
-      sizes,
+      searchTerm,
       minPrice: params.get("minPrice") || "",
       maxPrice: params.get("maxPrice") || "",
     });
@@ -684,11 +678,8 @@ const ProductListing = ({ initialCategories = [] }) => {
     if (filters.categories.length) {
       params.set("categories", filters.categories.join(","));
     }
-    if (filters.colors.length) {
-      params.set("colors", filters.colors.join(","));
-    }
-    if (filters.sizes.length) {
-      params.set("sizes", filters.sizes.join(","));
+    if (filters.searchTerm) {
+      params.set("search", filters.searchTerm);
     }
     if (filters.minPrice) {
       params.set("minPrice", filters.minPrice);
@@ -745,20 +736,12 @@ const ProductListing = ({ initialCategories = [] }) => {
     setPage(1);
   };
 
-  const handleColorChange = (id) => {
+  const handleSearchChange = (value) => {
     setFilters((prev) => ({
       ...prev,
-      colors: toggleValue(prev.colors, String(id)),
+      searchTerm: value,
     }));
-    setPage(1);
-  };
-
-  const handleSizeChange = (id) => {
-    setFilters((prev) => ({
-      ...prev,
-      sizes: toggleValue(prev.sizes, String(id)),
-    }));
-    setPage(1);
+    // Debounce - chỉ cập nhật page sau khi người dùng ngừng gõ
   };
 
   const handlePriceChange = (field, value) => {
@@ -773,8 +756,7 @@ const ProductListing = ({ initialCategories = [] }) => {
   const clearFilters = () => {
     setFilters({
       categories: [],
-      colors: [],
-      sizes: [],
+      searchTerm: "",
       minPrice: "",
       maxPrice: "",
     });
@@ -795,7 +777,7 @@ const ProductListing = ({ initialCategories = [] }) => {
       <div className="product-layout">
         <aside className="filters-panel">
           <div className="filter-section">
-            <h5>Categories</h5>
+            <h5>Danh mục</h5>
             <ul className="category-list">
               {initialCategories.length === 0 && (
                 <li className="text-muted">Chưa có danh mục.</li>
@@ -816,13 +798,13 @@ const ProductListing = ({ initialCategories = [] }) => {
           </div>
 
           <div className="filter-section">
-            <h5>Price</h5>
+            <h5>Giá</h5>
             <form className="price-form" onSubmit={handlePriceSubmit}>
               <div className="price-inputs">
                 <input
                   type="text"
                   inputMode="numeric"
-                  placeholder="Min"
+                  placeholder="Tối thiểu"
                   value={filters.minPrice}
                   onChange={(event) =>
                     handlePriceChange("minPrice", event.target.value)
@@ -831,55 +813,34 @@ const ProductListing = ({ initialCategories = [] }) => {
                 <input
                   type="text"
                   inputMode="numeric"
-                  placeholder="Max"
+                  placeholder="Tối đa"
                   value={filters.maxPrice}
                   onChange={(event) =>
                     handlePriceChange("maxPrice", event.target.value)
                   }
                 />
               </div>
-              <button type="submit">Apply price</button>
+              <button type="submit">Áp dụng giá</button>
             </form>
           </div>
 
           <div className="filter-section">
-            <h5>Color</h5>
-            <div className="swatches">
-              {COLOR_SWATCHES.map((swatch) => (
-                <button
-                  key={swatch.id}
-                  type="button"
-                  className={`swatch ${
-                    filters.colors.includes(String(swatch.id)) ? "selected" : ""
-                  }`}
-                  style={{
-                    background: swatch.hex,
-                    borderColor: filters.colors.includes(String(swatch.id))
-                      ? "#111"
-                      : swatch.border || "transparent",
-                  }}
-                  data-label={swatch.label}
-                  onClick={() => handleColorChange(swatch.id)}
-                />
-              ))}
-            </div>
-          </div>
-
-          <div className="filter-section">
-            <h5>Size</h5>
-            <div className="size-list">
-              {SIZE_OPTIONS.map((size) => (
-                <button
-                  key={size.id}
-                  type="button"
-                  className={`size-pill ${
-                    filters.sizes.includes(String(size.id)) ? "selected" : ""
-                  }`}
-                  onClick={() => handleSizeChange(size.id)}
-                >
-                  {size.label}
-                </button>
-              ))}
+            <h5>Tìm kiếm</h5>
+            <div style={{ marginTop: '1rem' }}>
+              <input
+                type="text"
+                placeholder="Nhập tên sản phẩm..."
+                value={filters.searchTerm}
+                onChange={(e) => handleSearchChange(e.target.value)}
+                style={{
+                  width: '100%',
+                  borderRadius: '999px',
+                  border: '1px solid #e3e3e3',
+                  padding: '0.6rem 1rem',
+                  background: 'transparent',
+                  fontSize: '0.9rem',
+                }}
+              />
             </div>
           </div>
 
@@ -890,20 +851,19 @@ const ProductListing = ({ initialCategories = [] }) => {
               onClick={clearFilters}
               disabled={
                 !filters.categories.length &&
-                !filters.colors.length &&
-                !filters.sizes.length &&
+                !filters.searchTerm &&
                 !filters.minPrice &&
                 !filters.maxPrice
               }
             >
-              Clear
+              Xóa
             </button>
             <button
               type="button"
               className="primary"
               onClick={() => setPage(1)}
             >
-              Apply
+              Áp dụng
             </button>
           </div>
         </aside>
@@ -912,7 +872,7 @@ const ProductListing = ({ initialCategories = [] }) => {
           <div className="products-toolbar">
             <div>
               <p className="text-uppercase fw-semibold text-muted mb-1" style={{ letterSpacing: "0.3em" }}>
-                SHOP THE DROP
+                SẢN PHẨM
               </p>
               <small className="text-muted">
                 {pagination.total
@@ -922,7 +882,7 @@ const ProductListing = ({ initialCategories = [] }) => {
             </div>
             <div className="toolbar-actions">
               <label className="text-muted" style={{ fontSize: "0.9rem" }}>
-                Sort by
+                Sắp xếp
               </label>
               <select
                 value={sort}
@@ -931,9 +891,9 @@ const ProductListing = ({ initialCategories = [] }) => {
                   setPage(1);
                 }}
               >
-                <option value="newest">Newest</option>
-                <option value="price_asc">Price ↑</option>
-                <option value="price_desc">Price ↓</option>
+                <option value="newest">Mới nhất</option>
+                <option value="price_asc">Giá tăng dần</option>
+                <option value="price_desc">Giá giảm dần</option>
               </select>
             </div>
           </div>
@@ -983,10 +943,10 @@ const ProductListing = ({ initialCategories = [] }) => {
                           <div className="card-hover">
                             <div className="hover-actions">
                               <button className="btn btn-light text-uppercase">
-                                View Detail
+                                Xem chi tiết
                               </button>
                               <button className="btn btn-light text-uppercase add">
-                                Add To Cart
+                                Thêm vào giỏ
                               </button>
                             </div>
                           </div>
@@ -1281,7 +1241,7 @@ const ProductDetailModal = ({ product, onClose, onSelectProduct }) => {
             {colorOptions.length > 0 && (
               <div className="mt-3">
                 <p className="text-uppercase text-muted mb-2" style={{ letterSpacing: "0.3em" }}>
-                  Color
+                  Màu sắc
                 </p>
                 <div className="swatch-row">
                   {colorOptions.map((color) => {
@@ -1308,7 +1268,7 @@ const ProductDetailModal = ({ product, onClose, onSelectProduct }) => {
             {sizeOptions.length > 0 && (
               <div className="mt-4">
                 <p className="text-uppercase text-muted mb-2" style={{ letterSpacing: "0.3em" }}>
-                  Size
+                  Kích thước
                 </p>
                 <div className="pill-row">
                   {sizeOptions.map((size) => {
@@ -1357,7 +1317,7 @@ const ProductDetailModal = ({ product, onClose, onSelectProduct }) => {
                   cartFeedback.state === "loading"
                 }
               >
-                Add to Bag
+                Thêm vào giỏ
               </button>
               {cartFeedback.message && (
                 <span className="cart-feedback text-muted">
@@ -1371,7 +1331,7 @@ const ProductDetailModal = ({ product, onClose, onSelectProduct }) => {
         {recommendations.length > 0 && (
           <section className="product-modal__related">
             <h5 className="text-uppercase text-muted" style={{ letterSpacing: "0.3em" }}>
-              You Might Also Like
+              Sản phẩm gợi ý
             </h5>
             <div className="product-modal__related-grid">
               {recommendations.map((rec) => (
@@ -1399,7 +1359,7 @@ const ProductDetailModal = ({ product, onClose, onSelectProduct }) => {
 
         <section className="review-section">
           <h5 className="text-uppercase text-muted mb-3" style={{ letterSpacing: "0.3em" }}>
-            Reviews
+            Đánh giá
           </h5>
           <div className="review-summary">
             <div>
@@ -1407,7 +1367,7 @@ const ProductDetailModal = ({ product, onClose, onSelectProduct }) => {
                 {summary.averageRating?.toFixed(1) || "0.0"}
               </div>
               <p className="text-muted">
-                Based on {summary.totalReviews || 0} reviews
+                Dựa trên {summary.totalReviews || 0} đánh giá
               </p>
             </div>
             <div className="review-bars">

@@ -47,6 +47,14 @@ const getCategories = () =>
 // Thứ tự chuẩn cho sizes
 const SIZE_ORDER = ['S', 'M', 'L', 'XL', 'XXL'];
 
+// Shoe sizes (35-45)
+const SHOE_SIZES = [35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45].map((size, index) => ({
+  id: `shoe-${size}`,
+  value: String(size),
+  attributeId: SIZE_ATTRIBUTE_ID,
+  isShoeSize: true,
+}));
+
 const getAttributeOptions = async () => {
   const [colors, sizesRaw] = await Promise.all([
     AttributeValue.findAll({
@@ -74,7 +82,7 @@ const getAttributeOptions = async () => {
     return indexA - indexB;
   });
   
-  return { colors, sizes };
+  return { colors, sizes, shoeSizes: SHOE_SIZES };
 };
 
 const renderView = async (req, res, options = {}) => {
@@ -102,6 +110,7 @@ const renderView = async (req, res, options = {}) => {
     successMessage: options.successMessage || null,
     colorOptions: attributeOptions.colors,
     sizeOptions: attributeOptions.sizes,
+    shoeSizeOptions: attributeOptions.shoeSizes,
     inventorySnapshot: options.inventorySnapshot || null,
     currentUser: req.session?.user || null,
     theme: req.session?.theme || "light",

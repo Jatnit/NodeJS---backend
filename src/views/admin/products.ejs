@@ -1,3 +1,4 @@
+<!-- eslint-disable -->
 <!doctype html>
 <html lang="vi">
 
@@ -190,8 +191,50 @@
                                                                 <% } %>
                                                         </div>
                                                         <div class="mb-0">
+                                                            <!-- Variant Type Selector -->
+                                                            <div class="mb-3 p-3 border rounded-3 bg-white">
+                                                                <label class="form-label small fw-semibold text-muted mb-2">
+                                                                    <i class="bi bi-diagram-3 me-1"></i>LOẠI BIẾN THỂ SẢN PHẨM
+                                                                </label>
+                                                                <div class="d-flex flex-wrap gap-2">
+                                                                    <div class="form-check form-check-inline">
+                                                                        <input class="form-check-input" type="radio" name="variantType" 
+                                                                            id="variantTypeClothing" value="clothing" checked>
+                                                                        <label class="form-check-label small" for="variantTypeClothing">
+                                                                            <i class="bi bi-person-standing me-1"></i>Quần áo 
+                                                                            <span class="text-muted">(Màu + Size)</span>
+                                                                        </label>
+                                                                    </div>
+                                                                    <div class="form-check form-check-inline">
+                                                                        <input class="form-check-input" type="radio" name="variantType" 
+                                                                            id="variantTypeShoes" value="shoes">
+                                                                        <label class="form-check-label small" for="variantTypeShoes">
+                                                                            <i class="bi bi-gem me-1"></i>Giày dép 
+                                                                            <span class="text-muted">(Chỉ Size số)</span>
+                                                                        </label>
+                                                                    </div>
+                                                                    <div class="form-check form-check-inline">
+                                                                        <input class="form-check-input" type="radio" name="variantType" 
+                                                                            id="variantTypeAccessory" value="accessory">
+                                                                        <label class="form-check-label small" for="variantTypeAccessory">
+                                                                            <i class="bi bi-bag me-1"></i>Phụ kiện 
+                                                                            <span class="text-muted">(Chỉ Màu)</span>
+                                                                        </label>
+                                                                    </div>
+                                                                    <div class="form-check form-check-inline">
+                                                                        <input class="form-check-input" type="radio" name="variantType" 
+                                                                            id="variantTypeSimple" value="simple">
+                                                                        <label class="form-check-label small" for="variantTypeSimple">
+                                                                            <i class="bi bi-box me-1"></i>Đơn giản 
+                                                                            <span class="text-muted">(Không biến thể)</span>
+                                                                        </label>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+
+                                                            <!-- Variant Inventory Section -->
                                                             <label class="form-label small fw-semibold text-muted">
-                                                                <i class="bi bi-palette me-1"></i>MÀU SẮC & TỒN KHO
+                                                                <i class="bi bi-palette me-1"></i>BIẾN THỂ & TỒN KHO
                                                             </label>
                                                             <div id="color-inventory-list"
                                                                 class="d-flex flex-column gap-3">
@@ -220,7 +263,7 @@
                                                                             <i class="bi bi-trash"></i>
                                                                         </button>
                                                                     </div>
-                                                                    <!-- Bottom row: Size inventory table -->
+                                                                    <!-- Bottom row: Size inventory table (for clothing/shoes) -->
                                                                     <div class="size-inventory-row">
                                                                         <div class="d-flex gap-2 flex-wrap">
                                                                             <% sizeOptions.forEach(function(size) { %>
@@ -242,6 +285,36 @@
                                                                                         style="font-size: 11px;">
                                                                                 </div>
                                                                                 <% }) %>
+                                                                        </div>
+                                                                    </div>
+                                                                    
+                                                                    <!-- Accessory row: Only quantity (no size) -->
+                                                                    <div class="accessory-inventory-row" style="display: none;">
+                                                                        <div class="d-flex gap-2 flex-wrap">
+                                                                            <div class="text-center p-2 bg-light rounded" style="min-width: 120px;">
+                                                                                <div class="small fw-semibold text-muted mb-1">Giá</div>
+                                                                                <input type="number" step="1000" 
+                                                                                    class="form-control form-control-sm accessory-price-input"
+                                                                                    placeholder="Giá" style="font-size: 11px;">
+                                                                            </div>
+                                                                            <div class="text-center p-2 bg-light rounded" style="min-width: 100px;">
+                                                                                <div class="small fw-semibold text-muted mb-1">Số lượng</div>
+                                                                                <input type="number" min="0" 
+                                                                                    class="form-control form-control-sm accessory-stock-input"
+                                                                                    placeholder="SL" style="font-size: 11px;">
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                    
+                                                                    <!-- Simple product row: Just quantity -->
+                                                                    <div class="simple-inventory-row" style="display: none;">
+                                                                        <div class="d-flex gap-2">
+                                                                            <div class="text-center p-3 bg-light rounded flex-grow-1">
+                                                                                <div class="small fw-semibold text-muted mb-2">Số lượng tồn kho</div>
+                                                                                <input type="number" min="0" name="simpleStock"
+                                                                                    class="form-control form-control-sm simple-stock-input text-center"
+                                                                                    placeholder="Nhập số lượng" style="max-width: 150px; margin: 0 auto;">
+                                                                            </div>
                                                                         </div>
                                                                     </div>
                                                                 </div>
@@ -556,6 +629,144 @@
                             list.appendChild(clone);
                             bindBlockEvents(clone);
                         });
+                    })();
+                </script>
+
+                <!-- Variant Type Handler Script -->
+                <script>
+                    (function() {
+                        const variantRadios = document.querySelectorAll('input[name="variantType"]');
+                        const colorInventoryList = document.getElementById('color-inventory-list');
+                        const addColorBtn = document.getElementById('addColorInventoryBlock');
+                        
+                        if (!variantRadios.length || !colorInventoryList) return;
+
+                        // Size data - with fallback for undefined
+                        const clothingSizes = <%- JSON.stringify(sizeOptions || []) %>;
+                        const shoeSizes = <%- JSON.stringify(shoeSizeOptions || []) %>;
+
+                        const generateSizeCells = (sizes) => {
+                            return sizes.map(size => `
+                                <div class="size-cell text-center p-2 bg-light rounded" style="min-width: 80px; flex: 1;">
+                                    <div class="small fw-semibold text-muted mb-1">${size.value}</div>
+                                    <input type="number" step="1000" class="form-control form-control-sm mb-1 price-input"
+                                        placeholder="Giá" data-size-id="${size.id}" style="font-size: 11px;">
+                                    <input type="number" min="0" class="form-control form-control-sm stock-input"
+                                        placeholder="SL" data-size-id="${size.id}" style="font-size: 11px;">
+                                </div>
+                            `).join('');
+                        };
+
+                        const updateSizeCells = (variantType) => {
+                            const blocks = colorInventoryList.querySelectorAll('.color-inventory-block');
+                            const sizes = variantType === 'shoes' ? shoeSizes : clothingSizes;
+                            
+                            blocks.forEach(block => {
+                                const sizeRow = block.querySelector('.size-inventory-row .d-flex');
+                                if (sizeRow) {
+                                    sizeRow.innerHTML = generateSizeCells(sizes);
+                                }
+                            });
+                        };
+
+                        const updateVariantUI = (variantType) => {
+                            const blocks = colorInventoryList.querySelectorAll('.color-inventory-block');
+                            
+                            blocks.forEach(block => {
+                                const colorSelect = block.querySelector('select[name^="colorImageColorIds"]');
+                                const colorSelectContainer = colorSelect?.closest('.d-flex');
+                                const sizeRow = block.querySelector('.size-inventory-row');
+                                const accessoryRow = block.querySelector('.accessory-inventory-row');
+                                const simpleRow = block.querySelector('.simple-inventory-row');
+                                const fileInput = block.querySelector('input[type="file"]');
+                                const removeBtn = block.querySelector('.remove-color-block');
+
+                                // Hide all variant rows first
+                                if (sizeRow) sizeRow.style.display = 'none';
+                                if (accessoryRow) accessoryRow.style.display = 'none';
+                                if (simpleRow) simpleRow.style.display = 'none';
+
+                                switch(variantType) {
+                                    case 'clothing':
+                                        // Show both color and size
+                                        if (colorSelectContainer) {
+                                            colorSelectContainer.style.display = '';
+                                            colorSelect.style.display = '';
+                                            if (fileInput) fileInput.style.display = '';
+                                            if (removeBtn) removeBtn.style.display = '';
+                                        }
+                                        if (sizeRow) sizeRow.style.display = '';
+                                        if (addColorBtn) addColorBtn.style.display = '';
+                                        updateSizeCells('clothing');
+                                        break;
+
+                                    case 'shoes':
+                                        // Only size (no color)
+                                        if (colorSelectContainer) {
+                                            colorSelectContainer.style.display = 'none';
+                                        }
+                                        if (sizeRow) sizeRow.style.display = '';
+                                        if (addColorBtn) addColorBtn.style.display = 'none';
+                                        updateSizeCells('shoes');
+                                        break;
+
+                                    case 'accessory':
+                                        // Only color (no size) - show accessory row for quantity
+                                        if (colorSelectContainer) {
+                                            colorSelectContainer.style.display = '';
+                                            colorSelect.style.display = '';
+                                            if (fileInput) fileInput.style.display = '';
+                                            if (removeBtn) removeBtn.style.display = '';
+                                        }
+                                        if (accessoryRow) accessoryRow.style.display = '';
+                                        if (addColorBtn) addColorBtn.style.display = '';
+                                        break;
+
+                                    case 'simple':
+                                        // No variants at all - show simple row
+                                        if (colorSelectContainer) {
+                                            colorSelectContainer.style.display = 'none';
+                                        }
+                                        if (simpleRow) simpleRow.style.display = '';
+                                        if (addColorBtn) addColorBtn.style.display = 'none';
+                                        break;
+                                }
+                            });
+
+                            // Update the label
+                            const labelEl = colorInventoryList.previousElementSibling;
+                            if (labelEl) {
+                                const labels = {
+                                    'clothing': '<i class="bi bi-palette me-1"></i>BIẾN THỂ MÀU & SIZE',
+                                    'shoes': '<i class="bi bi-rulers me-1"></i>BIẾN THỂ SIZE GIÀY (35-45)',
+                                    'accessory': '<i class="bi bi-palette me-1"></i>BIẾN THỂ MÀU SẮC',
+                                    'simple': '<i class="bi bi-box me-1"></i>TỒN KHO ĐƠN GIẢN'
+                                };
+                                labelEl.innerHTML = labels[variantType] || labels['clothing'];
+                            }
+
+                            // Show/hide the entire variant section for simple products
+                            if (variantType === 'simple') {
+                                colorInventoryList.style.opacity = '1';
+                                colorInventoryList.style.pointerEvents = '';
+                            } else {
+                                colorInventoryList.style.opacity = '1';
+                                colorInventoryList.style.pointerEvents = '';
+                            }
+                        };
+
+                        // Listen for variant type changes
+                        variantRadios.forEach(radio => {
+                            radio.addEventListener('change', (e) => {
+                                updateVariantUI(e.target.value);
+                            });
+                        });
+
+                        // Initial setup
+                        const checkedRadio = document.querySelector('input[name="variantType"]:checked');
+                        if (checkedRadio) {
+                            updateVariantUI(checkedRadio.value);
+                        }
                     })();
                 </script>
 
