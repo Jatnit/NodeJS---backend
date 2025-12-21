@@ -447,49 +447,75 @@
                                             <div class="section-header">
                                                 <h3 class="section-title"><i class="bi bi-geo-alt me-2"
                                                         style="color: var(--color-steel);"></i>Địa chỉ nhận hàng</h3>
+                                                <button class="btn-action" onclick="openAddressModal()">
+                                                    <i class="bi bi-plus-lg"></i>Thêm mới
+                                                </button>
                                             </div>
+                                            <div id="addressList">
                                             <% if (!addressList.length) { %>
                                                 <div class="empty-state">
                                                     <i class="bi bi-geo"></i>
                                                     <p class="mb-0">Bạn chưa có địa chỉ nhận hàng nào.</p>
                                                 </div>
-                                                <% } else { %>
-                                                    <% addressList.forEach(function(address) { %>
-                                                        <div class="address-item">
-                                                            <div
-                                                                class="d-flex justify-content-between align-items-start">
-                                                                <div>
-                                                                    <p class="address-name">
-                                                                        <i class="bi bi-person me-2"></i>
-                                                                        <%= address.recipientName %>
-                                                                    </p>
-                                                                    <p class="address-detail mb-1">
-                                                                        <i class="bi bi-telephone me-2"></i>
-                                                                        <%= address.phoneNumber %>
-                                                                    </p>
-                                                                    <p class="address-detail mb-0">
-                                                                        <i class="bi bi-pin-map me-2"></i>
-                                                                        <%= address.fullAddress %>
-                                                                    </p>
-                                                                </div>
+                                            <% } else { %>
+                                                <% addressList.forEach(function(address) { %>
+                                                    <div class="address-item" data-address-id="<%= address.id %>">
+                                                        <div
+                                                            class="d-flex justify-content-between align-items-start">
+                                                            <div>
+                                                                <p class="address-name">
+                                                                    <i class="bi bi-person me-2"></i>
+                                                                    <%= address.recipientName %>
+                                                                </p>
+                                                                <p class="address-detail mb-1">
+                                                                    <i class="bi bi-telephone me-2"></i>
+                                                                    <%= address.phoneNumber %>
+                                                                </p>
+                                                                <p class="address-detail mb-0">
+                                                                    <i class="bi bi-pin-map me-2"></i>
+                                                                    <%= address.fullAddress %>
+                                                                </p>
+                                                            </div>
+                                                            <div class="d-flex flex-column align-items-end gap-2">
                                                                 <% if (address.isDefault) { %>
                                                                     <span class="default-badge">Mặc định</span>
+                                                                <% } %>
+                                                                <div class="d-flex gap-1">
+                                                                    <% if (!address.isDefault) { %>
+                                                                    <button class="btn btn-sm btn-outline-secondary" onclick="setDefaultAddress(<%= address.id %>)" title="Đặt mặc định">
+                                                                        <i class="bi bi-star"></i>
+                                                                    </button>
                                                                     <% } %>
+                                                                    <button class="btn btn-sm btn-outline-primary" onclick='editAddress(<%= JSON.stringify(address) %>)' title="Sửa">
+                                                                        <i class="bi bi-pencil"></i>
+                                                                    </button>
+                                                                    <button class="btn btn-sm btn-outline-danger" onclick="deleteAddress(<%= address.id %>)" title="Xóa">
+                                                                        <i class="bi bi-trash"></i>
+                                                                    </button>
+                                                                </div>
                                                             </div>
                                                         </div>
-                                                        <% }) %>
-                                                            <% } %>
+                                                    </div>
+                                                <% }) %>
+                                            <% } %>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
 
                                 <!-- Orders -->
+                                <% 
+                                const activeOrders = orderList.filter(o => !o.isCancelled);
+                                const cancelledOrders = orderList.filter(o => o.isCancelled);
+                                %>
+                                
+                                <!-- Active Orders -->
                                 <div class="orders-section">
                                     <div class="section-header mb-4">
                                         <h3 class="section-title"><i class="bi bi-box-seam me-2"
-                                                style="color: var(--color-steel);"></i>Đơn hàng gần đây</h3>
+                                                style="color: var(--color-steel);"></i>Đơn hàng</h3>
                                     </div>
-                                    <% if (!orderList.length) { %>
+                                    <% if (!activeOrders.length) { %>
                                         <div class="section-card">
                                             <div class="empty-state">
                                                 <i class="bi bi-cart-x"></i>
@@ -500,77 +526,479 @@
                                                 </a>
                                             </div>
                                         </div>
-                                        <% } else { %>
-                                            <% orderList.forEach(function(order) { %>
-                                                <div class="order-item">
-                                                    <div
-                                                        class="d-flex flex-column flex-md-row justify-content-between gap-3">
-                                                        <div>
-                                                            <p class="order-code mb-1">
-                                                                <i class="bi bi-receipt me-2"></i>Đơn hàng #<%=
-                                                                    order.code %>
-                                                            </p>
-                                                            <p class="order-date mb-0">
-                                                                <i class="bi bi-calendar3 me-1"></i>
-                                                                Ngày đặt: <%= order.orderDate ? new
-                                                                    Date(order.orderDate).toLocaleDateString('vi-VN', {
-                                                                    day: '2-digit' , month: '2-digit' , year: 'numeric'
-                                                                    }) : 'Chưa cập nhật' %>
-                                                            </p>
-                                                        </div>
-                                                        <div class="text-md-end">
-                                                            <p class="order-amount mb-2">
-                                                                <%= (order.totalAmount || 0).toLocaleString('vi-VN', {
-                                                                    style: 'currency' , currency: 'VND' }) %>
-                                                            </p>
-                                                            <% const statusClass=order.status==="Hoàn thành" ? "success"
-                                                                : order.status==="Đang giao" ? "info" :
-                                                                order.status==="Đã hủy" ? "danger" : "warning" ; %>
-                                                                <span class="status-badge <%= statusClass %>">
-                                                                    <%= order.status %>
-                                                                </span>
-                                                                <div class="mt-2">
-                                                                    <a href="/user/orders/<%= order.id %>"
-                                                                        class="btn-action"
-                                                                        style="padding: 0.5rem 1rem; font-size: 0.85rem;">
-                                                                        <i class="bi bi-eye"></i>Chi tiết
-                                                                    </a>
-                                                                </div>
-                                                        </div>
+                                    <% } else { %>
+                                        <% activeOrders.forEach(function(order) { %>
+                                            <div class="order-item">
+                                                <div
+                                                    class="d-flex flex-column flex-md-row justify-content-between gap-3">
+                                                    <div>
+                                                        <p class="order-code mb-1">
+                                                            <i class="bi bi-receipt me-2"></i>Đơn hàng #<%=
+                                                                order.code %>
+                                                        </p>
+                                                        <p class="order-date mb-0">
+                                                            <i class="bi bi-calendar3 me-1"></i>
+                                                            Ngày đặt: <%= order.orderDate ? new
+                                                                Date(order.orderDate).toLocaleDateString('vi-VN', {
+                                                                day: '2-digit' , month: '2-digit' , year: 'numeric'
+                                                                }) : 'Chưa cập nhật' %>
+                                                        </p>
                                                     </div>
-                                                    <div class="order-progress">
-                                                        <% (order.progress || []).forEach(function(step) { %>
-                                                            <div class="progress-node 
-                                            <%= step.isCompleted ? 'completed' : '' %> 
-                                            <%= step.isActive ? 'active' : '' %> 
-                                            <%= order.isCancelled ? 'is-cancelled' : '' %>">
-                                                                <div class="progress-dot">
-                                                                    <% if (step.isCompleted) { %><i
-                                                                            class="bi bi-check"></i>
-                                                                        <% } %>
-                                                                </div>
-                                                                <div>
-                                                                    <%= step.label %>
-                                                                </div>
+                                                    <div class="text-md-end">
+                                                        <p class="order-amount mb-2">
+                                                            <%= (order.totalAmount || 0).toLocaleString('vi-VN', {
+                                                                style: 'currency' , currency: 'VND' }) %>
+                                                        </p>
+                                                        <% const statusClass=order.status==="Hoàn thành" ? "success"
+                                                            : order.status==="Đang giao" ? "info" : "warning" ; %>
+                                                            <span class="status-badge <%= statusClass %>">
+                                                                <%= order.status %>
+                                                            </span>
+                                                            <div class="mt-2">
+                                                                <a href="/user/orders/<%= order.id %>"
+                                                                    class="btn-action"
+                                                                    style="padding: 0.5rem 1rem; font-size: 0.85rem;">
+                                                                    <i class="bi bi-eye"></i>Chi tiết
+                                                                </a>
                                                             </div>
-                                                            <% }) %>
                                                     </div>
-                                                    <% if (order.isCancelled) { %>
-                                                        <div class="alert alert-warning border-0 mt-3 mb-0">
-                                                            <i class="bi bi-exclamation-triangle me-2"></i>
-                                                            Đơn hàng đã bị hủy. Liên hệ CSKH nếu cần hỗ trợ.
-                                                        </div>
-                                                        <% } %>
                                                 </div>
-                                                <% }) %>
-                                                    <% } %>
+                                                <div class="order-progress">
+                                                    <% (order.progress || []).forEach(function(step) { %>
+                                                        <div class="progress-node 
+                                            <%= step.isCompleted ? 'completed' : '' %> 
+                                            <%= step.isActive ? 'active' : '' %>">
+                                                            <div class="progress-dot">
+                                                                <% if (step.isCompleted) { %><i
+                                                                        class="bi bi-check"></i>
+                                                                    <% } %>
+                                                            </div>
+                                                            <div>
+                                                                <%= step.label %>
+                                                            </div>
+                                                        </div>
+                                                    <% }) %>
+                                                </div>
+                                            </div>
+                                        <% }) %>
+                                    <% } %>
                                 </div>
+                                
+                                <!-- Cancelled Orders -->
+                                <% if (cancelledOrders.length) { %>
+                                <div class="orders-section" style="margin-top: 2rem;">
+                                    <div class="section-header mb-4">
+                                        <h3 class="section-title" style="color: #dc2626;"><i class="bi bi-x-circle me-2"></i>Đã hủy</h3>
+                                    </div>
+                                    <% cancelledOrders.forEach(function(order) { %>
+                                        <div class="order-item" style="opacity: 0.7; border-left: 4px solid #dc2626;">
+                                            <div
+                                                class="d-flex flex-column flex-md-row justify-content-between gap-3">
+                                                <div>
+                                                    <p class="order-code mb-1">
+                                                        <i class="bi bi-receipt me-2"></i>Đơn hàng #<%=
+                                                            order.code %>
+                                                    </p>
+                                                    <p class="order-date mb-0">
+                                                        <i class="bi bi-calendar3 me-1"></i>
+                                                        Ngày đặt: <%= order.orderDate ? new
+                                                            Date(order.orderDate).toLocaleDateString('vi-VN', {
+                                                            day: '2-digit' , month: '2-digit' , year: 'numeric'
+                                                            }) : 'Chưa cập nhật' %>
+                                                    </p>
+                                                </div>
+                                                <div class="text-md-end">
+                                                    <p class="order-amount mb-2">
+                                                        <%= (order.totalAmount || 0).toLocaleString('vi-VN', {
+                                                            style: 'currency' , currency: 'VND' }) %>
+                                                    </p>
+                                                    <span class="status-badge danger">
+                                                        Đã hủy
+                                                    </span>
+                                                    <div class="mt-2">
+                                                        <a href="/user/orders/<%= order.id %>"
+                                                            class="btn-action"
+                                                            style="padding: 0.5rem 1rem; font-size: 0.85rem; background: #6c737e;">
+                                                            <i class="bi bi-eye"></i>Chi tiết
+                                                        </a>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="alert alert-danger border-0 mt-3 mb-0" style="background: rgba(220, 38, 38, 0.1);">
+                                                <i class="bi bi-x-circle me-2"></i>
+                                                Đơn hàng đã bị hủy. Liên hệ CSKH nếu cần hỗ trợ.
+                                            </div>
+                                        </div>
+                                    <% }) %>
+                                </div>
+                                <% } %>
                                 <% } %>
             </div>
         </main>
+        
+        <!-- Address Modal -->
+        <div class="modal fade" id="addressModal" tabindex="-1" aria-labelledby="addressModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content" style="border-radius: 20px; border: none;">
+                    <div class="modal-header" style="border-bottom: none; padding: 1.5rem 1.5rem 0;">
+                        <h5 class="modal-title" id="addressModalLabel" style="font-family: var(--font-display); font-size: 1.5rem;">
+                            Thêm địa chỉ mới
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body" style="padding: 1.5rem;">
+                        <form id="addressForm">
+                            <input type="hidden" id="addressId" name="addressId" value="">
+                            <div class="mb-3">
+                                <label for="recipientName" class="form-label">Tên người nhận <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="recipientName" name="recipientName" required placeholder="Nguyễn Văn A">
+                            </div>
+                            <div class="mb-3">
+                                <label for="phoneNumber" class="form-label">Số điện thoại <span class="text-danger">*</span></label>
+                                <input type="tel" class="form-control" id="phoneNumber" name="phoneNumber" required placeholder="0912345678">
+                            </div>
+                            <div class="mb-3">
+                                <label for="addressLine" class="form-label">Địa chỉ chi tiết <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="addressLine" name="addressLine" required placeholder="Số nhà, tên đường...">
+                            </div>
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <label for="city" class="form-label">Tỉnh/Thành phố <span class="text-danger">*</span></label>
+                                    <select class="form-select" id="city" name="city" required>
+                                        <option value="">Chọn Tỉnh/TP</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label for="district" class="form-label">Quận/Huyện <span class="text-danger">*</span></label>
+                                    <select class="form-select" id="district" name="district" required disabled>
+                                        <option value="">Chọn Quận/Huyện</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label for="ward" class="form-label">Phường/Xã <span class="text-danger">*</span></label>
+                                    <select class="form-select" id="ward" name="ward" required disabled>
+                                        <option value="">Chọn Phường/Xã</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-check mb-3">
+                                <input class="form-check-input" type="checkbox" id="isDefault" name="isDefault">
+                                <label class="form-check-label" for="isDefault">
+                                    Đặt làm địa chỉ mặc định
+                                </label>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer" style="border-top: none; padding: 0 1.5rem 1.5rem;">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal" style="border-radius: 12px;">Hủy</button>
+                        <button type="button" class="btn-action" onclick="saveAddress()" id="saveAddressBtn">
+                            <i class="bi bi-check-lg me-1"></i>Lưu địa chỉ
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
         <%- include('../partials/footer') %>
 
-            <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+        
+        <script>
+            const VN_API = 'https://provinces.open-api.vn/api';
+            let addressModal;
+            let provincesData = [];
+            let districtsData = [];
+            let wardsData = [];
+            
+            document.addEventListener('DOMContentLoaded', async function() {
+                addressModal = new bootstrap.Modal(document.getElementById('addressModal'));
+                
+                // Load provinces on page load
+                await loadProvinces();
+                
+                // Setup event listeners
+                document.getElementById('city').addEventListener('change', onProvinceChange);
+                document.getElementById('district').addEventListener('change', onDistrictChange);
+            });
+            
+            async function loadProvinces() {
+                try {
+                    const response = await fetch(`${VN_API}/p/`);
+                    provincesData = await response.json();
+                    
+                    const citySelect = document.getElementById('city');
+                    citySelect.innerHTML = '<option value="">Chọn Tỉnh/TP</option>';
+                    provincesData.forEach(province => {
+                        const option = document.createElement('option');
+                        option.value = province.name;
+                        option.dataset.code = province.code;
+                        option.textContent = province.name;
+                        citySelect.appendChild(option);
+                    });
+                } catch (error) {
+                    console.error('Error loading provinces:', error);
+                }
+            }
+            
+            async function onProvinceChange() {
+                const citySelect = document.getElementById('city');
+                const districtSelect = document.getElementById('district');
+                const wardSelect = document.getElementById('ward');
+                
+                // Reset district and ward
+                districtSelect.innerHTML = '<option value="">Chọn Quận/Huyện</option>';
+                districtSelect.disabled = true;
+                wardSelect.innerHTML = '<option value="">Chọn Phường/Xã</option>';
+                wardSelect.disabled = true;
+                
+                const selectedOption = citySelect.options[citySelect.selectedIndex];
+                const provinceCode = selectedOption?.dataset?.code;
+                
+                if (!provinceCode) return;
+                
+                try {
+                    const response = await fetch(`${VN_API}/p/${provinceCode}?depth=2`);
+                    const data = await response.json();
+                    districtsData = data.districts || [];
+                    
+                    districtsData.forEach(district => {
+                        const option = document.createElement('option');
+                        option.value = district.name;
+                        option.dataset.code = district.code;
+                        option.textContent = district.name;
+                        districtSelect.appendChild(option);
+                    });
+                    
+                    districtSelect.disabled = false;
+                } catch (error) {
+                    console.error('Error loading districts:', error);
+                }
+            }
+            
+            async function onDistrictChange() {
+                const districtSelect = document.getElementById('district');
+                const wardSelect = document.getElementById('ward');
+                
+                // Reset ward
+                wardSelect.innerHTML = '<option value="">Chọn Phường/Xã</option>';
+                wardSelect.disabled = true;
+                
+                const selectedOption = districtSelect.options[districtSelect.selectedIndex];
+                const districtCode = selectedOption?.dataset?.code;
+                
+                if (!districtCode) return;
+                
+                try {
+                    const response = await fetch(`${VN_API}/d/${districtCode}?depth=2`);
+                    const data = await response.json();
+                    wardsData = data.wards || [];
+                    
+                    wardsData.forEach(ward => {
+                        const option = document.createElement('option');
+                        option.value = ward.name;
+                        option.dataset.code = ward.code;
+                        option.textContent = ward.name;
+                        wardSelect.appendChild(option);
+                    });
+                    
+                    wardSelect.disabled = false;
+                } catch (error) {
+                    console.error('Error loading wards:', error);
+                }
+            }
+            
+            function openAddressModal() {
+                document.getElementById('addressModalLabel').textContent = 'Thêm địa chỉ mới';
+                document.getElementById('addressForm').reset();
+                document.getElementById('addressId').value = '';
+                
+                // Reset selects
+                document.getElementById('district').innerHTML = '<option value="">Chọn Quận/Huyện</option>';
+                document.getElementById('district').disabled = true;
+                document.getElementById('ward').innerHTML = '<option value="">Chọn Phường/Xã</option>';
+                document.getElementById('ward').disabled = true;
+                
+                addressModal.show();
+            }
+            
+            async function editAddress(address) {
+                document.getElementById('addressModalLabel').textContent = 'Sửa địa chỉ';
+                document.getElementById('addressId').value = address.id;
+                document.getElementById('recipientName').value = address.recipientName || '';
+                document.getElementById('phoneNumber').value = address.phoneNumber || '';
+                document.getElementById('addressLine').value = address.addressLine || '';
+                document.getElementById('isDefault').checked = address.isDefault || false;
+                
+                // Đảm bảo provinces đã được load
+                if (provincesData.length === 0) {
+                    await loadProvinces();
+                }
+                
+                const citySelect = document.getElementById('city');
+                const districtSelect = document.getElementById('district');
+                const wardSelect = document.getElementById('ward');
+                
+                // Tìm và chọn Tỉnh/TP
+                let cityFound = false;
+                for (let i = 0; i < citySelect.options.length; i++) {
+                    if (citySelect.options[i].value === address.city) {
+                        citySelect.selectedIndex = i;
+                        cityFound = true;
+                        break;
+                    }
+                }
+                
+                if (cityFound && address.city) {
+                    await onProvinceChange();
+                    
+                    // Tìm và chọn Quận/Huyện
+                    let districtFound = false;
+                    for (let i = 0; i < districtSelect.options.length; i++) {
+                        if (districtSelect.options[i].value === address.district) {
+                            districtSelect.selectedIndex = i;
+                            districtFound = true;
+                            break;
+                        }
+                    }
+                    
+                    if (districtFound && address.district) {
+                        await onDistrictChange();
+                        
+                        // Tìm và chọn Phường/Xã
+                        for (let i = 0; i < wardSelect.options.length; i++) {
+                            if (wardSelect.options[i].value === address.ward) {
+                                wardSelect.selectedIndex = i;
+                                break;
+                            }
+                        }
+                    } else if (address.district) {
+                        // Fallback: thêm option với giá trị cũ nếu không tìm thấy
+                        const opt = document.createElement('option');
+                        opt.value = address.district;
+                        opt.textContent = address.district;
+                        opt.selected = true;
+                        districtSelect.appendChild(opt);
+                        districtSelect.disabled = false;
+                        
+                        // Thêm ward cũ
+                        if (address.ward) {
+                            const wOpt = document.createElement('option');
+                            wOpt.value = address.ward;
+                            wOpt.textContent = address.ward;
+                            wOpt.selected = true;
+                            wardSelect.appendChild(wOpt);
+                            wardSelect.disabled = false;
+                        }
+                    }
+                } else if (address.city) {
+                    // Fallback: thêm option với giá trị cũ nếu không tìm thấy
+                    const opt = document.createElement('option');
+                    opt.value = address.city;
+                    opt.textContent = address.city;
+                    opt.selected = true;
+                    citySelect.appendChild(opt);
+                    
+                    if (address.district) {
+                        const dOpt = document.createElement('option');
+                        dOpt.value = address.district;
+                        dOpt.textContent = address.district;
+                        dOpt.selected = true;
+                        districtSelect.appendChild(dOpt);
+                        districtSelect.disabled = false;
+                    }
+                    if (address.ward) {
+                        const wOpt = document.createElement('option');
+                        wOpt.value = address.ward;
+                        wOpt.textContent = address.ward;
+                        wOpt.selected = true;
+                        wardSelect.appendChild(wOpt);
+                        wardSelect.disabled = false;
+                    }
+                }
+                
+                addressModal.show();
+            }
+            
+            async function saveAddress() {
+                const form = document.getElementById('addressForm');
+                if (!form.checkValidity()) {
+                    form.reportValidity();
+                    return;
+                }
+                
+                const addressId = document.getElementById('addressId').value;
+                const data = {
+                    recipientName: document.getElementById('recipientName').value,
+                    phoneNumber: document.getElementById('phoneNumber').value,
+                    addressLine: document.getElementById('addressLine').value,
+                    ward: document.getElementById('ward').value,
+                    district: document.getElementById('district').value,
+                    city: document.getElementById('city').value,
+                    isDefault: document.getElementById('isDefault').checked,
+                };
+                
+                const url = addressId ? `/user/addresses/${addressId}` : '/user/addresses';
+                
+                try {
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(data),
+                    });
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        addressModal.hide();
+                        location.reload();
+                    } else {
+                        alert(result.message || 'Có lỗi xảy ra.');
+                    }
+                } catch (error) {
+                    console.error('Error saving address:', error);
+                    alert('Có lỗi xảy ra. Vui lòng thử lại.');
+                }
+            }
+            
+            async function deleteAddress(id) {
+                if (!confirm('Bạn có chắc chắn muốn xóa địa chỉ này?')) return;
+                
+                try {
+                    const response = await fetch(`/user/addresses/${id}/delete`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                    });
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        location.reload();
+                    } else {
+                        alert(result.message || 'Có lỗi xảy ra.');
+                    }
+                } catch (error) {
+                    console.error('Error deleting address:', error);
+                    alert('Có lỗi xảy ra. Vui lòng thử lại.');
+                }
+            }
+            
+            async function setDefaultAddress(id) {
+                try {
+                    const response = await fetch(`/user/addresses/${id}/set-default`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                    });
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        location.reload();
+                    } else {
+                        alert(result.message || 'Có lỗi xảy ra.');
+                    }
+                } catch (error) {
+                    console.error('Error setting default address:', error);
+                    alert('Có lỗi xảy ra. Vui lòng thử lại.');
+                }
+            }
+        </script>
 </body>
 
 </html>

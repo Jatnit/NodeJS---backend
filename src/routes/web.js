@@ -81,7 +81,14 @@ const initWebRoutes = (app) => {
   // Audit Logs - Super Admin only
   router.get("/admin/audit-logs", homeController.renderAuditLogs);
 
+  // User profile
   router.get("/user/profile/:id", homeController.handleUserProfile);
+
+  // Address management API
+  router.post("/user/addresses", homeController.handleAddAddress);
+  router.post("/user/addresses/:id", homeController.handleUpdateAddress);
+  router.post("/user/addresses/:id/delete", homeController.handleDeleteAddress);
+  router.post("/user/addresses/:id/set-default", homeController.handleSetDefaultAddress);
 
   return app.use("/", router);
 };

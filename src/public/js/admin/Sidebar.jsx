@@ -113,12 +113,23 @@ const sidebarStyles = `
     flex-shrink: 0;
   }
 
+  /* Collapsed header - center toggle button */
+  .admin-sidebar.collapsed .sidebar-header {
+    justify-content: center;
+    padding: 1rem 0.5rem;
+  }
+
   .admin-sidebar .sidebar-brand {
     display: flex;
     align-items: center;
     gap: 0.5rem;
     overflow: hidden;
     white-space: nowrap;
+    transition: all 0.3s ease;
+  }
+
+  .admin-sidebar.collapsed .sidebar-brand {
+    display: none;
   }
 
   .admin-sidebar .sidebar-brand-text {
@@ -151,11 +162,11 @@ const sidebarStyles = `
   }
 
   .admin-sidebar .toggle-btn {
-    width: 32px;
-    height: 32px;
-    border-radius: 8px;
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
     border: none;
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.15);
     color: white;
     cursor: pointer;
     display: flex;
@@ -166,13 +177,22 @@ const sidebarStyles = `
   }
 
   .admin-sidebar .toggle-btn:hover {
-    background: rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.25);
+    transform: scale(1.05);
+  }
+
+  .admin-sidebar .toggle-btn i {
+    font-size: 1rem;
   }
 
   .admin-sidebar .sidebar-nav {
     flex: 1;
     padding: 1rem 0.75rem;
     overflow-y: auto;
+  }
+
+  .admin-sidebar.collapsed .sidebar-nav {
+    padding: 1rem 0.5rem;
   }
 
   .admin-sidebar .nav-section {
@@ -226,30 +246,44 @@ const sidebarStyles = `
   }
 
   .admin-sidebar .nav-link i {
-    font-size: 1.1rem;
-    min-width: 22px;
+    font-size: 1.2rem;
+    min-width: 24px;
     text-align: center;
     flex-shrink: 0;
   }
 
   .admin-sidebar .nav-link-text {
-    transition: opacity 0.2s ease;
+    transition: opacity 0.2s ease, width 0.3s ease;
   }
 
   .admin-sidebar.collapsed .nav-link-text {
     opacity: 0;
     width: 0;
+    overflow: hidden;
   }
 
   .admin-sidebar.collapsed .nav-link {
     justify-content: center;
-    padding: 0.7rem;
+    padding: 0.75rem;
+    margin: 0.25rem auto;
+    width: 46px;
+    height: 46px;
+    border-radius: 12px;
+  }
+
+  .admin-sidebar.collapsed .nav-link i {
+    margin: 0;
+    font-size: 1.3rem;
   }
 
   .admin-sidebar .sidebar-divider {
     border: 0;
     border-top: 1px solid rgba(255, 255, 255, 0.1);
     margin: 0.75rem 0;
+  }
+
+  .admin-sidebar.collapsed .sidebar-divider {
+    margin: 0.5rem 0.5rem;
   }
 
   .admin-sidebar .sidebar-footer {
@@ -259,11 +293,19 @@ const sidebarStyles = `
     flex-shrink: 0;
   }
 
+  .admin-sidebar.collapsed .sidebar-footer {
+    padding: 0.75rem 0.5rem;
+  }
+
   .admin-sidebar .user-info {
     display: flex;
     align-items: center;
     gap: 0.75rem;
     overflow: hidden;
+  }
+
+  .admin-sidebar.collapsed .user-info {
+    justify-content: center;
   }
 
   .admin-sidebar .user-avatar {
@@ -287,6 +329,7 @@ const sidebarStyles = `
   .admin-sidebar.collapsed .user-details {
     opacity: 0;
     width: 0;
+    display: none;
   }
 
   .admin-sidebar .user-name {
@@ -339,18 +382,33 @@ const sidebarStyles = `
     transform: translateY(-50%);
     background: #333;
     color: white;
-    padding: 0.4rem 0.75rem;
-    border-radius: 6px;
-    font-size: 0.75rem;
+    padding: 0.5rem 0.85rem;
+    border-radius: 8px;
+    font-size: 0.8rem;
     white-space: nowrap;
     opacity: 0;
     visibility: hidden;
     transition: all 0.2s ease;
     z-index: 1100;
     pointer-events: none;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
   }
 
-  .admin-sidebar.collapsed .nav-link:hover::after {
+  .admin-sidebar.collapsed .nav-link::before {
+    content: '';
+    position: absolute;
+    left: calc(100% + 4px);
+    top: 50%;
+    transform: translateY(-50%);
+    border: 6px solid transparent;
+    border-right-color: #333;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.2s ease;
+  }
+
+  .admin-sidebar.collapsed .nav-link:hover::after,
+  .admin-sidebar.collapsed .nav-link:hover::before {
     opacity: 1;
     visibility: visible;
   }

@@ -310,6 +310,7 @@ const getProducts = async (req, res) => {
     const minPrice = parseNumber(req.query.minPrice);
     const maxPrice = parseNumber(req.query.maxPrice);
     const sort = (req.query.sort || "newest").toLowerCase();
+    const searchTerm = (req.query.search || "").trim();
 
     let filteredProductIds = null;
 
@@ -342,6 +343,11 @@ const getProducts = async (req, res) => {
     const whereClause = { isActive: true };
     if (filteredProductIds) {
       whereClause.id = { [Op.in]: filteredProductIds };
+    }
+    
+    // Tìm kiếm theo tên sản phẩm
+    if (searchTerm) {
+      whereClause.name = { [Op.like]: `%${searchTerm}%` };
     }
 
     const categoryInclude = {

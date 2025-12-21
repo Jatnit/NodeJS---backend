@@ -12,16 +12,16 @@
         <div class="collapse navbar-collapse" id="navbarGlobal">
             <ul class="navbar-nav mx-auto gap-lg-4">
                 <li class="nav-item">
-                    <a class="nav-link" href="/#collections">Collections</a>
+                    <a class="nav-link" href="/#collections">Bộ sưu tập</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="/products">Danh mục sản phẩm</a>
+                    <a class="nav-link" href="/products">Sản phẩm</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="/#stories">Stories</a>
+                    <a class="nav-link" href="/#stories">Câu chuyện</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="/#shop">Shop</a>
+                    <a class="nav-link" href="/#shop">Cửa hàng</a>
                 </li>
             </ul>
 
@@ -33,7 +33,7 @@
                             <span class="user-avatar">
                                 <%= (currentUser.username || currentUser.email || 'U' ).charAt(0).toUpperCase() %>
                             </span>
-                            <span class="d-none d-md-inline ms-2">Xin chào, <%= currentUser.username ||
+                            <span class="d-none d-md-inline ms-2"><%= currentUser.username ||
                                     currentUser.email %></span>
                         </button>
                         <ul class="dropdown-menu dropdown-menu-end">
@@ -85,21 +85,22 @@
                         </ul>
                     </div>
                     <% } else { %>
-                        <a class="btn btn-outline-nav btn-sm" href="/signin">Đăng nhập</a>
-                        <a class="btn btn-dark btn-sm" href="/signup">Tạo tài khoản</a>
+                        <!-- Guest Actions - Modern Design -->
+                        <a class="btn btn-nav-ghost" href="/signin">
+                            <i class="bi bi-person me-1"></i>Đăng nhập
+                        </a>
+                        <a class="btn btn-nav-primary" href="/signup">
+                            <i class="bi bi-person-plus me-1"></i>Đăng ký
+                        </a>
                         <% } %>
 
+                            <!-- Cart Button - Modern Design -->
                             <button type="button" class="btn btn-cart" id="openCartDrawer">
                                 <i class="bi bi-bag"></i>
                                 <span class="cart-badge" id="cartCount">
                                     <%= (cartItems && cartItems.length) || 0 %>
                                 </span>
                             </button>
-
-                            <a class="btn btn-dark btn-sm btn-checkout" href="/checkout" <% if (!cartItems ||
-                                !cartItems.length) { %>disabled aria-disabled="true"<% } %>>
-                                    Checkout
-                            </a>
             </div>
         </div>
     </div>
@@ -298,6 +299,50 @@
         padding: 0 5px;
     }
 
+    /* Modern Nav Buttons */
+    .btn-nav-ghost {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        padding: 0.5rem 1rem;
+        font-size: 0.85rem;
+        font-weight: 500;
+        color: var(--app-text);
+        background: transparent;
+        border: none;
+        border-radius: 50px;
+        transition: all 0.2s ease;
+        text-decoration: none;
+    }
+
+    .btn-nav-ghost:hover {
+        background: var(--border-color);
+        color: var(--app-text);
+    }
+
+    .btn-nav-primary {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        padding: 0.5rem 1.25rem;
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: #fff;
+        background: linear-gradient(135deg, #1f2937 0%, #374151 100%);
+        border: none;
+        border-radius: 50px;
+        transition: all 0.2s ease;
+        text-decoration: none;
+        box-shadow: 0 2px 8px rgba(31, 41, 55, 0.25);
+    }
+
+    .btn-nav-primary:hover {
+        background: linear-gradient(135deg, #111827 0%, #1f2937 100%);
+        color: #fff;
+        box-shadow: 0 4px 12px rgba(31, 41, 55, 0.35);
+        transform: translateY(-1px);
+    }
+
     .btn-outline-nav {
         border: 1px solid var(--border-color);
         color: var(--app-text);
@@ -310,12 +355,6 @@
         background: var(--app-text);
         color: var(--app-bg);
         border-color: var(--app-text);
-    }
-
-    .btn-checkout {
-        border-radius: 8px;
-        font-size: 0.85rem;
-        padding: 0.5rem 1rem;
     }
 
     /* ===== CART DRAWER ===== */

@@ -37,17 +37,24 @@ const getSwatchHex = (label) => {
 };
 
 const COLOR_SWATCHES = [
-  { id: 3, label: "Yellow", hex: "#F3C257" },
-  { id: 2, label: "Black", hex: "#111111" },
-  { id: 1, label: "White", hex: "#F5F5F5", border: "#D9D9D9" },
+  { id: 1, label: "Trắng", hex: "#F7F7F7", border: "#D9D9D9" },
+  { id: 2, label: "Đen", hex: "#111111" },
+  { id: 3, label: "Xanh Navy", hex: "#000080" },
+  { id: 4, label: "Xám", hex: "#808080" },
+  { id: 5, label: "Đỏ", hex: "#FF0000" },
+  { id: 11, label: "Vàng", hex: "#FFD700" },
+  { id: 12, label: "Nâu", hex: "#8B4513" },
+  { id: 13, label: "Tím", hex: "#800080" },
+  { id: 14, label: "Hồng", hex: "#FFC0CB", border: "#D9D9D9" },
+  { id: 15, label: "Xanh Lá", hex: "#228B22" },
 ];
 
 const SIZE_OPTIONS = [
-  { id: 4, label: "XS" },
-  { id: 5, label: "S" },
-  { id: 6, label: "M" },
-  { id: 7, label: "L" },
-  { id: 8, label: "XL" },
+  { id: 6, label: "S" },
+  { id: 7, label: "M" },
+  { id: 8, label: "L" },
+  { id: 9, label: "XL" },
+  { id: 10, label: "XXL" },
 ];
 
 const styles = `
@@ -57,48 +64,137 @@ const styles = `
   }
   .product-layout {
     display: grid;
-    grid-template-columns: 300px 1fr;
-    gap: 2.5rem;
+    grid-template-columns: 280px 1fr;
+    gap: 2rem;
   }
   @media (max-width: 991px) {
     .product-layout {
       grid-template-columns: 1fr;
     }
   }
+  
+  /* Mobile Filter Toggle Button */
+  .mobile-filter-toggle {
+    display: none;
+    position: fixed;
+    bottom: 1.5rem;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 100;
+    background: #111;
+    color: #fff;
+    border: none;
+    border-radius: 999px;
+    padding: 0.75rem 1.5rem;
+    font-weight: 600;
+    font-size: 0.85rem;
+    letter-spacing: 0.1em;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+    cursor: pointer;
+  }
+  @media (max-width: 991px) {
+    .mobile-filter-toggle {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+  }
+  
+  /* Mobile Filter Overlay */
+  .filter-overlay {
+    display: none;
+  }
+  @media (max-width: 991px) {
+    .filter-overlay {
+      display: block;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 1000;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s ease;
+    }
+    .filter-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+  }
+  
+  /* Filters Panel */
   .filters-panel {
     background: var(--card-bg, #fff);
-    border-radius: 28px;
-    padding: 2rem;
-    box-shadow: 0 30px 80px rgba(15, 15, 15, 0.08);
+    border-radius: 24px;
+    padding: 1.5rem;
+    box-shadow: 0 20px 60px rgba(15, 15, 15, 0.08);
     position: sticky;
-    top: 110px;
+    top: 100px;
     height: fit-content;
   }
+  @media (max-width: 991px) {
+    .filters-panel {
+      position: fixed;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      width: 280px;
+      max-width: 85vw;
+      border-radius: 0;
+      z-index: 1001;
+      transform: translateX(-100%);
+      transition: transform 0.3s ease;
+      overflow-y: auto;
+      padding-top: 1rem;
+      padding-bottom: 6rem;
+    }
+    .filters-panel.mobile-open {
+      transform: translateX(0);
+    }
+    .filters-panel .filter-close-btn {
+      display: flex;
+    }
+  }
+  .filter-close-btn {
+    display: none;
+    position: absolute;
+    top: 0.75rem;
+    right: 0.75rem;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(0,0,0,0.08);
+    font-size: 1.2rem;
+    cursor: pointer;
+    align-items: center;
+    justify-content: center;
+  }
+  
   .filters-panel h5 {
-    font-size: 0.85rem;
-    letter-spacing: 0.3em;
+    font-size: 0.8rem;
+    letter-spacing: 0.25em;
     font-weight: 600;
     color: #8d7a5f;
   }
   .filter-section + .filter-section {
-    margin-top: 2rem;
+    margin-top: 1.5rem;
   }
   .category-list {
     list-style: none;
     padding: 0;
-    margin: 1rem 0 0;
+    margin: 0.75rem 0 0;
     display: flex;
     flex-direction: column;
-    gap: 0.6rem;
+    gap: 0.5rem;
   }
   .category-list label {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    font-size: 0.95rem;
+    font-size: 0.9rem;
   }
   .price-form {
-    margin-top: 1rem;
+    margin-top: 0.75rem;
   }
   .price-form::after {
     content: "";
@@ -107,17 +203,18 @@ const styles = `
   }
   .price-inputs {
     display: flex;
-    gap: 0.75rem;
+    gap: 0.5rem;
     flex-wrap: wrap;
   }
   .price-inputs input {
-    flex: none;
-    width: 92px;
+    flex: 1;
+    min-width: 70px;
     border-radius: 999px;
     border: 1px solid #e3e3e3;
-    padding: 0.35rem 0.9rem;
+    padding: 0.35rem 0.75rem;
     background: transparent;
     text-align: center;
+    font-size: 0.85rem;
   }
   .price-form button {
     display: none;
@@ -182,47 +279,59 @@ const styles = `
     display: flex;
     flex-wrap: wrap;
     justify-content: space-between;
-    gap: 1rem;
+    gap: 0.75rem;
     align-items: center;
-    margin-bottom: 1.5rem;
+    margin-bottom: 1.25rem;
   }
   .toolbar-actions {
     display: flex;
-    gap: 1rem;
+    gap: 0.75rem;
     align-items: center;
   }
   .toolbar-actions select {
     border-radius: 999px;
     border: 1px solid #dcdcdc;
-    padding: 0.45rem 1.25rem;
+    padding: 0.4rem 1rem;
     background: transparent;
+    font-size: 0.85rem;
   }
+  
+  /* Product Grid - Always 3 columns */
   .product-grid {
     width: 100%;
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 2.25rem;
+    gap: 1.5rem;
     align-items: stretch;
   }
   @media (max-width: 1200px) {
     .product-grid {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 2rem;
+      gap: 1.25rem;
     }
   }
   @media (max-width: 768px) {
     .product-grid {
-      grid-template-columns: repeat(1, minmax(0, 1fr));
-      gap: 1.5rem;
+      gap: 0.75rem;
+    }
+  }
+  @media (max-width: 480px) {
+    .product-grid {
+      gap: 0.5rem;
     }
   }
   .product-card {
     position: relative;
-    border-radius: 32px;
+    border-radius: 20px;
     overflow: hidden;
     background: linear-gradient(180deg, rgba(255,255,255,0.9), rgba(245,245,245,1));
-    box-shadow: 0 25px 60px rgba(20, 20, 20, 0.08);
+    box-shadow: 0 15px 40px rgba(20, 20, 20, 0.08);
     width: 100%;
+  }
+  @media (max-width: 768px) {
+    .product-card {
+      border-radius: 12px;
+      box-shadow: 0 8px 20px rgba(20, 20, 20, 0.06);
+    }
   }
   .product-card figure {
     margin: 0;
@@ -237,17 +346,48 @@ const styles = `
     transform: scale(1.05);
   }
   .product-meta {
-    padding: 1.25rem 1.5rem 1.5rem;
+    padding: 1rem 1.25rem 1.25rem;
+  }
+  @media (max-width: 768px) {
+    .product-meta {
+      padding: 0.5rem 0.5rem 0.75rem;
+    }
   }
   .product-meta h4 {
-    font-size: 1rem;
-    letter-spacing: 0.18em;
+    font-size: 0.9rem;
+    letter-spacing: 0.12em;
     text-transform: uppercase;
-    margin-bottom: 0.6rem;
+    margin-bottom: 0.4rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  @media (max-width: 768px) {
+    .product-meta h4 {
+      font-size: 0.65rem;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.2rem;
+    }
   }
   .price-tag {
     font-weight: 600;
     color: #b48b57;
+    font-size: 0.9rem;
+  }
+  @media (max-width: 768px) {
+    .price-tag {
+      font-size: 0.6rem;
+    }
+  }
+  .product-categories-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+  }
+  @media (max-width: 768px) {
+    .product-categories-tags {
+      display: none;
+    }
   }
   .card-hover {
     position: absolute;
@@ -259,6 +399,11 @@ const styles = `
     justify-content: center;
     transition: opacity 0.3s ease;
   }
+  @media (max-width: 768px) {
+    .card-hover {
+      display: none;
+    }
+  }
   .product-card:hover .card-hover {
     opacity: 1;
   }
@@ -267,14 +412,16 @@ const styles = `
     flex-direction: column;
     gap: 0.6rem;
     width: 100%;
-    max-width: 220px;
+    max-width: 180px;
+    padding: 0 1rem;
   }
   .card-hover button {
     border-radius: 999px;
-    padding: 0.55rem 1.5rem;
+    padding: 0.5rem 1rem;
     border: none;
     font-weight: 600;
-    letter-spacing: 0.15em;
+    font-size: 0.75rem;
+    letter-spacing: 0.1em;
   }
   .card-hover button.add {
     background: #111;
@@ -577,8 +724,7 @@ const toggleValue = (list, value) => {
 const ProductListing = ({ initialCategories = [] }) => {
   const [filters, setFilters] = useState({
     categories: [],
-    colors: [],
-    sizes: [],
+    searchTerm: "",
     minPrice: "",
     maxPrice: "",
   });
@@ -592,6 +738,7 @@ const ProductListing = ({ initialCategories = [] }) => {
   const [activeProduct, setActiveProduct] = useState(null);
   const [detailLoading, setDetailLoading] = useState(false);
   const [detailError, setDetailError] = useState("");
+  const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
 
   const handlePriceSubmit = (event) => {
     event.preventDefault();
@@ -606,22 +753,10 @@ const ProductListing = ({ initialCategories = [] }) => {
           .split(",")
           .filter(Boolean)
       : [];
-    const colors = params.get("colors")
-      ? params
-          .get("colors")
-          .split(",")
-          .filter(Boolean)
-      : [];
-    const sizes = params.get("sizes")
-      ? params
-          .get("sizes")
-          .split(",")
-          .filter(Boolean)
-      : [];
+    const searchTerm = params.get("search") || "";
     setFilters({
       categories,
-      colors,
-      sizes,
+      searchTerm,
       minPrice: params.get("minPrice") || "",
       maxPrice: params.get("maxPrice") || "",
     });
@@ -684,11 +819,8 @@ const ProductListing = ({ initialCategories = [] }) => {
     if (filters.categories.length) {
       params.set("categories", filters.categories.join(","));
     }
-    if (filters.colors.length) {
-      params.set("colors", filters.colors.join(","));
-    }
-    if (filters.sizes.length) {
-      params.set("sizes", filters.sizes.join(","));
+    if (filters.searchTerm) {
+      params.set("search", filters.searchTerm);
     }
     if (filters.minPrice) {
       params.set("minPrice", filters.minPrice);
@@ -745,20 +877,12 @@ const ProductListing = ({ initialCategories = [] }) => {
     setPage(1);
   };
 
-  const handleColorChange = (id) => {
+  const handleSearchChange = (value) => {
     setFilters((prev) => ({
       ...prev,
-      colors: toggleValue(prev.colors, String(id)),
+      searchTerm: value,
     }));
-    setPage(1);
-  };
-
-  const handleSizeChange = (id) => {
-    setFilters((prev) => ({
-      ...prev,
-      sizes: toggleValue(prev.sizes, String(id)),
-    }));
-    setPage(1);
+    // Debounce - chỉ cập nhật page sau khi người dùng ngừng gõ
   };
 
   const handlePriceChange = (field, value) => {
@@ -773,8 +897,7 @@ const ProductListing = ({ initialCategories = [] }) => {
   const clearFilters = () => {
     setFilters({
       categories: [],
-      colors: [],
-      sizes: [],
+      searchTerm: "",
       minPrice: "",
       maxPrice: "",
     });
@@ -792,10 +915,34 @@ const ProductListing = ({ initialCategories = [] }) => {
   return (
     <div className="product-page">
       <style>{styles}</style>
+      
+      {/* Mobile Filter Toggle */}
+      <button 
+        className="mobile-filter-toggle"
+        onClick={() => setMobileFilterOpen(true)}
+      >
+        <i className="bi bi-funnel"></i>
+        Bộ lọc
+      </button>
+      
+      {/* Mobile Filter Overlay */}
+      <div 
+        className={`filter-overlay ${mobileFilterOpen ? 'active' : ''}`}
+        onClick={() => setMobileFilterOpen(false)}
+      />
+      
       <div className="product-layout">
-        <aside className="filters-panel">
+        <aside className={`filters-panel ${mobileFilterOpen ? 'mobile-open' : ''}`}>
+          {/* Close button for mobile */}
+          <button 
+            className="filter-close-btn"
+            onClick={() => setMobileFilterOpen(false)}
+          >
+            ×
+          </button>
+          
           <div className="filter-section">
-            <h5>Categories</h5>
+            <h5>Danh mục</h5>
             <ul className="category-list">
               {initialCategories.length === 0 && (
                 <li className="text-muted">Chưa có danh mục.</li>
@@ -816,13 +963,13 @@ const ProductListing = ({ initialCategories = [] }) => {
           </div>
 
           <div className="filter-section">
-            <h5>Price</h5>
+            <h5>Giá</h5>
             <form className="price-form" onSubmit={handlePriceSubmit}>
               <div className="price-inputs">
                 <input
                   type="text"
                   inputMode="numeric"
-                  placeholder="Min"
+                  placeholder="Tối thiểu"
                   value={filters.minPrice}
                   onChange={(event) =>
                     handlePriceChange("minPrice", event.target.value)
@@ -831,55 +978,34 @@ const ProductListing = ({ initialCategories = [] }) => {
                 <input
                   type="text"
                   inputMode="numeric"
-                  placeholder="Max"
+                  placeholder="Tối đa"
                   value={filters.maxPrice}
                   onChange={(event) =>
                     handlePriceChange("maxPrice", event.target.value)
                   }
                 />
               </div>
-              <button type="submit">Apply price</button>
+              <button type="submit">Áp dụng giá</button>
             </form>
           </div>
 
           <div className="filter-section">
-            <h5>Color</h5>
-            <div className="swatches">
-              {COLOR_SWATCHES.map((swatch) => (
-                <button
-                  key={swatch.id}
-                  type="button"
-                  className={`swatch ${
-                    filters.colors.includes(String(swatch.id)) ? "selected" : ""
-                  }`}
-                  style={{
-                    background: swatch.hex,
-                    borderColor: filters.colors.includes(String(swatch.id))
-                      ? "#111"
-                      : swatch.border || "transparent",
-                  }}
-                  data-label={swatch.label}
-                  onClick={() => handleColorChange(swatch.id)}
-                />
-              ))}
-            </div>
-          </div>
-
-          <div className="filter-section">
-            <h5>Size</h5>
-            <div className="size-list">
-              {SIZE_OPTIONS.map((size) => (
-                <button
-                  key={size.id}
-                  type="button"
-                  className={`size-pill ${
-                    filters.sizes.includes(String(size.id)) ? "selected" : ""
-                  }`}
-                  onClick={() => handleSizeChange(size.id)}
-                >
-                  {size.label}
-                </button>
-              ))}
+            <h5>Tìm kiếm</h5>
+            <div style={{ marginTop: '1rem' }}>
+              <input
+                type="text"
+                placeholder="Nhập tên sản phẩm..."
+                value={filters.searchTerm}
+                onChange={(e) => handleSearchChange(e.target.value)}
+                style={{
+                  width: '100%',
+                  borderRadius: '999px',
+                  border: '1px solid #e3e3e3',
+                  padding: '0.6rem 1rem',
+                  background: 'transparent',
+                  fontSize: '0.9rem',
+                }}
+              />
             </div>
           </div>
 
@@ -887,23 +1013,28 @@ const ProductListing = ({ initialCategories = [] }) => {
             <button
               type="button"
               className="ghost"
-              onClick={clearFilters}
+              onClick={() => {
+                clearFilters();
+                setMobileFilterOpen(false);
+              }}
               disabled={
                 !filters.categories.length &&
-                !filters.colors.length &&
-                !filters.sizes.length &&
+                !filters.searchTerm &&
                 !filters.minPrice &&
                 !filters.maxPrice
               }
             >
-              Clear
+              Xóa
             </button>
             <button
               type="button"
               className="primary"
-              onClick={() => setPage(1)}
+              onClick={() => {
+                setPage(1);
+                setMobileFilterOpen(false);
+              }}
             >
-              Apply
+              Áp dụng
             </button>
           </div>
         </aside>
@@ -912,7 +1043,7 @@ const ProductListing = ({ initialCategories = [] }) => {
           <div className="products-toolbar">
             <div>
               <p className="text-uppercase fw-semibold text-muted mb-1" style={{ letterSpacing: "0.3em" }}>
-                SHOP THE DROP
+                SẢN PHẨM
               </p>
               <small className="text-muted">
                 {pagination.total
@@ -922,7 +1053,7 @@ const ProductListing = ({ initialCategories = [] }) => {
             </div>
             <div className="toolbar-actions">
               <label className="text-muted" style={{ fontSize: "0.9rem" }}>
-                Sort by
+                Sắp xếp
               </label>
               <select
                 value={sort}
@@ -931,9 +1062,9 @@ const ProductListing = ({ initialCategories = [] }) => {
                   setPage(1);
                 }}
               >
-                <option value="newest">Newest</option>
-                <option value="price_asc">Price ↑</option>
-                <option value="price_desc">Price ↓</option>
+                <option value="newest">Mới nhất</option>
+                <option value="price_asc">Giá tăng dần</option>
+                <option value="price_desc">Giá giảm dần</option>
               </select>
             </div>
           </div>
@@ -983,10 +1114,10 @@ const ProductListing = ({ initialCategories = [] }) => {
                           <div className="card-hover">
                             <div className="hover-actions">
                               <button className="btn btn-light text-uppercase">
-                                View Detail
+                                Xem chi tiết
                               </button>
                               <button className="btn btn-light text-uppercase add">
-                                Add To Cart
+                                Thêm vào giỏ
                               </button>
                             </div>
                           </div>
@@ -1281,7 +1412,7 @@ const ProductDetailModal = ({ product, onClose, onSelectProduct }) => {
             {colorOptions.length > 0 && (
               <div className="mt-3">
                 <p className="text-uppercase text-muted mb-2" style={{ letterSpacing: "0.3em" }}>
-                  Color
+                  Màu sắc
                 </p>
                 <div className="swatch-row">
                   {colorOptions.map((color) => {
@@ -1308,7 +1439,7 @@ const ProductDetailModal = ({ product, onClose, onSelectProduct }) => {
             {sizeOptions.length > 0 && (
               <div className="mt-4">
                 <p className="text-uppercase text-muted mb-2" style={{ letterSpacing: "0.3em" }}>
-                  Size
+                  Kích thước
                 </p>
                 <div className="pill-row">
                   {sizeOptions.map((size) => {
@@ -1357,7 +1488,7 @@ const ProductDetailModal = ({ product, onClose, onSelectProduct }) => {
                   cartFeedback.state === "loading"
                 }
               >
-                Add to Bag
+                Thêm vào giỏ
               </button>
               {cartFeedback.message && (
                 <span className="cart-feedback text-muted">
@@ -1371,7 +1502,7 @@ const ProductDetailModal = ({ product, onClose, onSelectProduct }) => {
         {recommendations.length > 0 && (
           <section className="product-modal__related">
             <h5 className="text-uppercase text-muted" style={{ letterSpacing: "0.3em" }}>
-              You Might Also Like
+              Sản phẩm gợi ý
             </h5>
             <div className="product-modal__related-grid">
               {recommendations.map((rec) => (
@@ -1399,7 +1530,7 @@ const ProductDetailModal = ({ product, onClose, onSelectProduct }) => {
 
         <section className="review-section">
           <h5 className="text-uppercase text-muted mb-3" style={{ letterSpacing: "0.3em" }}>
-            Reviews
+            Đánh giá
           </h5>
           <div className="review-summary">
             <div>
@@ -1407,7 +1538,7 @@ const ProductDetailModal = ({ product, onClose, onSelectProduct }) => {
                 {summary.averageRating?.toFixed(1) || "0.0"}
               </div>
               <p className="text-muted">
-                Based on {summary.totalReviews || 0} reviews
+                Dựa trên {summary.totalReviews || 0} đánh giá
               </p>
             </div>
             <div className="review-bars">
