@@ -176,7 +176,7 @@ const syncProductColorImages = async (
 };
 
 const buildSkuKey = (colorValueId, sizeValueId) =>
-  `${colorValueId}-${sizeValueId}`;
+  `${colorValueId ?? 'null'}-${sizeValueId ?? 'null'}`;
 
 const parseInventoryPayload = (rawInventory, basePrice) => {
   if (!rawInventory || typeof rawInventory !== "object") return [];
@@ -198,10 +198,11 @@ const parseInventoryPayload = (rawInventory, basePrice) => {
         priceRaw === undefined || priceRaw === ""
           ? Number(basePrice) || 0
           : Number(priceRaw);
-      // Luôn tạo entry cho mọi size, kể cả khi stock = 0 hoặc để trống
+      // Cho phép colorValueId = 0 (shoes) hoặc sizeValueId = 0 (accessory)
+      // Dùng null thay vì 0 trong DB
       entries.push({
-        colorValueId,
-        sizeValueId,
+        colorValueId: colorValueId === 0 ? null : colorValueId,
+        sizeValueId: sizeValueId === 0 ? null : sizeValueId,
         stockQuantity: Number.isNaN(stockQuantity)
           ? 0
           : Math.max(0, Math.floor(stockQuantity)),
@@ -231,7 +232,11 @@ const syncInventoryMatrix = async (
 
   const desiredKeys = new Set();
   for (const entry of inventoryEntries) {
-    if (Number.isNaN(entry.colorValueId) || Number.isNaN(entry.sizeValueId)) {
+    // Cho phép null cho accessory (không size) hoặc shoes (không color)
+    // Nhưng không cho phép cả 2 đều null
+    const hasValidColor = entry.colorValueId !== undefined && !Number.isNaN(entry.colorValueId);
+    const hasValidSize = entry.sizeValueId !== undefined && !Number.isNaN(entry.sizeValueId);
+    if (!hasValidColor && !hasValidSize) {
       continue;
     }
     const key = buildSkuKey(entry.colorValueId, entry.sizeValueId);
@@ -250,11 +255,13 @@ const syncInventoryMatrix = async (
         { where: { id: existingMap.get(key).id }, transaction }
       );
     } else {
-      // Luôn tạo SKU mới cho tất cả color/size, kể cả khi stock = 0
+      // Tạo SKU code phù hợp với loại sản phẩm
+      const colorPart = entry.colorValueId ?? 'C';
+      const sizePart = entry.sizeValueId ?? 'S';
       await ProductSKU.create(
         {
           productId,
-          skuCode: `SP${productId}-${entry.colorValueId}-${entry.sizeValueId}`,
+          skuCode: `SP${productId}-${colorPart}-${sizePart}`,
           colorValueId: entry.colorValueId,
           sizeValueId: entry.sizeValueId,
           price: nextPrice,

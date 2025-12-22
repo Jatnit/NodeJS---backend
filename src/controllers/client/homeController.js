@@ -986,11 +986,13 @@ const handleProductDetail = async (req, res) => {
               model: AttributeValue,
               as: "colorValue",
               attributes: ["id", "value", "code"],
+              required: false, // Cho phép NULL (shoes)
             },
             {
               model: AttributeValue,
               as: "sizeValue",
               attributes: ["id", "value"],
+              required: false, // Cho phép NULL (accessory)
             },
           ],
           order: [
@@ -1057,6 +1059,17 @@ const handleProductDetail = async (req, res) => {
       sizeLabel: sku.sizeValue?.value || "",
     }));
 
+    // DEBUG: Log SKU data từ DB
+    console.log(`[ProductDetail] Product ID: ${product.id}, Name: ${product.name}`);
+    console.log(`[ProductDetail] Raw SKUs from DB:`, product.ProductSKUs?.map(s => ({
+      id: s.id,
+      colorValueId: s.colorValueId,
+      sizeValueId: s.sizeValueId,
+      colorValue: s.colorValue,
+      sizeValue: s.sizeValue
+    })));
+    console.log(`[ProductDetail] Mapped skuOptions:`, skuOptions);
+
     const colorMap = new Map();
     const sizeMap = new Map();
     skuOptions.forEach((sku) => {
@@ -1075,16 +1088,45 @@ const handleProductDetail = async (req, res) => {
       }
     });
 
-    // Sắp xếp sizes theo thứ tự chuẩn: S, M, L, XL, XXL
-    const SIZE_ORDER = ['S', 'M', 'L', 'XL', 'XXL'];
+    // Sắp xếp sizes theo thứ tự chuẩn
+    const CLOTHING_SIZE_ORDER = ['S', 'M', 'L', 'XL', 'XXL'];
     const sortedSizeOptions = Array.from(sizeMap.values()).sort((a, b) => {
-      const indexA = SIZE_ORDER.indexOf(a.value);
-      const indexB = SIZE_ORDER.indexOf(b.value);
-      if (indexA === -1 && indexB === -1) return a.value.localeCompare(b.value);
+      const indexA = CLOTHING_SIZE_ORDER.indexOf(a.value);
+      const indexB = CLOTHING_SIZE_ORDER.indexOf(b.value);
+      // Nếu cả hai đều là size số (giày), sắp xếp theo số
+      if (indexA === -1 && indexB === -1) {
+        const numA = parseInt(a.value);
+        const numB = parseInt(b.value);
+        if (!isNaN(numA) && !isNaN(numB)) return numA - numB;
+        return a.value.localeCompare(b.value);
+      }
       if (indexA === -1) return 1;
       if (indexB === -1) return -1;
       return indexA - indexB;
     });
+
+    // Xác định variantType dựa trên dữ liệu SKU
+    const hasColors = colorMap.size > 0;
+    const hasSizes = sizeMap.size > 0;
+    const sizeValues = Array.from(sizeMap.values()).map(s => s.value);
+    const isShoeSize = hasSizes && sizeValues.every(v => /^\d+$/.test(v) && parseInt(v) >= 35 && parseInt(v) <= 50);
+    
+    let variantType = 'simple';
+    if (hasColors && hasSizes && !isShoeSize) {
+      variantType = 'clothing'; // Quần áo: Màu + Size chữ
+    } else if (isShoeSize && !hasColors) {
+      variantType = 'shoes'; // Giày: Chỉ size số
+    } else if (hasColors && !hasSizes) {
+      variantType = 'accessory'; // Phụ kiện: Chỉ màu
+    } else if (!hasColors && !hasSizes) {
+      variantType = 'simple'; // Đơn giản: Không biến thể
+    } else if (isShoeSize && hasColors) {
+      variantType = 'shoes'; // Giày có màu (ít gặp)
+    } else if (hasColors && hasSizes) {
+      variantType = 'clothing'; // Mặc định
+    }
+
+    console.log(`[ProductDetail] Product ${product.id}: hasColors=${hasColors}, hasSizes=${hasSizes}, variantType=${variantType}, skuCount=${skuOptions.length}`);
 
     return res.render("client/product-detail.ejs", {
       product,
@@ -1093,6 +1135,7 @@ const handleProductDetail = async (req, res) => {
       colorOptions: Array.from(colorMap.values()),
       sizeOptions: sortedSizeOptions,
       skuOptions,
+      variantType,
       errorMessage: null,
     });
   } catch (error) {

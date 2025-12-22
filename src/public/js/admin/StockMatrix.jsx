@@ -10,6 +10,7 @@ const InventoryMatrix = ({ productId }) => {
     sizes: [],
     matrix: {},
     skuKeyIndex: {},
+    variantType: 'clothing', // clothing, accessory, shoes, simple
   });
 
   const fetchMatrix = useCallback(async () => {
@@ -29,8 +30,22 @@ const InventoryMatrix = ({ productId }) => {
       const sizes = payload.sizes || [];
       const matrix = {};
       const skuKeyIndex = {};
+      
+      // Xác định loại sản phẩm
+      let variantType = 'simple';
+      const hasColors = colors.length > 0;
+      const hasSizes = sizes.length > 0;
+      
+      if (hasColors && hasSizes) {
+        variantType = 'clothing';
+      } else if (hasColors && !hasSizes) {
+        variantType = 'accessory';
+      } else if (!hasColors && hasSizes) {
+        variantType = 'shoes';
+      }
+      
       (payload.cells || []).forEach((cell) => {
-        const key = `${cell.colorId}-${cell.sizeId}`;
+        const key = `${cell.colorId || 'null'}-${cell.sizeId || 'null'}`;
         matrix[key] = {
           ...cell,
           value: Number.isFinite(Number(cell.quantity))
@@ -51,6 +66,7 @@ const InventoryMatrix = ({ productId }) => {
         sizes,
         matrix,
         skuKeyIndex,
+        variantType,
       });
     } catch (error) {
       setState((prev) => ({
@@ -166,30 +182,197 @@ const InventoryMatrix = ({ productId }) => {
     );
   }
 
-  if (!state.colors.length || !state.sizes.length) {
+  const hasVariants = state.colors.length > 0 || state.sizes.length > 0 || Object.keys(state.matrix).length > 0;
+  
+  if (!hasVariants) {
     return (
       <div className="alert alert-warning mb-0">
-        Sản phẩm này chưa có biến thể màu hoặc size để quản lý tồn kho.
+        Sản phẩm này chưa có biến thể để quản lý tồn kho.
       </div>
     );
   }
-
-  // Sắp xếp sizes theo thứ tự chuẩn: S, M, L, XL, XXL
-  const SIZE_ORDER = ['S', 'M', 'L', 'XL', 'XXL'];
-  const sortedSizes = [...state.sizes].sort((a, b) => {
-    const indexA = SIZE_ORDER.indexOf(a.label);
-    const indexB = SIZE_ORDER.indexOf(b.label);
-    if (indexA === -1 && indexB === -1) return a.label.localeCompare(b.label);
-    if (indexA === -1) return 1;
-    if (indexB === -1) return -1;
-    return indexA - indexB;
-  });
 
   // Style để ẩn spinners trên input number
   const inputStyle = {
     MozAppearance: 'textfield',
     WebkitAppearance: 'none',
     appearance: 'textfield',
+  };
+
+  // Sắp xếp sizes theo thứ tự chuẩn
+  const SIZE_ORDER = ['S', 'M', 'L', 'XL', 'XXL'];
+  const sortedSizes = [...state.sizes].sort((a, b) => {
+    const indexA = SIZE_ORDER.indexOf(a.label);
+    const indexB = SIZE_ORDER.indexOf(b.label);
+    if (indexA === -1 && indexB === -1) {
+      // Số size giày
+      const numA = parseInt(a.label);
+      const numB = parseInt(b.label);
+      if (!isNaN(numA) && !isNaN(numB)) return numA - numB;
+      return a.label.localeCompare(b.label);
+    }
+    if (indexA === -1) return 1;
+    if (indexB === -1) return -1;
+    return indexA - indexB;
+  });
+
+  // Render theo loại sản phẩm
+  const renderClothingMatrix = () => (
+    <div className="table-responsive">
+      <table className="table table-bordered align-middle text-center">
+        <thead className="table-light">
+          <tr>
+            <th style={{ minWidth: "120px" }}>Màu / Size</th>
+            {sortedSizes.map((size) => (
+              <th key={size.id}>{size.label}</th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {state.colors.map((color) => (
+            <tr key={color.id}>
+              <th className="text-start">{color.label}</th>
+              {sortedSizes.map((size) => {
+                const key = `${color.id}-${size.id}`;
+                const cell = state.matrix[key];
+                const hasSku = cell && cell.skuId;
+                const displayValue = hasSku ? cell.value : 0;
+                
+                return (
+                  <td key={key}>
+                    <input
+                      type="number"
+                      min="0"
+                      className={`form-control form-control-sm text-center stock-input ${!hasSku ? 'text-muted bg-light' : ''}`}
+                      style={inputStyle}
+                      value={displayValue}
+                      onChange={(event) =>
+                        handleCellChange(key, event.target.value)
+                      }
+                      disabled={state.saving || !hasSku}
+                      title={!hasSku ? 'Chưa có biến thể này trong kho' : ''}
+                    />
+                  </td>
+                );
+              })}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+
+  const renderAccessoryList = () => (
+    <div className="table-responsive">
+      <table className="table table-bordered align-middle">
+        <thead className="table-light">
+          <tr>
+            <th>Màu sắc</th>
+            <th style={{ width: "150px" }} className="text-center">Số lượng</th>
+          </tr>
+        </thead>
+        <tbody>
+          {state.colors.map((color) => {
+            const key = `${color.id}-null`;
+            const cell = state.matrix[key];
+            const hasSku = cell && cell.skuId;
+            const displayValue = hasSku ? cell.value : 0;
+            
+            return (
+              <tr key={color.id}>
+                <td>
+                  <span className="fw-semibold">{color.label}</span>
+                </td>
+                <td>
+                  <input
+                    type="number"
+                    min="0"
+                    className={`form-control form-control-sm text-center stock-input ${!hasSku ? 'text-muted bg-light' : ''}`}
+                    style={inputStyle}
+                    value={displayValue}
+                    onChange={(event) =>
+                      handleCellChange(key, event.target.value)
+                    }
+                    disabled={state.saving || !hasSku}
+                    title={!hasSku ? 'Chưa có biến thể này trong kho' : ''}
+                  />
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  );
+
+  const renderShoesList = () => (
+    <div className="table-responsive">
+      <table className="table table-bordered align-middle">
+        <thead className="table-light">
+          <tr>
+            <th>Kích thước</th>
+            <th style={{ width: "150px" }} className="text-center">Số lượng</th>
+          </tr>
+        </thead>
+        <tbody>
+          {sortedSizes.map((size) => {
+            const key = `null-${size.id}`;
+            const cell = state.matrix[key];
+            const hasSku = cell && cell.skuId;
+            const displayValue = hasSku ? cell.value : 0;
+            
+            return (
+              <tr key={size.id}>
+                <td>
+                  <span className="badge bg-light text-dark" style={{ fontSize: '14px', padding: '8px 16px' }}>
+                    Size {size.label}
+                  </span>
+                </td>
+                <td>
+                  <input
+                    type="number"
+                    min="0"
+                    className={`form-control form-control-sm text-center stock-input ${!hasSku ? 'text-muted bg-light' : ''}`}
+                    style={inputStyle}
+                    value={displayValue}
+                    onChange={(event) =>
+                      handleCellChange(key, event.target.value)
+                    }
+                    disabled={state.saving || !hasSku}
+                    title={!hasSku ? 'Chưa có biến thể này trong kho' : ''}
+                  />
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  );
+
+  const renderSimpleStock = () => {
+    const key = 'null-null';
+    const cell = state.matrix[key] || Object.values(state.matrix)[0];
+    const hasSku = cell && cell.skuId;
+    const displayValue = hasSku ? cell.value : 0;
+    const actualKey = cell ? `${cell.colorId || 'null'}-${cell.sizeId || 'null'}` : key;
+    
+    return (
+      <div className="d-flex align-items-center gap-3">
+        <label className="fw-semibold mb-0">Số lượng tồn kho:</label>
+        <input
+          type="number"
+          min="0"
+          className={`form-control form-control-sm stock-input ${!hasSku ? 'text-muted bg-light' : ''}`}
+          style={{ ...inputStyle, width: '120px' }}
+          value={displayValue}
+          onChange={(event) =>
+            handleCellChange(actualKey, event.target.value)
+          }
+          disabled={state.saving || !hasSku}
+        />
+      </div>
+    );
   };
 
   return (
@@ -213,48 +396,10 @@ const InventoryMatrix = ({ productId }) => {
         <div className="alert alert-success">{state.success}</div>
       ) : null}
 
-      <div className="table-responsive">
-        <table className="table table-bordered align-middle text-center">
-          <thead className="table-light">
-            <tr>
-              <th style={{ minWidth: "120px" }}>Màu / Size</th>
-              {sortedSizes.map((size) => (
-                <th key={size.id}>{size.label}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {state.colors.map((color) => (
-              <tr key={color.id}>
-                <th className="text-start">{color.label}</th>
-                {sortedSizes.map((size) => {
-                  const key = `${color.id}-${size.id}`;
-                  const cell = state.matrix[key];
-                  const hasSku = cell && cell.skuId;
-                  const displayValue = hasSku ? cell.value : 0;
-                  
-                  return (
-                    <td key={key}>
-                      <input
-                        type="number"
-                        min="0"
-                        className={`form-control form-control-sm text-center stock-input ${!hasSku ? 'text-muted bg-light' : ''}`}
-                        style={inputStyle}
-                        value={displayValue}
-                        onChange={(event) =>
-                          handleCellChange(key, event.target.value)
-                        }
-                        disabled={state.saving || !hasSku}
-                        title={!hasSku ? 'Chưa có biến thể này trong kho' : ''}
-                      />
-                    </td>
-                  );
-                })}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      {state.variantType === 'clothing' && renderClothingMatrix()}
+      {state.variantType === 'accessory' && renderAccessoryList()}
+      {state.variantType === 'shoes' && renderShoesList()}
+      {state.variantType === 'simple' && renderSimpleStock()}
 
       <div className="d-flex flex-column flex-md-row gap-2 mt-3">
         <button

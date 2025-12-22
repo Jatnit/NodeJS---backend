@@ -301,7 +301,15 @@
                                             }).format(product.basePrice || 0) %>
                                     </p>
 
-                                    <% if (colorOptions && colorOptions.length) { %>
+                                    <% 
+                                    // Xác định variantType từ server hoặc mặc định
+                                    const vType = typeof variantType !== 'undefined' ? variantType : 'clothing';
+                                    const showColors = (vType === 'clothing' || vType === 'accessory') && colorOptions && colorOptions.length;
+                                    const showSizes = (vType === 'clothing' || vType === 'shoes') && sizeOptions && sizeOptions.length;
+                                    const isSimple = vType === 'simple' || (!showColors && !showSizes);
+                                    %>
+
+                                    <% if (showColors) { %>
                                         <div class="mb-4">
                                             <p class="option-label">Màu sắc</p>
                                             <div class="pill-group" id="colorOptions">
@@ -316,48 +324,71 @@
                                                     <% }); %>
                                             </div>
                                         </div>
-                                        <% } %>
+                                    <% } %>
 
-                                            <% if (sizeOptions && sizeOptions.length) { %>
-                                                <%
-                                                    // Sắp xếp sizes theo thứ tự chuẩn: S, M, L, XL, XXL
-                                                    const SIZE_ORDER = ['S', 'M', 'L', 'XL', 'XXL'];
-                                                    const sortedSizes = [...sizeOptions].sort((a, b) => {
-                                                        const indexA = SIZE_ORDER.indexOf(a.value);
-                                                        const indexB = SIZE_ORDER.indexOf(b.value);
-                                                        if (indexA === -1 && indexB === -1) return a.value.localeCompare(b.value);
-                                                        if (indexA === -1) return 1;
-                                                        if (indexB === -1) return -1;
-                                                        return indexA - indexB;
-                                                    });
-                                                %>
-                                                <div class="mb-4">
-                                                    <p class="option-label">Size</p>
-                                                    <div class="pill-group" id="sizeOptions">
-                                                        <% sortedSizes.forEach(function(size) { %>
-                                                            <button type="button" class="pill"
-                                                                data-size-id="<%= size.id %>">
-                                                                <%= size.value %>
-                                                            </button>
-                                                            <% }); %>
-                                                    </div>
-                                                </div>
-                                                <% } %>
-
-                                                    <input type="hidden" id="selectedSkuId">
-                                                    <p id="stockStatus" class="stock-status">
-                                                        <i class="bi bi-info-circle"></i>
-                                                        Chọn màu và size để xem tồn kho
-                                                    </p>
-
-                                                    <button class="btn-add-cart" id="addToCartBtnDesktop" disabled>
-                                                        <i class="bi bi-bag-plus me-2"></i>Thêm vào giỏ
+                                    <% if (showSizes) { %>
+                                        <div class="mb-4">
+                                            <p class="option-label"><%= vType === 'shoes' ? 'Kích thước' : 'Size' %></p>
+                                            <div class="pill-group" id="sizeOptions">
+                                                <% sizeOptions.forEach(function(size) { %>
+                                                    <button type="button" class="pill"
+                                                        data-size-id="<%= size.id %>">
+                                                        <%= size.value %>
                                                     </button>
+                                                <% }); %>
+                                            </div>
+                                        </div>
+                                    <% } %>
 
-                                                    <div class="toast align-items-center text-bg-dark border-0 position-fixed bottom-0 end-0 m-3"
+                                    <input type="hidden" id="selectedSkuId">
+                                    <input type="hidden" id="variantType" value="<%= vType %>">
+                                    
+                                    <p id="stockStatus" class="stock-status">
+                                        <i class="bi bi-info-circle"></i>
+                                        <% if (isSimple) { %>
+                                            <% 
+                                            const totalStock = skuOptions.reduce((sum, s) => sum + (s.stockQuantity || 0), 0);
+                                            %>
+                                            <% if (totalStock > 0) { %>
+                                                Còn <%= totalStock %> sản phẩm
+                                            <% } else { %>
+                                                Hết hàng
+                                            <% } %>
+                                        <% } else if (vType === 'accessory') { %>
+                                            Vui lòng chọn màu để xem tồn kho
+                                        <% } else if (vType === 'shoes') { %>
+                                            Vui lòng chọn kích thước để xem tồn kho
+                                        <% } else { %>
+                                            Vui lòng chọn màu và size để xem tồn kho
+                                        <% } %>
+                                    </p>
+
+                                    <!-- Quantity Input -->
+                                    <div class="mb-3 d-flex align-items-center gap-3">
+                                        <label for="quantity" class="form-label mb-0">Số lượng:</label>
+                                        <div class="input-group" style="width: 120px;">
+                                            <button class="btn btn-outline-secondary" type="button" id="btnDecrease">-</button>
+                                            <input type="number" class="form-control text-center" id="quantityInput" value="1" min="1" max="10">
+                                            <button class="btn btn-outline-secondary" type="button" id="btnIncrease">+</button>
+                                        </div>
+                                    </div>
+
+                                    <!-- Debug Info Panel -->
+                                    <div class="alert alert-info py-1 px-2 mb-3" style="font-size: 11px; opacity: 0.8;">
+                                        <strong>Debug Info:</strong><br>
+                                        Type: <span id="debugType"><%= vType %></span> | 
+                                        Cols: <%= showColors %> | 
+                                        Sizes: <%= showSizes %>
+                                    </div>
+
+                                    <button class="btn-add-cart" id="addToCartBtnDesktop" <%= isSimple && skuOptions.length > 0 && skuOptions[0].stockQuantity > 0 ? '' : 'disabled' %>>
+                                        <i class="bi bi-bag-plus me-2"></i>Thêm vào giỏ
+                                    </button>
+
+                                    <div class="toast align-items-center text-bg-dark border-0 position-fixed bottom-0 end-0 m-3"
                                                         role="alert" id="selectionToast">
                                                         <div class="d-flex">
-                                                            <div class="toast-body">Vui lòng chọn màu và size</div>
+                                                            <div class="toast-body">Vui lòng chọn <%= vType === 'accessory' ? 'màu' : (vType === 'shoes' ? 'kích thước' : 'màu và size') %></div>
                                                             <button type="button"
                                                                 class="btn-close btn-close-white me-2 m-auto"
                                                                 data-bs-dismiss="toast"></button>
@@ -422,6 +453,18 @@
                                     const colorOptions = parseJsonData("product-colors", []);
                                     const sizeOptions = parseJsonData("product-sizes", []);
 
+                                    // === DEBUG: Log dữ liệu ban đầu ===
+                                    const debugVariantType = document.getElementById('variantType')?.value || 'clothing';
+                                    console.log('=== PRODUCT DETAIL DEBUG ===');
+                                    console.log('variantType:', debugVariantType);
+                                    console.log('basePrice:', basePrice);
+                                    console.log('skuOptions:', skuOptions);
+                                    console.log('colorOptions:', colorOptions);
+                                    console.log('sizeOptions:', sizeOptions);
+                                    console.log('galleries:', galleries);
+                                    console.log('colorImages:', colorImages);
+                                    // === END DEBUG ===
+
                                     const colorImageMap = new Map(colorImages.map((item) => [Number(item.colorValueId), item.imageUrl]));
 
                                     const mainImageEl = document.getElementById("mainProductImage");
@@ -474,12 +517,20 @@
                                         });
                                     };
 
-                                    const updateGallery = () => {
-                                        const overrideImage = state.selectedColor && colorImageMap.has(state.selectedColor)
+                                    const updateGallery = (isInitial = false) => {
+                                        // Khi chọn màu: chỉ đổi hình chính, KHÔNG thay đổi gallery thumbnails
+                                        const colorImage = state.selectedColor && colorImageMap.has(state.selectedColor)
                                             ? colorImageMap.get(state.selectedColor) : null;
-                                        const imagesToShow = overrideImage ? [overrideImage] : baseImages;
-                                        if (mainImageEl && imagesToShow.length) mainImageEl.src = imagesToShow[0];
-                                        renderThumbs(imagesToShow);
+                                        
+                                        // Nếu có hình màu, hiển thị nó làm hình chính
+                                        if (mainImageEl) {
+                                            mainImageEl.src = colorImage || (baseImages.length > 0 ? baseImages[0] : '');
+                                        }
+                                        
+                                        // Chỉ render thumbnails lần đầu tiên khi load trang
+                                        if (isInitial) {
+                                            renderThumbs(baseImages);
+                                        }
                                     };
 
                                     const refreshColorButtons = () => {
@@ -495,10 +546,15 @@
 
                                     const refreshSizeButtons = () => {
                                         if (!sizeButtons.length) return;
+                                        const variantType = document.getElementById('variantType')?.value || 'clothing';
+                                        
                                         sizeButtons.forEach((btn) => {
                                             const sizeId = Number(btn.dataset.sizeId);
+                                            // Shoes: không cần kiểm tra màu
                                             const available = skuOptions.some((sku) =>
-                                                sku.sizeValueId === sizeId && (!state.selectedColor || sku.colorValueId === state.selectedColor) && Number(sku.stockQuantity || 0) > 0
+                                                sku.sizeValueId === sizeId && 
+                                                (variantType === 'shoes' || !state.selectedColor || sku.colorValueId === state.selectedColor) && 
+                                                Number(sku.stockQuantity || 0) > 0
                                             );
                                             const isSelected = state.selectedSize === sizeId && available;
                                             if (!available && state.selectedSize === sizeId) state.selectedSize = null;
@@ -509,13 +565,54 @@
                                     };
 
                                     const findMatchingSku = () => {
-                                        if (!state.selectedColor || !state.selectedSize) return null;
-                                        return skuOptions.find((sku) => sku.colorValueId === state.selectedColor && sku.sizeValueId === state.selectedSize);
+                                        const variantType = document.getElementById('variantType')?.value || 'clothing';
+                                        console.log('[findMatchingSku] variantType:', variantType, 'state:', JSON.stringify(state));
+                                        
+                                        // Simple: lấy SKU đầu tiên
+                                        if (variantType === 'simple') {
+                                            const sku = skuOptions.length > 0 ? skuOptions[0] : null;
+                                            console.log('[findMatchingSku] Simple - returning first SKU:', sku);
+                                            return sku;
+                                        }
+                                        
+                                        // Accessory: chỉ cần chọn màu
+                                        if (variantType === 'accessory') {
+                                            if (!state.selectedColor) {
+                                                console.log('[findMatchingSku] Accessory - no color selected');
+                                                return null;
+                                            }
+                                            const sku = skuOptions.find((sku) => sku.colorValueId === state.selectedColor);
+                                            console.log('[findMatchingSku] Accessory - looking for colorValueId:', state.selectedColor, 'found:', sku);
+                                            return sku;
+                                        }
+                                        
+                                        // Shoes: chỉ cần chọn size
+                                        if (variantType === 'shoes') {
+                                            if (!state.selectedSize) {
+                                                console.log('[findMatchingSku] Shoes - no size selected');
+                                                return null;
+                                            }
+                                            const sku = skuOptions.find((sku) => sku.sizeValueId === state.selectedSize);
+                                            console.log('[findMatchingSku] Shoes - looking for sizeValueId:', state.selectedSize, 'found:', sku);
+                                            return sku;
+                                        }
+                                        
+                                        // Clothing: cần cả màu và size
+                                        if (!state.selectedColor || !state.selectedSize) {
+                                            console.log('[findMatchingSku] Clothing - missing selection, color:', state.selectedColor, 'size:', state.selectedSize);
+                                            return null;
+                                        }
+                                        const sku = skuOptions.find((sku) => sku.colorValueId === state.selectedColor && sku.sizeValueId === state.selectedSize);
+                                        console.log('[findMatchingSku] Clothing - found:', sku);
+                                        return sku;
                                     };
 
                                     const updateSummary = () => {
+                                        const variantType = document.getElementById('variantType')?.value || 'clothing';
                                         const matchedSku = findMatchingSku();
                                         state.selectedSku = matchedSku || null;
+                                        console.log('[updateSummary] variantType:', variantType, 'matchedSku:', matchedSku, 'state:', JSON.stringify(state));
+                                        
                                         if (matchedSku) {
                                             hiddenSkuInput.value = matchedSku.id;
                                             const formattedPrice = currencyFormatter.format(Number(matchedSku.price) || basePrice);
@@ -532,19 +629,33 @@
                                             hiddenSkuInput.value = "";
                                             skuPriceEl.textContent = currencyFormatter.format(basePrice);
                                             if (mobileSubtotal) mobileSubtotal.textContent = currencyFormatter.format(basePrice);
-                                            stockStatusEl.innerHTML = colorOptions.length && sizeOptions.length
-                                                ? `<i class="bi bi-info-circle"></i> Chọn màu và size để xem tồn kho`
-                                                : `<i class="bi bi-info-circle"></i> Chưa có biến thể`;
+                                            
+                                            // Hiển thị thông báo tùy theo variantType
+                                            let statusMessage = '';
+                                            if (variantType === 'simple') {
+                                                statusMessage = `<i class="bi bi-x-circle" style="color:#ef4444"></i> Không có sản phẩm`;
+                                            } else if (variantType === 'accessory') {
+                                                statusMessage = `<i class="bi bi-info-circle"></i> Vui lòng chọn màu để xem tồn kho`;
+                                            } else if (variantType === 'shoes') {
+                                                statusMessage = `<i class="bi bi-info-circle"></i> Vui lòng chọn kích thước để xem tồn kho`;
+                                            } else {
+                                                statusMessage = `<i class="bi bi-info-circle"></i> Vui lòng chọn màu và size để xem tồn kho`;
+                                            }
+                                            stockStatusEl.innerHTML = statusMessage;
                                             setCartButtonsState(false, "Thêm vào giỏ");
                                         }
                                     };
 
                                     const handleColorClick = (event) => {
                                         const button = event.currentTarget;
-                                        if (button.classList.contains("disabled")) return;
+                                        if (button.classList.contains("disabled")) {
+                                            console.log('[handleColorClick] Button disabled, skipping');
+                                            return;
+                                        }
                                         const colorId = Number(button.dataset.colorId);
                                         state.selectedColor = state.selectedColor === colorId ? null : colorId;
                                         state.selectedSize = null;
+                                        console.log('[handleColorClick] Selected color:', colorId, 'State:', JSON.stringify(state));
                                         refreshColorButtons();
                                         refreshSizeButtons();
                                         updateGallery();
@@ -553,9 +664,13 @@
 
                                     const handleSizeClick = (event) => {
                                         const button = event.currentTarget;
-                                        if (button.classList.contains("disabled")) return;
+                                        if (button.classList.contains("disabled")) {
+                                            console.log('[handleSizeClick] Button disabled, skipping');
+                                            return;
+                                        }
                                         const sizeId = Number(button.dataset.sizeId);
                                         state.selectedSize = state.selectedSize === sizeId ? null : sizeId;
+                                        console.log('[handleSizeClick] Selected size:', sizeId, 'State:', JSON.stringify(state));
                                         refreshSizeButtons();
                                         updateSummary();
                                     };
@@ -563,9 +678,31 @@
                                     colorButtons.forEach((btn) => btn.addEventListener("click", handleColorClick));
                                     sizeButtons.forEach((btn) => btn.addEventListener("click", handleSizeClick));
 
+                                    // Quantity handling
+                                    const qtyInput = document.getElementById("quantityInput");
+                                    const btnIncrease = document.getElementById("btnIncrease");
+                                    const btnDecrease = document.getElementById("btnDecrease");
+
+                                    if (btnIncrease && qtyInput) {
+                                        btnIncrease.addEventListener("click", () => {
+                                            let val = parseInt(qtyInput.value) || 1;
+                                            if (val < 10) qtyInput.value = val + 1;
+                                        });
+                                    }
+                                    if (btnDecrease && qtyInput) {
+                                        btnDecrease.addEventListener("click", () => {
+                                            let val = parseInt(qtyInput.value) || 1;
+                                            if (val > 1) qtyInput.value = val - 1;
+                                        });
+                                    }
+
                                     const handleAddToCart = async () => {
                                         const skuId = hiddenSkuInput.value;
+                                        const quantity = parseInt(qtyInput?.value) || 1;
+                                        console.log('[handleAddToCart] skuId:', skuId, 'quantity:', quantity, 'state:', JSON.stringify(state));
+                                        
                                         if (!skuId) {
+                                            console.log('[handleAddToCart] No SKU selected, showing toast');
                                             toastInstance && toastInstance.show();
                                             return;
                                         }
@@ -573,7 +710,7 @@
                                             const response = await fetch("/cart/add", {
                                                 method: "POST",
                                                 headers: { "Content-Type": "application/json" },
-                                                body: JSON.stringify({ skuId }),
+                                                body: JSON.stringify({ skuId, quantity }),
                                             });
                                             if (!response.ok) throw new Error("Network error");
                                             const data = await response.json();
@@ -581,6 +718,8 @@
                                                 alert(data.message || "Không thể thêm vào giỏ.");
                                                 return;
                                             }
+                                            
+                                            // Handle Success - Update UI
                                             if (data.cart) {
                                                 if (window.__CART_DRAWER__ && typeof window.__CART_DRAWER__.update === "function") {
                                                     window.__CART_DRAWER__.update(data.cart);
@@ -589,10 +728,15 @@
                                                     window.dispatchEvent(new CustomEvent("cart:updated", { detail: data.cart }));
                                                     window.dispatchEvent(new CustomEvent("cart:open"));
                                                 }
+                                            } else {
+                                                // Fallback if no cart data returned
+                                                alert("Đã thêm vào giỏ hàng!");
+                                                window.location.reload();
                                             }
-                                        } catch (error) {
-                                            console.error(error);
-                                            alert("Không thể thêm vào giỏ.");
+
+                                        } catch (e) {
+                                            console.error(e);
+                                            alert("Lỗi khi thêm vào giỏ hàng");
                                         }
                                     };
 
@@ -600,8 +744,20 @@
 
                                     refreshColorButtons();
                                     refreshSizeButtons();
-                                    updateGallery();
-                                    updateSummary();
+                                    updateGallery(true); // Initial load - render thumbnails
+                                    
+                                    // Auto-select SKU cho simple products
+                                    const variantType = document.getElementById('variantType')?.value || 'clothing';
+                                    if (variantType === 'simple' && skuOptions.length > 0) {
+                                        const firstSku = skuOptions[0];
+                                        hiddenSkuInput.value = firstSku.id;
+                                        if (firstSku.stockQuantity > 0) {
+                                            stockStatusEl.innerHTML = `<i class="bi bi-check-circle" style="color:#10b981"></i> Còn ${firstSku.stockQuantity} sản phẩm`;
+                                            setCartButtonsState(true, "Thêm vào giỏ");
+                                        }
+                                    } else {
+                                        updateSummary();
+                                    }
                                 })();
                             </script>
 

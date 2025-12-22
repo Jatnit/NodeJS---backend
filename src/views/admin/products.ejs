@@ -540,30 +540,61 @@
                         const addBtn = document.getElementById("addColorInventoryBlock");
                         if (!list || !addBtn) return;
 
+                        // Helper to get current variant type
+                        const getVariantType = () => {
+                            const checked = document.querySelector('input[name="variantType"]:checked');
+                            return checked ? checked.value : 'clothing';
+                        };
+
                         // Update inventory input names when color is selected
                         const updateInventoryNames = (block) => {
                             const select = block.querySelector("select");
                             const colorId = select ? select.value : "";
+                            const variantType = getVariantType();
 
-                            // Update price inputs
-                            block.querySelectorAll(".price-input").forEach((input) => {
-                                const sizeId = input.dataset.sizeId;
-                                if (colorId && sizeId) {
-                                    input.name = `inventory[${colorId}][${sizeId}][price]`;
-                                } else {
-                                    input.name = "";
-                                }
+                            // Clear ALL inventory inputs first
+                            block.querySelectorAll(".price-input, .stock-input, .accessory-price-input, .accessory-stock-input").forEach(input => {
+                                input.name = "";
                             });
 
-                            // Update stock inputs
-                            block.querySelectorAll(".stock-input").forEach((input) => {
-                                const sizeId = input.dataset.sizeId;
-                                if (colorId && sizeId) {
-                                    input.name = `inventory[${colorId}][${sizeId}][stock]`;
-                                } else {
-                                    input.name = "";
+                            if (variantType === 'clothing' || variantType === 'shoes') {
+                                // Update price inputs for size-based variants
+                                block.querySelectorAll(".price-input").forEach((input) => {
+                                    const sizeId = input.dataset.sizeId;
+                                    if (variantType === 'shoes') {
+                                        // Shoes: use sizeId only, colorId = 0
+                                        if (sizeId) {
+                                            input.name = `inventory[0][${sizeId}][price]`;
+                                        }
+                                    } else if (colorId && sizeId) {
+                                        // Clothing: use both colorId and sizeId
+                                        input.name = `inventory[${colorId}][${sizeId}][price]`;
+                                    }
+                                });
+
+                                // Update stock inputs for size-based variants
+                                block.querySelectorAll(".stock-input").forEach((input) => {
+                                    const sizeId = input.dataset.sizeId;
+                                    if (variantType === 'shoes') {
+                                        // Shoes: use sizeId only, colorId = 0
+                                        if (sizeId) {
+                                            input.name = `inventory[0][${sizeId}][stock]`;
+                                        }
+                                    } else if (colorId && sizeId) {
+                                        // Clothing: use both colorId and sizeId
+                                        input.name = `inventory[${colorId}][${sizeId}][stock]`;
+                                    }
+                                });
+                            } else if (variantType === 'accessory') {
+                                // Accessory: use colorId only, sizeId = 0
+                                const priceInput = block.querySelector(".accessory-price-input");
+                                const stockInput = block.querySelector(".accessory-stock-input");
+                                if (colorId) {
+                                    if (priceInput) priceInput.name = `inventory[${colorId}][0][price]`;
+                                    if (stockInput) stockInput.name = `inventory[${colorId}][0][stock]`;
                                 }
-                            });
+                            }
+                            // For 'simple' type, use simpleStock input which has its own name
                         };
 
                         // Ensure color select name is set only when file is selected
@@ -628,6 +659,11 @@
                             if (select) select.selectedIndex = 0;
                             list.appendChild(clone);
                             bindBlockEvents(clone);
+                        });
+
+                        // Listen for variant type changes and update all inventory names
+                        document.addEventListener('variantTypeChanged', () => {
+                            Array.from(list.children).forEach((block) => updateInventoryNames(block));
                         });
                     })();
                 </script>
@@ -759,6 +795,8 @@
                         variantRadios.forEach(radio => {
                             radio.addEventListener('change', (e) => {
                                 updateVariantUI(e.target.value);
+                                // Dispatch custom event to notify inventory blocks
+                                document.dispatchEvent(new CustomEvent('variantTypeChanged', { detail: e.target.value }));
                             });
                         });
 

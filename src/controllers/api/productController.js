@@ -592,11 +592,13 @@ export default {
             model: AttributeValue,
             as: "colorValue",
             attributes: ["id", "value"],
+            required: false, // Cho phép NULL
           },
           {
             model: AttributeValue,
             as: "sizeValue",
             attributes: ["id", "value"],
+            required: false, // Cho phép NULL
           },
         ],
         order: [
@@ -613,21 +615,33 @@ export default {
         const plain = record.get({ plain: true });
         const colorAttr = plain.colorValue;
         const sizeAttr = plain.sizeValue;
-        if (!colorAttr || !sizeAttr) {
-          return;
+        
+        // Cho phép SKU không có màu (shoes) hoặc không có size (accessory)
+        if (colorAttr) {
+          colorMap.set(colorAttr.id, {
+            id: colorAttr.id,
+            label: colorAttr.value,
+          });
         }
-        colorMap.set(colorAttr.id, {
-          id: colorAttr.id,
-          label: colorAttr.value,
-        });
-        sizeMap.set(sizeAttr.id, {
-          id: sizeAttr.id,
-          label: sizeAttr.value,
-        });
-        const key = `${colorAttr.id}-${sizeAttr.id}`;
+        if (sizeAttr) {
+          sizeMap.set(sizeAttr.id, {
+            id: sizeAttr.id,
+            label: sizeAttr.value,
+          });
+        }
+        
+        // Key sử dụng 'null' cho các trường hợp không có màu/size
+        const colorId = colorAttr ? colorAttr.id : null;
+        const sizeId = sizeAttr ? sizeAttr.id : null;
+        const key = `${colorId}-${sizeId}`;
+        
         cellMap.set(key, {
           skuId: plain.id,
           quantity: Number(plain.stockQuantity) || 0,
+          colorId,
+          sizeId,
+          colorLabel: colorAttr ? colorAttr.value : null,
+          sizeLabel: sizeAttr ? sizeAttr.value : null,
         });
       });
 
@@ -638,22 +652,72 @@ export default {
         a.label.localeCompare(b.label)
       );
 
+      // Tạo cells dựa trên loại sản phẩm
       const cells = [];
-      colors.forEach((color) => {
-        sizes.forEach((size) => {
-          const key = `${color.id}-${size.id}`;
+      const hasColors = colors.length > 0;
+      const hasSizes = sizes.length > 0;
+      
+      if (hasColors && hasSizes) {
+        // Clothing: màu × size
+        colors.forEach((color) => {
+          sizes.forEach((size) => {
+            const key = `${color.id}-${size.id}`;
+            const cell = cellMap.get(key);
+            cells.push({
+              key,
+              colorId: color.id,
+              colorLabel: color.label,
+              sizeId: size.id,
+              sizeLabel: size.label,
+              skuId: cell ? cell.skuId : null,
+              quantity: cell ? cell.quantity : 0,
+            });
+          });
+        });
+      } else if (hasColors && !hasSizes) {
+        // Accessory: chỉ có màu
+        colors.forEach((color) => {
+          const key = `${color.id}-null`;
           const cell = cellMap.get(key);
           cells.push({
             key,
             colorId: color.id,
             colorLabel: color.label,
+            sizeId: null,
+            sizeLabel: null,
+            skuId: cell ? cell.skuId : null,
+            quantity: cell ? cell.quantity : 0,
+          });
+        });
+      } else if (!hasColors && hasSizes) {
+        // Shoes: chỉ có size
+        sizes.forEach((size) => {
+          const key = `null-${size.id}`;
+          const cell = cellMap.get(key);
+          cells.push({
+            key,
+            colorId: null,
+            colorLabel: null,
             sizeId: size.id,
             sizeLabel: size.label,
             skuId: cell ? cell.skuId : null,
             quantity: cell ? cell.quantity : 0,
           });
         });
-      });
+      } else {
+        // Simple: lấy tất cả cells từ cellMap
+        cellMap.forEach((cell, key) => {
+          cells.push({
+            key,
+            colorId: cell.colorId,
+            colorLabel: cell.colorLabel,
+            sizeId: cell.sizeId,
+            sizeLabel: cell.sizeLabel,
+            skuId: cell.skuId,
+            quantity: cell.quantity,
+          });
+        });
+      }
 
       return res.json({
         success: true,

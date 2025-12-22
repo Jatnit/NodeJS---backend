@@ -23,12 +23,12 @@ const ProductSKU = sequelize.define(
     },
     colorValueId: {
       type: DataTypes.INTEGER,
-      allowNull: false,
+      allowNull: true, // Cho phép null cho shoes (chỉ có size)
       field: "ColorValueId",
     },
     sizeValueId: {
       type: DataTypes.INTEGER,
-      allowNull: false,
+      allowNull: true, // Cho phép null cho accessory (chỉ có màu)
       field: "SizeValueId",
     },
     price: {
